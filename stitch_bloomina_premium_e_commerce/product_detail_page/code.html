@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;family=Manrope:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-container": "#f191a1",
+                      "on-surface-variant": "#534345",
+                      "surface-container-low": "#f3f3f3",
+                      "outline": "#867274",
+                      "on-primary-fixed-variant": "#772e3e",
+                      "tertiary-container": "#b0acac",
+                      "outline-variant": "#d9c1c3",
+                      "on-background": "#1a1c1c",
+                      "tertiary-fixed-dim": "#cac5c6",
+                      "on-tertiary-fixed-variant": "#484647",
+                      "surface-container-highest": "#e2e2e2",
+                      "on-error": "#ffffff",
+                      "primary-fixed-dim": "#ffb2bd",
+                      "secondary": "#575d78",
+                      "on-tertiary-fixed": "#1c1b1c",
+                      "inverse-primary": "#ffb2bd",
+                      "primary": "#944555",
+                      "error-container": "#ffdad6",
+                      "secondary-container": "#d8defe",
+                      "on-secondary-container": "#5b617d",
+                      "surface-dim": "#dadada",
+                      "secondary-fixed-dim": "#bfc5e4",
+                      "surface-container-high": "#e8e8e8",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-fixed-variant": "#3f465f",
+                      "on-primary-fixed": "#3e0214",
+                      "surface-variant": "#e2e2e2",
+                      "on-primary": "#ffffff",
+                      "on-primary-container": "#6f2838",
+                      "on-surface": "#1a1c1c",
+                      "surface-tint": "#944555",
+                      "surface": "#f9f9f9",
+                      "primary-fixed": "#ffd9dd",
+                      "secondary-fixed": "#dce1ff",
+                      "inverse-on-surface": "#f1f1f1",
+                      "on-secondary-fixed": "#141a32",
+                      "error": "#ba1a1a",
+                      "tertiary": "#605e5e",
+                      "surface-bright": "#f9f9f9",
+                      "on-tertiary-container": "#424040",
+                      "on-error-container": "#93000a",
+                      "background": "#f9f9f9",
+                      "inverse-surface": "#2f3131",
+                      "tertiary-fixed": "#e6e1e1",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-container": "#eeeeee",
+                      "on-secondary": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "container-max": "1280px",
+                      "unit": "8px",
+                      "gutter": "24px",
+                      "element-gap": "16px",
+                      "section-padding": "120px"
+              },
+              "fontFamily": {
+                      "headline-lg": ["Plus Jakarta Sans"],
+                      "body-lg": ["Manrope"],
+                      "label-caps": ["Manrope"],
+                      "body-md": ["Manrope"],
+                      "headline-md": ["Plus Jakarta Sans"],
+                      "display-lg": ["Plus Jakarta Sans"]
+              },
+              "fontSize": {
+                      "headline-lg": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "headline-md": ["32px", {"lineHeight": "1.3", "fontWeight": "400"}],
+                      "display-lg": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "300"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="bg-white/90 dark:bg-stone-950/90 backdrop-blur-lg fixed top-0 w-full z-50 border-b border-stone-100 dark:border-stone-900 shadow-[0_10px_30px_-15px_rgba(241,145,161,0.1)]">
+<div class="flex justify-between items-center px-6 h-16 w-full max-w-screen-xl mx-auto font-['Plus_Jakarta_SANS'] antialiased">
+<button class="active:scale-95 transition-transform text-stone-400 hover:text-[#F191A1] transition-colors duration-300">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="text-xl font-semibold tracking-widest text-stone-900 dark:text-stone-50 uppercase">Bloomina</h1>
+<button class="active:scale-95 transition-transform text-stone-400 hover:text-[#F191A1] transition-colors duration-300">
+<span class="material-symbols-outlined" data-icon="shopping_bag">shopping_bag</span>
+</button>
+</div>
+</header>
+<main class="pt-16 pb-32">
+<!-- Hero Product Carousel (Simulated) -->
+<section class="relative w-full overflow-hidden bg-surface-container-lowest">
+<div class="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar">
+<div class="flex-none w-full snap-center h-[618px] md:h-[751px] relative">
+<img alt="Bloomina Product Shot 1" class="w-full h-full object-cover" data-alt="A high-end editorial fashion shot of a soft pink lace bra displayed against a minimalist, warm-toned plaster background. The lighting is soft and diffused, highlighting the delicate floral textures of the fabric. The overall mood is serene and sophisticated, embodying the Bloomina brand's floral minimalism with a clean, high-fidelity aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTbghw_WZVzhd9DKApPxJcoUK9cwJkf44QoDbHoRjTRnubMMge4zVDFV4aKhYlPUZNpOupfdzT_0TFOc5M6oK763b3jWnP3FX8u0mOjZs3PFlSuFUrwyW4_flxdqhvotNurlXfZlqgu9fsu5PAuM8dAy-TskCzImUd_-ghDraPg07vOihUfj8zdinMGOjJgvlkxSv-3v0qUaYWyUveFWSIXwp6uyeh7Wq5XildCnMHdWUN0Mar7Gjox8ZGa_kkMAJD0mIuDs0er5Y"/>
+</div>
+<div class="flex-none w-full snap-center h-[618px] md:h-[751px] relative">
+<img alt="Bloomina Product Shot 2" class="w-full h-full object-cover" data-alt="A close-up artistic photograph focusing on the intricate silk straps and floral embroidery of a premium undergarment. The color palette is dominated by soft Bloom Pink and warm off-white tones. High-key natural lighting creates soft shadows that emphasize the weightless, premium quality of the textile in a modern, minimalist setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTIWoOnng9K5yPSpMmXc95o8OC9DqFYy3aJ-qQmGyDE1_nwTAQUviGPWPn4a_6jwpIJqbdd--zu-Ora9nPDKYVguXj8l2ZejYrHveF9Ub1ZgQHV7rMX8Yj0AQOXTRj5q0bvo9oUiiNxuFOAd03b06nnez2bXMjJJiDilYl1btuP5V7mnHYLRi-NO9uc3eqPndWIDalbP7JGONXA7vm198_diIzFOlrgW3k6encuh-Fq_-x8zekJG8dUBArnl581pQGNhON2yiS-wg"/>
+</div>
+</div>
+<!-- Carousel Indicators -->
+<div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+<span class="w-12 h-1 bg-primary-container rounded-full"></span>
+<span class="w-8 h-1 bg-on-surface-variant/20 rounded-full"></span>
+<span class="w-8 h-1 bg-on-surface-variant/20 rounded-full"></span>
+</div>
+</section>
+<!-- Product Details Section -->
+<section class="max-w-screen-xl mx-auto px-6 mt-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
+<!-- Left Column: Description & Info -->
+<div class="lg:col-span-7 space-y-12">
+<div>
+<span class="font-label-caps text-label-caps text-primary tracking-[0.2em] uppercase">Signature Collection</span>
+<h2 class="font-headline-lg text-headline-lg mt-2 text-on-surface">The Petal Silk Contour Bra</h2>
+<p class="text-headline-md font-headline-md text-primary mt-2">₹2,499.00</p>
+</div>
+<div class="prose prose-stone">
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+                        Designed to feel like a second skin, the Petal Silk Contour Bra combines our signature floral lace with ultra-breathable Japanese mulberry silk. Experience effortless support without the weight, featuring our patented 'Soft-Lift' technology that moves with your body.
+                    </p>
+</div>
+<!-- Features Accordion/List -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-outline-variant/30">
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-primary-container" data-icon="auto_awesome">auto_awesome</span>
+<div>
+<h4 class="font-semibold text-on-surface">Breathable Mesh</h4>
+<p class="text-sm text-on-surface-variant">Stay fresh with advanced moisture-wicking technology.</p>
+</div>
+</div>
+<div class="flex items-start gap-4">
+<span class="material-symbols-outlined text-primary-container" data-icon="favorite">favorite</span>
+<div>
+<h4 class="font-semibold text-on-surface">Silk Lined</h4>
+<p class="text-sm text-on-surface-variant">Inner cups lined with 100% hypoallergenic mulberry silk.</p>
+</div>
+</div>
+</div>
+<!-- Trust Badges -->
+<div class="bg-surface-container-low p-8 rounded-xl flex flex-wrap justify-between items-center gap-8 border border-white">
+<div class="flex flex-col items-center gap-2 flex-1 min-w-[120px]">
+<span class="material-symbols-outlined text-stone-500 scale-125" data-icon="verified_user">verified_user</span>
+<p class="text-[10px] font-label-caps text-center uppercase tracking-wider text-stone-500">GST Registered</p>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1 min-w-[120px]">
+<span class="material-symbols-outlined text-stone-500 scale-125" data-icon="lock">lock</span>
+<p class="text-[10px] font-label-caps text-center uppercase tracking-wider text-stone-500">Secure Razorpay</p>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1 min-w-[120px]">
+<span class="material-symbols-outlined text-stone-500 scale-125" data-icon="local_shipping">local_shipping</span>
+<p class="text-[10px] font-label-caps text-center uppercase tracking-wider text-stone-500">Shiprocket Delivery</p>
+</div>
+</div>
+</div>
+<!-- Right Column: Selections & Controls -->
+<div class="lg:col-span-5 space-y-10 lg:sticky lg:top-28 self-start">
+<!-- Color Selector -->
+<div>
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase mb-4">Select Color: Bloom Pink</h3>
+<div class="flex gap-3">
+<button class="w-10 h-10 rounded-full border-2 border-primary-container p-0.5">
+<span class="block w-full h-full rounded-full bg-[#f191a1]"></span>
+</button>
+<button class="w-10 h-10 rounded-full border border-outline-variant/30 p-0.5">
+<span class="block w-full h-full rounded-full bg-stone-200"></span>
+</button>
+<button class="w-10 h-10 rounded-full border border-outline-variant/30 p-0.5">
+<span class="block w-full h-full rounded-full bg-[#575d78]"></span>
+</button>
+</div>
+</div>
+<!-- Size Selector -->
+<div>
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-label-caps text-label-caps text-on-surface-variant uppercase">Select Size</h3>
+<button class="text-xs font-semibold text-primary underline underline-offset-4 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="straighten">straighten</span>
+                            Interactive Size Guide
+                        </button>
+</div>
+<div class="grid grid-cols-4 gap-2">
+<button class="py-3 border border-outline-variant/30 rounded-lg text-sm hover:border-primary-container transition-colors">32B</button>
+<button class="py-3 bg-secondary text-white rounded-lg text-sm">34B</button>
+<button class="py-3 border border-outline-variant/30 rounded-lg text-sm hover:border-primary-container transition-colors">36B</button>
+<button class="py-3 border border-outline-variant/30 rounded-lg text-sm hover:border-primary-container transition-colors">38B</button>
+<button class="py-3 border border-outline-variant/30 rounded-lg text-sm hover:border-primary-container transition-colors">32C</button>
+<button class="py-3 border border-outline-variant/30 rounded-lg text-sm hover:border-primary-container transition-colors">34C</button>
+<button class="py-3 border border-outline-variant/30 rounded-lg text-sm hover:border-primary-container transition-colors opacity-40 cursor-not-allowed">36C</button>
+<button class="py-3 border border-outline-variant/30 rounded-lg text-sm hover:border-primary-container transition-colors">38C</button>
+</div>
+</div>
+<!-- Shipping Estimator -->
+<div class="pt-6 border-t border-outline-variant/20">
+<div class="flex items-center gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-primary" data-icon="schedule">schedule</span>
+<p>Estimated delivery within <span class="font-bold text-on-surface">3-5 business days</span></p>
+</div>
+</div>
+</div>
+</section>
+<!-- Fabric Info Section (Asymmetric Bento Grid) -->
+<section class="max-w-screen-xl mx-auto px-6 mt-32">
+<h3 class="font-headline-md text-headline-md text-center mb-16">The Material Science</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[300px]">
+<div class="md:col-span-2 relative group overflow-hidden rounded-2xl">
+<img alt="Silk Texture" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A macro photograph of delicate silk fabric rippling softly. The image focuses on the sheen and fluid motion of premium Mulberry silk, with soft pink hues and high-key studio lighting that creates a weightless, airy feel in line with the Bloomina brand aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGPPq_cBqSwAdy2cUN61awIe3gHZnI8rrU8p6OcWfMpd9O15RW-Pthd8D6uFCE5kfCG903UdG_jYB0ug4BL7eK1XqDYW2VAhwENq3ocFtqhu-fJZN4sr6JoTXii2sCC-evy2PSGkGuQST8e0MOToQ39ZZjjb9ZnXDsQq0YDbjANz3SfEC5TScPZmV8eB-xVNcTfnVQJx7IWG5N5I-9Pq8SEUfzjLXQnrTp-1TvMAxlbsuJQQZb63KpyPBNctGiuZQ5pFmVlRFml0s"/>
+<div class="absolute inset-0 bg-gradient-to-t from-stone-900/60 to-transparent p-8 flex flex-col justify-end">
+<h4 class="text-white font-headline-md">Ethical Mulberry Silk</h4>
+<p class="text-white/80 max-w-md">Our silk is sourced from sustainable farms, ensuring a carbon-neutral footprint while providing unmatched softness.</p>
+</div>
+</div>
+<div class="bg-surface-container-high p-8 flex flex-col justify-center rounded-2xl">
+<span class="material-symbols-outlined text-primary scale-150 mb-6" data-icon="spa">spa</span>
+<h4 class="font-headline-md text-2xl mb-4">Floral Intricacy</h4>
+<p class="text-on-surface-variant">Each lace pattern is custom-illustrated to mimic the organic geometry of spring petals.</p>
+</div>
+<div class="bg-primary-container p-8 flex flex-col justify-center rounded-2xl">
+<h4 class="text-on-primary-container font-headline-md text-2xl mb-4">4-Way Stretch</h4>
+<p class="text-on-primary-container/80">Premium elastane fibers blended for a lift that never feels restrictive, ensuring all-day comfort.</p>
+</div>
+<div class="md:col-span-2 relative group overflow-hidden rounded-2xl">
+<img alt="Craftsmanship" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A minimalist overhead view of high-quality textiles and measuring tools on a white marble table. The setting is bright, clean, and modern, representing the precise craftsmanship and design focus of Bloomina's lingerie collection." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKq2ZqaPQDsBnvgS8EaEYRjcdTOsthKWepnNCcAE1mHR6wOX_0jodaZZmwSqeH2ChAVPM34dEvI3Cg60aeg9wtoqZcoIQjW4St9nDscoXjJWVxpHrRsJmAqWy9l5remmY6Ph9YA0CG-55qR-BOZpKF2nyonX8VxAMj6n6ggKYwxPMyX5epQPvXNajshQg5BvX7iQxfG6AfBxz_kS25TXzw1SUZ98nbuzblM-7nqYwwUKCNZ7l8aawP3mDSbNwKaNrC6X_8UPhsgZs"/>
+<div class="absolute inset-0 bg-gradient-to-t from-stone-900/40 to-transparent p-8 flex flex-col justify-end">
+<h4 class="text-white font-headline-md">Precision Fit</h4>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Sticky Add to Cart Bar -->
+<div class="fixed bottom-0 left-0 w-full z-50 bg-white/95 dark:bg-stone-950/95 backdrop-blur-xl shadow-[0_-10px_40px_rgba(241,145,161,0.08)] border-t border-stone-50 dark:border-stone-900 px-6 py-4 md:py-6">
+<div class="max-w-screen-xl mx-auto flex items-center justify-between gap-4">
+<div class="hidden md:flex flex-col">
+<span class="font-label-caps text-[10px] text-stone-400 uppercase tracking-widest">Currently Viewing</span>
+<span class="font-semibold text-on-surface">The Petal Silk Contour Bra</span>
+</div>
+<div class="flex items-center gap-4 flex-1 md:flex-none md:w-[400px]">
+<div class="flex items-center border border-outline-variant/30 rounded-full px-4 h-14">
+<button class="text-stone-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="remove">remove</span>
+</button>
+<span class="w-10 text-center font-semibold">1</span>
+<button class="text-stone-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+</button>
+</div>
+<button class="flex-1 bg-primary-container text-on-primary-container h-14 rounded-full font-semibold tracking-wide hover:brightness-105 active:scale-95 transition-all shadow-lg shadow-primary-container/20 flex items-center justify-center gap-2 uppercase text-sm">
+<span class="material-symbols-outlined" data-icon="shopping_bag">shopping_bag</span>
+                    Add to Bag
+                </button>
+</div>
+</div>
+</div>
+<!-- Mobile Bottom Navigation (Filtered for Product Page) -->
+<!-- Suppression: Navigation hidden on focused product page to prioritize checkout flow -->
+</body></html>

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Bloomina — Checkout</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#f191a1",
+                        "on-surface-variant": "#534345",
+                        "surface-container-low": "#f3f3f3",
+                        "outline": "#867274",
+                        "on-primary-fixed-variant": "#772e3e",
+                        "tertiary-container": "#b0acac",
+                        "outline-variant": "#d9c1c3",
+                        "on-background": "#1a1c1c",
+                        "tertiary-fixed-dim": "#cac5c6",
+                        "on-tertiary-fixed-variant": "#484647",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#ffb2bd",
+                        "secondary": "#575d78",
+                        "on-tertiary-fixed": "#1c1b1c",
+                        "inverse-primary": "#ffb2bd",
+                        "primary": "#944555",
+                        "error-container": "#ffdad6",
+                        "secondary-container": "#d8defe",
+                        "on-secondary-container": "#5b617d",
+                        "surface-dim": "#dadada",
+                        "secondary-fixed-dim": "#bfc5e4",
+                        "surface-container-high": "#e8e8e8",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#3f465f",
+                        "on-primary-fixed": "#3e0214",
+                        "surface-variant": "#e2e2e2",
+                        "on-primary": "#ffffff",
+                        "on-primary-container": "#6f2838",
+                        "on-surface": "#1a1c1c",
+                        "surface-tint": "#944555",
+                        "surface": "#f9f9f9",
+                        "primary-fixed": "#ffd9dd",
+                        "secondary-fixed": "#dce1ff",
+                        "inverse-on-surface": "#f1f1f1",
+                        "on-secondary-fixed": "#141a32",
+                        "error": "#ba1a1a",
+                        "tertiary": "#605e5e",
+                        "surface-bright": "#f9f9f9",
+                        "on-tertiary-container": "#424040",
+                        "on-error-container": "#93000a",
+                        "background": "#f9f9f9",
+                        "inverse-surface": "#2f3131",
+                        "tertiary-fixed": "#e6e1e1",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#eeeeee",
+                        "on-secondary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-max": "1280px",
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "element-gap": "16px",
+                        "section-padding": "120px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "body-md": ["Manrope"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "display-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["40px", {"lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "1.0", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-md": ["32px", {"lineHeight": "1.3", "fontWeight": "400"}],
+                        "display-lg": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "300"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .petal-shadow {
+            box-shadow: 0 40px 80px -20px rgba(241, 145, 161, 0.08);
+        }
+        input:focus {
+            outline: none;
+            border-bottom-color: #f191a1 !important;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-body-md text-on-surface antialiased">
+<!-- TopAppBar Component (Transactional State - Navigation Suppressed) -->
+<header class="fixed top-0 w-full z-50 bg-white/90 dark:bg-stone-950/90 backdrop-blur-lg border-b border-stone-100 dark:border-stone-900 shadow-[0_10px_30px_-15px_rgba(241,145,161,0.1)] h-16 flex items-center">
+<div class="flex justify-between items-center px-6 w-full max-w-screen-xl mx-auto">
+<div class="flex items-center gap-4">
+<button class="active:scale-95 transition-transform text-stone-900 dark:text-stone-50">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<span class="text-xl font-semibold tracking-widest text-stone-900 dark:text-stone-50 uppercase font-headline-lg">Bloomina</span>
+</div>
+<div class="flex items-center gap-2 text-stone-400 font-label-caps uppercase">
+<span class="material-symbols-outlined text-sm">lock</span>
+<span class="text-[10px]">Secure Checkout</span>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 max-w-screen-xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">
+<!-- Left Column: Checkout Details -->
+<div class="lg:col-span-7 space-y-12">
+<!-- Delivery Section -->
+<section>
+<div class="flex items-center gap-3 mb-8">
+<span class="w-8 h-8 rounded-full bg-primary-container text-white flex items-center justify-center font-headline-md text-base">1</span>
+<h2 class="font-headline-md text-headline-md">Shipping Details</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+<div class="relative">
+<label class="block font-label-caps text-on-surface-variant mb-2">First Name</label>
+<input class="w-full bg-transparent border-0 border-b border-outline-variant py-2 px-0 focus:ring-0 transition-colors" placeholder="Evelyn" type="text"/>
+</div>
+<div class="relative">
+<label class="block font-label-caps text-on-surface-variant mb-2">Last Name</label>
+<input class="w-full bg-transparent border-0 border-b border-outline-variant py-2 px-0 focus:ring-0 transition-colors" placeholder="Sterling" type="text"/>
+</div>
+<div class="md:col-span-2 relative">
+<label class="block font-label-caps text-on-surface-variant mb-2">Street Address</label>
+<input class="w-full bg-transparent border-0 border-b border-outline-variant py-2 px-0 focus:ring-0 transition-colors" placeholder="123 Serenity Avenue, Apt 4B" type="text"/>
+</div>
+<div class="relative">
+<label class="block font-label-caps text-on-surface-variant mb-2">City</label>
+<input class="w-full bg-transparent border-0 border-b border-outline-variant py-2 px-0 focus:ring-0 transition-colors" placeholder="Mumbai" type="text"/>
+</div>
+<div class="relative">
+<label class="block font-label-caps text-on-surface-variant mb-2">Postal Code</label>
+<input class="w-full bg-transparent border-0 border-b border-outline-variant py-2 px-0 focus:ring-0 transition-colors" placeholder="400001" type="text"/>
+</div>
+</div>
+</section>
+<!-- Payment Section -->
+<section>
+<div class="flex items-center gap-3 mb-8">
+<span class="w-8 h-8 rounded-full bg-primary-container text-white flex items-center justify-center font-headline-md text-base">2</span>
+<h2 class="font-headline-md text-headline-md">Payment Method</h2>
+</div>
+<div class="space-y-4">
+<!-- UPI Option (Active) -->
+<div class="p-6 rounded-xl border-2 border-primary-container bg-white petal-shadow flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-5 h-5 rounded-full border-4 border-primary-container bg-white"></div>
+<div>
+<h3 class="font-headline-md text-lg">UPI Transfer</h3>
+<p class="text-on-surface-variant text-sm">GPay, PhonePe, Paytm</p>
+</div>
+</div>
+<div class="flex gap-3 opacity-80">
+<div class="h-6 w-10 bg-stone-50 rounded flex items-center justify-center border border-stone-100">
+<span class="material-symbols-outlined text-sm">account_balance_wallet</span>
+</div>
+<div class="h-6 w-10 bg-stone-50 rounded flex items-center justify-center border border-stone-100">
+<span class="material-symbols-outlined text-sm">payments</span>
+</div>
+</div>
+</div>
+<!-- Cards Option -->
+<div class="p-6 rounded-xl border border-outline-variant bg-white opacity-60 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-5 h-5 rounded-full border-2 border-outline-variant bg-white"></div>
+<div>
+<h3 class="font-headline-md text-lg">Credit / Debit Card</h3>
+<p class="text-on-surface-variant text-sm">Visa, Mastercard, Amex</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">credit_card</span>
+</div>
+<!-- UPI Input (Visible when selected) -->
+<div class="mt-6 px-6 py-8 bg-surface-container-low rounded-xl">
+<label class="block font-label-caps text-on-surface-variant mb-4 uppercase">Enter UPI ID</label>
+<div class="flex gap-4">
+<input class="flex-1 bg-white border border-outline-variant rounded-lg px-4 py-3 focus:border-primary-container focus:ring-0" placeholder="username@okaxis" type="text"/>
+<button class="bg-secondary text-white px-6 rounded-lg font-label-caps uppercase active:scale-95 transition-transform">Verify</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column: Order Summary (Sticky) -->
+<aside class="lg:col-span-5">
+<div class="sticky top-24 space-y-8 bg-white p-8 rounded-3xl petal-shadow border border-stone-50">
+<h2 class="font-headline-md text-2xl pb-6 border-b border-stone-100">Order Summary</h2>
+<div class="space-y-6">
+<!-- Item 1 -->
+<div class="flex gap-4">
+<div class="w-20 h-24 bg-surface-container-highest rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A soft focus editorial photograph of a delicate Bloom Pink lace bralette resting on a textured linen surface. The lighting is diffused and ethereal, highlighting the intricate floral patterns of the fabric. The aesthetic is clean, minimalist, and feminine, perfectly matching the Bloomina brand's emphasis on tactile luxury and self-care." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAtTWwa3VJHNdsEG9oh5tTD15FG99afrssGfm94XV_lmqu2lz5xhHh8baJqMbO6_pBR9T__va2ZSnk8byx9iPNLAJ9oyVz-VTDPa7tn7X21Jll0_DYfCidLpHlP2d1IMDxHXZ_XKIq_WtWfdKF8vICuD8HyOxPLkk52M5BQ8wF2vR4irro2gTc_5lJaVZh_Ht3LXdc-p4TNf_K2ayzw46-pnv6gJk8TaqdWKSsROYZBx5PwA9kr-HpDF055nX5Y9k04Rbgy1h19mY"/>
+</div>
+<div class="flex flex-col justify-between py-1">
+<div>
+<h4 class="font-headline-md text-base">Petal Lace Bralette</h4>
+<p class="text-on-surface-variant text-sm">Size: M | Color: Bloom Pink</p>
+</div>
+<span class="font-headline-md text-primary">₹3,499</span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex gap-4">
+<div class="w-20 h-24 bg-surface-container-highest rounded-lg overflow-hidden flex-shrink-0">
+<img class="w-full h-full object-cover" data-alt="A high-end product shot of premium silk loungewear pants in a soft Midnight Navy tone. The fabric displays a luxurious sheen under soft studio lighting, creating deep shadows and luminous highlights. The composition is artistic and minimalist, emphasizing the fluid drape and superior quality of the material in a modern, sophisticated setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAvfO2NIxaIgCESyQcNtM9KnBrKiNYbF7ncAfgP-RUU4bZRIUlzs3DmbF5JT_vhDyeU0jBWVop-pmwcivPOHz61VEjqkU1G0R6tzQuvJ9K6bmIsl6QfzQQttZo3o9G2szNxydX8C-REZATP4egaVlqSgtg5twEbhRn_0Y0_2vpFAdYbocuk-_avrPvSnzH5Bjpa5KLyLZsZkT7pKTZSZJMu4jOhIxbTNxwWYOVZ0D0poUYyI1UdojIvIXLyptrhEHgnKsUrJQeD9WY"/>
+</div>
+<div class="flex flex-col justify-between py-1">
+<div>
+<h4 class="font-headline-md text-base">Silk Lounge Pants</h4>
+<p class="text-on-surface-variant text-sm">Size: L | Color: Midnight Navy</p>
+</div>
+<span class="font-headline-md text-primary">₹5,200</span>
+</div>
+</div>
+</div>
+<div class="pt-6 border-t border-stone-100 space-y-4">
+<div class="flex justify-between text-on-surface-variant">
+<span class="font-body-md">Subtotal</span>
+<span class="font-body-md">₹8,699</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span class="font-body-md">Shipping</span>
+<span class="font-body-md">Free</span>
+</div>
+<div class="flex justify-between pt-4">
+<span class="font-headline-md text-xl">Total</span>
+<span class="font-headline-md text-xl text-primary">₹8,699</span>
+</div>
+</div>
+<button class="w-full bg-[#F191A1] text-white py-5 rounded-full font-headline-md text-lg tracking-wide shadow-lg shadow-[#F191A1]/20 hover:scale-[1.02] active:scale-95 transition-all duration-300">
+                    Complete Purchase
+                </button>
+<div class="flex items-center justify-center gap-6 pt-4 text-stone-400">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">shield</span>
+<span class="text-[10px] font-label-caps uppercase">Secure</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">verified</span>
+<span class="text-[10px] font-label-caps uppercase">Verified</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">package</span>
+<span class="text-[10px] font-label-caps uppercase">Discreet</span>
+</div>
+</div>
+</div>
+</aside>
+</main>
+<!-- Footer Security Section -->
+<footer class="bg-surface-container-lowest py-16 border-t border-stone-50">
+<div class="max-w-screen-xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="text-center md:text-left">
+<h3 class="font-headline-md text-xl text-stone-900 mb-2">Bloomina Guarentee</h3>
+<p class="text-on-surface-variant text-sm max-w-xs">Every piece is crafted for comfort and confidence. Enjoy easy 30-day returns on all items.</p>
+</div>
+<div class="flex items-center gap-8 grayscale opacity-50">
+<span class="material-symbols-outlined text-4xl">payments</span>
+<span class="material-symbols-outlined text-4xl">wallet</span>
+<span class="material-symbols-outlined text-4xl">contactless</span>
+</div>
+<div class="text-center md:text-right">
+<p class="font-label-caps text-[10px] text-stone-400 uppercase tracking-widest mb-4">Encrypted Checkout</p>
+<div class="flex items-center justify-center md:justify-end gap-2 text-primary">
+<span class="material-symbols-outlined">lock</span>
+<span class="font-headline-md text-sm">SSL Secure Payment</span>
+</div>
+</div>
+</div>
+<div class="max-w-screen-xl mx-auto px-6 pt-12 mt-12 border-t border-stone-50 flex flex-col md:flex-row justify-between items-center text-[10px] font-label-caps text-stone-400 uppercase tracking-widest gap-4">
+<p>© 2024 Bloomina Collective. All rights reserved.</p>
+<div class="flex gap-6">
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-primary transition-colors" href="#">Shipping Guide</a>
+</div>
+</div>
+</footer>
+</body></html>

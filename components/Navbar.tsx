@@ -1,0 +1,354 @@
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+
+const navLinks = [
+  { 
+    name: 'All Products', 
+    href: '/products' 
+  },
+  { 
+    name: 'Bras', 
+    href: '/category/bras',
+    subsections: [
+      { name: 'Wireless Comfort', href: '/category/bras/wireless' },
+      { name: 'Signature Lace', href: '/category/bras/lace' },
+      { name: 'Supportive Contour', href: '/category/bras/contour' },
+      { name: 'Silk Bralettes', href: '/category/bras/silk' },
+    ],
+    featured: {
+      title: 'The Petal Bra',
+      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBTbghw_WZVzhd9DKApPxJcoUK9cwJkf44QoDbHoRjTRnubMMge4zVDFV4aKhYlPUZNpOupfdzT_0TFOc5M6oK763b3jWnP3FX8u0mOjZs3PFlSuFUrwyW4_flxdqhvotNurlXfZlqgu9fsu5PAuM8dAy-TskCzImUd_-ghDraPg07vOihUfj8zdinMGOjJgvlkxSv-3v0qUaYWyUveFWSIXwp6uyeh7Wq5XildCnMHdWUN0Mar7Gjox8ZGa_kkMAJD0mIuDs0er5Y'
+    }
+  },
+  { 
+    name: 'Panties', 
+    href: '/category/panties',
+    subsections: [
+      { name: 'Seamless Invisibles', href: '/category/panties/seamless' },
+      { name: 'High-Waist Luxe', href: '/category/panties/high-waist' },
+      { name: 'Lace Details', href: '/category/panties/lace' },
+      { name: 'Cotton Basics', href: '/category/panties/cotton' },
+    ]
+  },
+  { name: 'Bestsellers', href: '/category/bestsellers' },
+  { name: 'Combo Packs', href: '/category/combos' },
+  { 
+    name: 'Luxe', 
+    href: '/category/luxe',
+    subsections: [
+      { name: 'Bridal Sanctuary', href: '/category/luxe/bridal' },
+      { name: 'Silk Robes', href: '/category/luxe/robes' },
+      { name: 'Night Rituals', href: '/category/luxe/nightwear' },
+      { name: 'Gift Sets', href: '/category/luxe/gifts' },
+    ]
+  },
+];
+
+const Navbar = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Lock scroll when search or mobile menu is open
+  useEffect(() => {
+    if (isSearchOpen || isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isSearchOpen, isMenuOpen]);
+
+  return (
+    <>
+      <header 
+        onMouseLeave={() => setHoveredLink(null)}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'bg-white/80 backdrop-blur-xl shadow-[0_10px_40px_-15px_rgba(241,145,161,0.1)]' : 'bg-white'}`}
+      >
+        {/* Announcement Bar */}
+        <div className="bg-primary py-2 text-center overflow-hidden px-4">
+          <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.05em] md:tracking-[0.3em] text-white animate-pulse whitespace-nowrap overflow-hidden text-ellipsis">
+            Ethereal Comfort: Free shipping on all signature collections
+          </p>
+        </div>
+
+        <div className="max-w-screen-xl mx-auto px-4 md:px-6 h-16 md:h-20 flex justify-between items-center antialiased relative">
+          {/* Left: Mobile Menu / Desktop Logo */}
+          <div className="flex items-center justify-start gap-4 z-10">
+            <button 
+              onClick={() => setIsMenuOpen(true)}
+              className="lg:hidden text-surface-on-variant hover:text-primary transition-colors flex-shrink-0"
+            >
+              <span className="material-symbols-outlined font-light scale-110">menu</span>
+            </button>
+            
+            <Link href="/" className="hidden lg:flex items-center">
+              <Image 
+                src="/logo/BLO_TRNSP_PINK_LRG.png" 
+                alt="Bloomina Logo" 
+                width={180} 
+                height={48} 
+                className="h-10 w-auto object-contain transition-transform duration-500 hover:scale-105"
+                priority
+              />
+            </Link>
+          </div>
+
+          {/* Center: Absolute Logo (Mobile) / Desktop Nav */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center lg:static lg:translate-x-0 lg:flex-1">
+            <Link href="/" className="lg:hidden flex items-center">
+              <Image 
+                src="/logo/BLO_TRNSP_PINK_LRG.png" 
+                alt="Bloomina Logo" 
+                width={120} 
+                height={32} 
+                className="h-5 w-auto object-contain"
+                priority
+              />
+            </Link>
+
+            <nav className="hidden lg:flex items-center gap-8 px-4 h-full">
+              {navLinks.map((link) => (
+                <div 
+                  key={link.name} 
+                  className="h-full flex items-center"
+                  onMouseEnter={() => setHoveredLink(link.name)}
+                >
+                  <Link 
+                    href={link.href} 
+                    className={`text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-300 whitespace-nowrap relative group py-2 ${pathname === link.href || hoveredLink === link.name ? 'text-primary' : 'text-surface-on hover:text-primary'}`}
+                  >
+                    {link.name}
+                    <span className={`absolute -bottom-1 left-0 h-[2px] bg-primary transition-all duration-300 ${pathname === link.href ? 'w-full' : 'w-0 group-hover:w-full'}`} />
+                  </Link>
+                </div>
+              ))}
+            </nav>
+          </div>
+
+          {/* Right: Icons */}
+          <div className="flex items-center justify-end gap-1.5 md:gap-8 z-10">
+            <button 
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className={`text-surface-on-variant hover:text-primary transition-all duration-300 flex-shrink-0 ${isSearchOpen ? 'text-primary scale-110' : ''}`}
+            >
+              <span className="material-symbols-outlined text-[20px] md:text-2xl font-light">search</span>
+            </button>
+            <Link href="/account" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0">
+              <span className="material-symbols-outlined text-[20px] md:text-2xl font-light">person</span>
+            </Link>
+            <Link href="/cart" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex items-center gap-0.5 group relative flex-shrink-0">
+              <span className="material-symbols-outlined text-[20px] md:text-2xl font-light group-hover:scale-110 transition-transform">shopping_cart</span>
+              <span className="text-[9px] md:text-[11px] font-black uppercase tracking-tighter md:tracking-widest">(0)</span>
+            </Link>
+          </div>
+        </div>
+
+          {/* Mega-Menu Dropdown */}
+          <div 
+            className={`absolute top-full left-0 w-full bg-white/95 backdrop-blur-2xl border-t border-stone-50 overflow-hidden transition-all duration-500 ease-out shadow-2xl ${hoveredLink && navLinks.find(l => l.name === hoveredLink)?.subsections ? 'max-h-[500px] opacity-100 py-12' : 'max-h-0 opacity-0 py-0 pointer-events-none'}`}
+          >
+            <div className="max-w-screen-xl mx-auto px-12 grid grid-cols-12 gap-12">
+              {/* Sub-sections */}
+              <div className="col-span-8 grid grid-cols-2 gap-x-12 gap-y-8">
+                {navLinks.find(l => l.name === hoveredLink)?.subsections?.map((sub) => (
+                  <Link 
+                    key={sub.name} 
+                    href={sub.href}
+                    className="group flex items-center gap-4 text-surface-on-variant hover:text-primary transition-all"
+                    onClick={() => setHoveredLink(null)}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary/20 group-hover:bg-primary transition-colors" />
+                    <div>
+                      <p className="text-sm font-semibold tracking-tight">{sub.name}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-30 mt-1">Shop Collection</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Featured Card */}
+              <div className="col-span-4 border-l border-stone-100 pl-12 flex flex-col justify-center">
+                {navLinks.find(l => l.name === hoveredLink)?.featured ? (
+                  <div className="relative group cursor-pointer overflow-hidden rounded-2xl aspect-[4/3] petal-shadow">
+                    <img 
+                      src={navLinks.find(l => l.name === hoveredLink)?.featured?.image} 
+                      alt="Featured" 
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent flex flex-col justify-end p-6">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/80">New Arrival</p>
+                      <h4 className="text-white font-display text-xl">{navLinks.find(l => l.name === hoveredLink)?.featured?.title}</h4>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">The Bloomina Way</p>
+                    <p className="text-sm font-light leading-relaxed text-surface-on-variant">
+                      Crafted for the feminine silhouette, our collections embrace the philosophy of ethereal comfort and timeless elegance.
+                    </p>
+                    <Link href="/story" className="inline-block text-[10px] font-bold uppercase tracking-widest text-primary underline underline-offset-8">Our Philosophy</Link>
+                  </div>
+                )}
+              </div>
+          </div>
+        </div>
+
+        {/* Premium Full-Page Search Overlay */}
+        <div className={`fixed inset-0 z-[110] transition-all duration-700 ease-in-out overflow-y-auto ${isSearchOpen ? 'visible pointer-events-auto' : 'invisible pointer-events-none'}`}>
+          {/* Backdrop */}
+          <div 
+            className={`fixed inset-0 bg-white/95 backdrop-blur-3xl transition-opacity duration-700 ${isSearchOpen ? 'opacity-100' : 'opacity-0'}`}
+            onClick={() => setIsSearchOpen(false)}
+          />
+          
+          {/* Content */}
+          <div className={`relative min-h-screen w-full transition-all duration-700 delay-100 ${isSearchOpen ? 'translate-y-0 opacity-100' : '-translate-y-12 opacity-0'}`}>
+            <div className="max-w-screen-xl mx-auto px-6 pt-12 md:pt-32 pb-24">
+              {/* Close Button Row (Mobile Optimized) */}
+              <div className="flex justify-end mb-8 md:absolute md:top-12 md:right-12">
+                <button 
+                  onClick={() => setIsSearchOpen(false)}
+                  className="p-3 rounded-full hover:bg-stone-50 text-surface-on/20 hover:text-primary transition-all duration-500"
+                >
+                  <span className="material-symbols-outlined text-3xl md:text-4xl font-light">close</span>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between border-b border-primary/10 pb-4 md:pb-8 mb-12 group">
+                <div className="flex-1 flex items-center gap-4 md:gap-8">
+                  <span className="material-symbols-outlined text-2xl md:text-4xl text-primary font-light">search</span>
+                  <input 
+                    type="text" 
+                    placeholder="Search..." 
+                    className="flex-1 bg-transparent border-none focus:ring-0 text-3xl md:text-7xl font-display font-light text-surface-on placeholder:text-stone-100 antialiased outline-none"
+                    autoFocus={isSearchOpen}
+                  />
+                </div>
+              </div>
+
+              {/* Trending / Quick Links */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-20">
+                <div className="space-y-8">
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">Trending Now</h3>
+                  <div className="flex flex-wrap gap-4">
+                    {['Lace Bralettes', 'Silk Robes', 'Bridal Set', 'Wireless Comfort', 'Midnight Black'].map((term) => (
+                      <button key={term} className="px-8 py-3 rounded-full border border-stone-100 text-xs font-semibold text-surface-on/40 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all duration-300">
+                        {term}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="space-y-8">
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">Suggested Collections</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {['Innerwear Essentials', 'Lounge Sanctuary', 'Silk Rituals', 'New Arrivals'].map((col) => (
+                      <Link key={col} href="/products" className="text-xl font-display font-light text-surface-on/60 hover:text-primary transition-colors">
+                        {col}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Menu Overlay (Same as before but refined) */}
+      <div className={`fixed inset-0 z-[100] transition-all duration-700 ${isMenuOpen ? 'visible' : 'invisible'}`}>
+        <div 
+          className={`absolute inset-0 bg-surface-on/20 backdrop-blur-md transition-opacity duration-700 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`}
+          onClick={() => setIsMenuOpen(false)}
+        />
+        <div className={`absolute top-0 left-0 w-[80%] max-w-[320px] h-full bg-white transition-transform duration-700 ease-out p-12 flex flex-col rounded-r-[3rem] shadow-2xl ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <button 
+            onClick={() => setIsMenuOpen(false)}
+            className="self-end text-surface-on-variant hover:text-primary transition-colors"
+          >
+            <span className="material-symbols-outlined text-3xl font-light">close</span>
+          </button>
+
+          <div className="mt-16 space-y-12 overflow-y-auto">
+            <h2 className="text-[10px] font-bold uppercase tracking-[0.4em] text-surface-on/30">Explore</h2>
+            <nav className="flex flex-col gap-6">
+              {navLinks.map((link) => (
+                <div key={link.name} className="space-y-4">
+                  <div className="flex items-center justify-between group">
+                    <Link 
+                      href={link.href} 
+                      className={`text-3xl font-display font-light transition-colors tracking-tight ${pathname === link.href ? 'text-primary' : 'text-surface-on'}`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {link.name}
+                    </Link>
+                    {link.subsections && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMobileExpanded(mobileExpanded === link.name ? null : link.name);
+                        }}
+                        className="p-2 text-primary/40"
+                      >
+                        <span className={`material-symbols-outlined transition-transform duration-500 ${mobileExpanded === link.name ? 'rotate-180' : ''}`}>
+                          expand_more
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Mobile Sub-sections Accordion */}
+                  {link.subsections && (
+                    <div className={`overflow-hidden transition-all duration-500 flex flex-col gap-4 pl-4 border-l border-primary/10 ${mobileExpanded === link.name ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
+                      {link.subsections.map((sub) => (
+                        <Link 
+                          key={sub.name} 
+                          href={sub.href}
+                          className="text-sm font-semibold text-surface-on/60 hover:text-primary transition-colors"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          {sub.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </nav>
+          </div>
+
+          <div className="mt-auto space-y-8 pt-12 border-t border-primary/5">
+            <div className="flex flex-col gap-4">
+              <Link href="/account" className="text-xs font-bold uppercase tracking-widest text-surface-on/40 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>My Account</Link>
+              <Link href="#" className="text-xs font-bold uppercase tracking-widest text-surface-on/40 hover:text-primary transition-colors">Size Guide</Link>
+            </div>
+            <p className="text-[10px] text-surface-on-variant font-light">
+              Crafting elegance since 2026. <br />
+              Bloomina Collective.
+            </p>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default Navbar;
