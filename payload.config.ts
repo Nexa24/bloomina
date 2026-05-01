@@ -1,5 +1,6 @@
 import { buildConfig } from 'payload'
 import { sqliteAdapter } from '@payloadcms/db-sqlite'
+import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -10,6 +11,8 @@ import { Orders } from './collections/Orders'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+const databaseUri = process.env.DATABASE_URI || 'file:./bloomina.db'
 
 export default buildConfig({
   admin: {
@@ -33,9 +36,15 @@ export default buildConfig({
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
-  db: sqliteAdapter({
-    client: {
-      url: process.env.DATABASE_URI || 'file:./bloomina.db',
-    },
-  }),
+  db: databaseUri.startsWith('postgres') 
+    ? postgresAdapter({
+        pool: {
+          connectionString: databaseUri,
+        },
+      })
+    : sqliteAdapter({
+        client: {
+          url: databaseUri,
+        },
+      }),
 })
