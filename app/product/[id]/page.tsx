@@ -27,7 +27,9 @@ const mockProduct = {
   sizes: ['32B', '34B', '36B', '38B', '32C', '34C', '36C', '38C']
 };
 
-export default function ProductPage({ params }: { params: { id: string } }) {
+export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = React.use(params);
+  const id = resolvedParams.id;
   const [selectedSize, setSelectedSize] = useState('34B');
   const [selectedColor, setSelectedColor] = useState('Bloom Pink');
   const [isAdded, setIsAdded] = useState(false);
