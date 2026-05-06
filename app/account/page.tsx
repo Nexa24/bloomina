@@ -3,34 +3,88 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
+import { createClient } from '@/utils/supabase/client';
 
 const AccountPage = () => {
   const [activeTab, setActiveTab] = useState('overview');
-  const [user, setUser] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [orderCount, setOrderCount] = useState(0);
+  const [orders, setOrders] = useState<any[]>([]);
+  const { user, isLoading, logout } = useAuth();
+  const [isDataLoading, setIsDataLoading] = useState(false);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState({
+    line1: '',
+    city: '',
+    state: '',
+    pincode: '',
+  });
   const router = useRouter();
+  const supabase = createClient();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/');
+  };
 
   useEffect(() => {
-    // Check authentication and fetch user data
-    const fetchUser = async () => {
-      try {
-        const response = await fetch('/api/users/me');
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data.user);
-        } else {
-          router.push('/login');
-        }
-      } catch (err) {
-        console.error('Failed to fetch user', err);
-        router.push('/login');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    if (!isLoading && !user) {
+      router.push('/login');
+    } else if (user) {
+      fetchAccountData();
+    }
+  }, [user, isLoading, router]);
 
-    fetchUser();
-  }, [router]);
+  const fetchAccountData = async () => {
+    if (!user) return;
+    setIsDataLoading(true);
+    try {
+      // Fetch Orders count and data
+      const { data: userOrders, count, error } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact' })
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (!error) {
+        setOrders(userOrders || []);
+        setOrderCount(count || 0);
+      }
+      
+      // Set initial profile values
+      if (user.user_metadata) {
+        setName(user.user_metadata.name || '');
+        setPhone(user.user_metadata.phone || '');
+        if (user.user_metadata.address) {
+          setAddress(user.user_metadata.address);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching account data:', err);
+    } finally {
+      setIsDataLoading(false);
+    }
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsDataLoading(true);
+    const { error } = await supabase.auth.updateUser({
+      data: { 
+        name, 
+        phone,
+        address
+      }
+    });
+
+    if (error) {
+      alert('Error updating profile: ' + error.message);
+    } else {
+      alert('Profile updated successfully!');
+    }
+    setIsDataLoading(false);
+  };
 
   if (isLoading) {
     return (
@@ -58,11 +112,11 @@ const AccountPage = () => {
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-3">Welcome Back</p>
               <h1 className="text-5xl font-display font-light text-surface-on tracking-tight">
-                {user?.name?.split(' ')[0] || 'Member'} <span className="text-primary/20 font-sans italic">.</span>
+                {(user?.user_metadata?.name || user?.email)?.split(' ')[0] || 'Member'} <span className="text-primary/20 font-sans italic">.</span>
               </h1>
             </div>
             <button 
-              onClick={() => { /* Handle Logout */ }}
+              onClick={handleLogout}
               className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40 hover:text-red-400 transition-colors flex items-center gap-2 group"
             >
               Sign Out
@@ -93,16 +147,6 @@ const AccountPage = () => {
                 ))}
               </nav>
 
-              <div className="mt-12 p-8 rounded-[2rem] bg-primary/5 border border-primary/10">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-4">Bloomina Rewards</p>
-                <div className="flex items-end gap-2 mb-2">
-                  <span className="text-3xl font-display text-primary">1,250</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary/40 pb-1.5">Points</span>
-                </div>
-                <p className="text-[10px] text-primary/60 leading-relaxed font-medium">
-                  You're only 250 points away from a complimentary signature lace set.
-                </p>
-              </div>
             </aside>
 
             {/* Main Content Area */}
@@ -113,9 +157,9 @@ const AccountPage = () => {
                   <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       {[
-                        { label: 'Total Orders', value: '04', icon: 'shopping_bag' },
-                        { label: 'Active Cart', value: '$240.00', icon: 'shopping_cart' },
-                        { label: 'Wishlist Items', value: '12', icon: 'favorite' },
+                        { label: 'Total Orders', value: orderCount.toString().padStart(2, '0'), icon: 'shopping_bag' },
+                        { label: 'Active Cart', value: '$0.00', icon: 'shopping_cart' },
+                        { label: 'Wishlist Items', value: '00', icon: 'favorite' },
                       ].map((stat, i) => (
                         <div key={i} className="p-8 rounded-3xl bg-stone-50 border border-stone-100 flex flex-col gap-4">
                           <span className="material-symbols-outlined text-primary/40">{stat.icon}</span>
@@ -130,20 +174,26 @@ const AccountPage = () => {
                     <div>
                       <h3 className="text-lg font-display mb-6">Recent Activity</h3>
                       <div className="space-y-4">
-                        {[1, 2].map((_, i) => (
-                          <div key={i} className="flex items-center justify-between p-6 rounded-2xl border border-stone-50 hover:bg-stone-50/50 transition-colors">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                                <span className="material-symbols-outlined">package_2</span>
+                        {orders.length > 0 ? (
+                          orders.slice(0, 3).map((order) => (
+                            <div key={order.id} className="flex items-center justify-between p-6 rounded-2xl border border-stone-50 hover:bg-stone-50/50 transition-colors">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                                  <span className="material-symbols-outlined">package_2</span>
+                                </div>
+                                <div>
+                                  <p className="text-sm font-semibold">Order #{order.id.slice(0, 8).toUpperCase()} - {order.status}</p>
+                                  <p className="text-[10px] text-surface-on/40 uppercase tracking-widest font-bold">
+                                    {new Date(order.created_at).toLocaleDateString()}
+                                  </p>
+                                </div>
                               </div>
-                              <div>
-                                <p className="text-sm font-semibold">Order #BLM-9284 was shipped</p>
-                                <p className="text-[10px] text-surface-on/40 uppercase tracking-widest font-bold">2 days ago</p>
-                              </div>
+                              <button className="text-[10px] font-bold uppercase tracking-widest text-primary">Details</button>
                             </div>
-                            <button className="text-[10px] font-bold uppercase tracking-widest text-primary">Details</button>
-                          </div>
-                        ))}
+                          ))
+                        ) : (
+                          <p className="text-sm text-surface-on/40 italic">No recent activity found.</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -153,13 +203,43 @@ const AccountPage = () => {
                   <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <h2 className="text-2xl font-display mb-8">Order History</h2>
                     <div className="space-y-6">
-                      <div className="p-12 rounded-3xl border border-dashed border-stone-200 flex flex-col items-center justify-center text-center">
-                        <div className="w-16 h-16 rounded-full bg-stone-50 flex items-center justify-center text-stone-300 mb-6">
-                          <span className="material-symbols-outlined text-3xl">inbox</span>
+                      {orders.length > 0 ? (
+                        orders.map((order) => (
+                          <div key={order.id} className="p-8 rounded-3xl border border-stone-100 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-xl hover:shadow-primary/5 transition-all">
+                            <div className="flex items-center gap-6">
+                              <div className="w-16 h-16 rounded-2xl bg-stone-50 flex items-center justify-center text-primary/40">
+                                <span className="material-symbols-outlined text-3xl">shopping_bag</span>
+                              </div>
+                              <div>
+                                <h4 className="font-display text-xl mb-1">Order #{order.id.slice(0, 8).toUpperCase()}</h4>
+                                <div className="flex gap-4">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40">
+                                    {new Date(order.created_at).toLocaleDateString()}
+                                  </p>
+                                  <p className={`text-[10px] font-bold uppercase tracking-widest ${order.status === 'delivered' ? 'text-green-500' : 'text-primary'}`}>
+                                    {order.status}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <div className="text-right hidden md:block">
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40 mb-1">Total Amount</p>
+                                <p className="font-display text-lg">₹{order.total || '0'}</p>
+                              </div>
+                              <button className="px-8 py-4 bg-stone-50 text-surface-on rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all">View Invoice</button>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-12 rounded-3xl border border-dashed border-stone-200 flex flex-col items-center justify-center text-center">
+                          <div className="w-16 h-16 rounded-full bg-stone-50 flex items-center justify-center text-stone-300 mb-6">
+                            <span className="material-symbols-outlined text-3xl">inbox</span>
+                          </div>
+                          <p className="text-sm text-surface-on/40 font-medium italic">No orders found yet. <br /> Your Bloomina journey starts here.</p>
+                          <Link href="/products" className="mt-8 px-8 py-4 bg-primary text-white rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-transform">Start Shopping</Link>
                         </div>
-                        <p className="text-sm text-surface-on/40 font-medium italic">No orders found yet. <br /> Your Bloomina journey starts here.</p>
-                        <Link href="/all-products" className="mt-8 px-8 py-4 bg-primary text-white rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-transform">Start Shopping</Link>
-                      </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -167,22 +247,96 @@ const AccountPage = () => {
                 {activeTab === 'profile' && (
                   <div className="max-w-xl animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <h2 className="text-2xl font-display mb-8">Profile Details</h2>
-                    <form className="space-y-8">
+                    <form onSubmit={handleUpdateProfile} className="space-y-8">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40 px-1">Full Name</label>
+                        <input 
+                          type="text" 
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          className="w-full bg-transparent border-0 border-b border-stone-100 py-3 px-1 focus:ring-0 focus:border-primary transition-all placeholder:text-stone-200" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40 px-1">Email Address</label>
+                        <input 
+                          type="email" 
+                          value={user?.email} 
+                          disabled 
+                          className="w-full bg-transparent border-0 border-b border-stone-100 py-3 px-1 opacity-50 cursor-not-allowed" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40 px-1">Phone Number</label>
+                        <input 
+                          type="tel" 
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="+91 99999 99999"
+                          className="w-full bg-transparent border-0 border-b border-stone-100 py-3 px-1 focus:ring-0 focus:border-primary transition-all placeholder:text-stone-200" 
+                        />
+                      </div>
+                      <button 
+                        type="submit"
+                        disabled={isDataLoading}
+                        className="px-12 py-5 bg-surface-on text-white rounded-full text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-primary transition-colors disabled:opacity-50"
+                      >
+                        {isDataLoading ? 'Saving...' : 'Save Changes'}
+                      </button>
+                    </form>
+                  </div>
+                )}
+
+                {activeTab === 'addresses' && (
+                  <div className="max-w-xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <h2 className="text-2xl font-display mb-8">Default Shipping Address</h2>
+                    <form onSubmit={handleUpdateProfile} className="space-y-8">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40 px-1">Street Address</label>
+                        <input 
+                          type="text" 
+                          value={address.line1}
+                          onChange={(e) => setAddress({...address, line1: e.target.value})}
+                          placeholder="Room/Flat, Building, Area"
+                          className="w-full bg-transparent border-0 border-b border-stone-100 py-3 px-1 focus:ring-0 focus:border-primary transition-all" 
+                        />
+                      </div>
                       <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40">First Name</label>
-                          <input type="text" defaultValue={user?.name?.split(' ')[0]} className="w-full bg-transparent border-0 border-b border-stone-100 py-3 px-1 focus:ring-0 focus:border-primary transition-all" />
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40 px-1">City</label>
+                          <input 
+                            type="text" 
+                            value={address.city}
+                            onChange={(e) => setAddress({...address, city: e.target.value})}
+                            className="w-full bg-transparent border-0 border-b border-stone-100 py-3 px-1 focus:ring-0 focus:border-primary transition-all" 
+                          />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40">Last Name</label>
-                          <input type="text" defaultValue={user?.name?.split(' ')[1]} className="w-full bg-transparent border-0 border-b border-stone-100 py-3 px-1 focus:ring-0 focus:border-primary transition-all" />
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40 px-1">Pincode</label>
+                          <input 
+                            type="text" 
+                            value={address.pincode}
+                            onChange={(e) => setAddress({...address, pincode: e.target.value})}
+                            className="w-full bg-transparent border-0 border-b border-stone-100 py-3 px-1 focus:ring-0 focus:border-primary transition-all" 
+                          />
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40">Email Address</label>
-                        <input type="email" defaultValue={user?.email} className="w-full bg-transparent border-0 border-b border-stone-100 py-3 px-1 focus:ring-0 focus:border-primary transition-all" />
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40 px-1">State</label>
+                        <input 
+                          type="text" 
+                          value={address.state}
+                          onChange={(e) => setAddress({...address, state: e.target.value})}
+                          className="w-full bg-transparent border-0 border-b border-stone-100 py-3 px-1 focus:ring-0 focus:border-primary transition-all" 
+                        />
                       </div>
-                      <button className="px-12 py-5 bg-surface-on text-white rounded-full text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-primary transition-colors">Update Profile</button>
+                      <button 
+                        type="submit"
+                        disabled={isDataLoading}
+                        className="px-12 py-5 bg-surface-on text-white rounded-full text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-primary transition-colors disabled:opacity-50"
+                      >
+                        {isDataLoading ? 'Saving...' : 'Update Address'}
+                      </button>
                     </form>
                   </div>
                 )}

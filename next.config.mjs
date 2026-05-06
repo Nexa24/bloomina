@@ -12,8 +12,23 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'pshiqbehsouzzljbsdhg.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+      },
     ],
+  },
+  // Suppress deprecation warnings from dependencies during build
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  eslint: {
+    ignoreDuringBuilds: false,
   },
 };
 
-export default withPayload(nextConfig);
+export default withPayload(nextConfig, { devBundleServerPackages: false });

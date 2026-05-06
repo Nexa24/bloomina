@@ -4,52 +4,40 @@ export const Orders: CollectionConfig = {
   slug: 'orders',
   admin: {
     useAsTitle: 'id',
-    defaultColumns: ['id', 'user', 'total', 'status'],
+    defaultColumns: ['id', 'customer_name', 'total', 'status'],
   },
   access: {
-    read: ({ req: { user } }) => {
-      if (!user) return false;
-      if (user.collection === 'users') return true; // Admins can read all
-      return {
-        user: {
-          equals: user.id,
-        },
-      };
-    },
-    create: () => true, // Creating order is handled by the backend API but needs create access
-    update: () => false, // Only backend should update via hooks
-    delete: () => false,
+    read: () => true,
+    create: () => true,
+    update: () => true,
+    delete: () => true,
   },
   fields: [
     {
       name: 'user',
       type: 'relationship',
       relationTo: 'users',
+      required: false, // Allow guest checkout
+    },
+    {
+      name: 'customer_name',
+      type: 'text',
+      required: true,
+    },
+    {
+      name: 'email',
+      type: 'text',
+      required: true,
+    },
+    {
+      name: 'phone',
+      type: 'text',
       required: true,
     },
     {
       name: 'items',
-      type: 'array',
+      type: 'json', // Using JSON to match the dashboard's expectation
       required: true,
-      fields: [
-        {
-          name: 'product',
-          type: 'relationship',
-          relationTo: 'products',
-          required: true,
-        },
-        {
-          name: 'quantity',
-          type: 'number',
-          min: 1,
-          required: true,
-        },
-        {
-          name: 'priceAtPurchase',
-          type: 'number',
-          required: true,
-        },
-      ],
     },
     {
       name: 'total',
@@ -59,38 +47,48 @@ export const Orders: CollectionConfig = {
     {
       name: 'status',
       type: 'select',
-      defaultValue: 'pending',
+      defaultValue: 'Payment Pending',
       options: [
-        { label: 'Pending', value: 'pending' },
-        { label: 'Paid', value: 'paid' },
-        { label: 'Shipped', value: 'shipped' },
-        { label: 'Delivered', value: 'delivered' },
-        { label: 'Cancelled', value: 'cancelled' },
+        { label: 'Payment Pending', value: 'Payment Pending' },
+        { label: 'Payment Done', value: 'Payment Done' },
+        { label: 'Processing', value: 'Processing' },
+        { label: 'Shipped', value: 'Shipped' },
+        { label: 'Delivered', value: 'Delivered' },
+        { label: 'Cancelled', value: 'Cancelled' },
       ],
     },
     {
-      name: 'razorpayOrderId',
-      type: 'text',
-      admin: {
-        position: 'sidebar',
-      },
+      name: 'shipping_address',
+      type: 'json', // Match the nested object structure
     },
     {
-      name: 'razorpayPaymentId',
+      name: 'payment_method',
       type: 'text',
-      admin: {
-        position: 'sidebar',
-      },
+      defaultValue: 'Razorpay',
     },
     {
-      name: 'shippingAddress',
-      type: 'group',
-      fields: [
-        { name: 'line1', type: 'text' },
-        { name: 'city', type: 'text' },
-        { name: 'state', type: 'text' },
-        { name: 'pincode', type: 'text' },
-      ],
+      name: 'razorpay_order_id',
+      type: 'text',
     },
+    {
+      name: 'razorpay_payment_id',
+      type: 'text',
+    },
+    {
+      name: 'razorpay_signature',
+      type: 'text',
+    },
+    {
+      name: 'metadata',
+      type: 'json',
+    },
+    {
+      name: 'delivery_method',
+      type: 'text',
+    },
+    {
+      name: 'tracking_number',
+      type: 'text',
+    }
   ],
 }

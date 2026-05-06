@@ -1,43 +1,27 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-
-// Mock Cart Data for initial "wow" effect
-const initialCartItems = [
-  {
-    id: '1',
-    name: 'Petal Lace Bralette',
-    variant: 'Size: M | Color: Bloom Pink',
-    price: 3499,
-    quantity: 1,
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDAtTWwa3VJHNdsEG9oh5tTD15FG99afrssGfm94XV_lmqu2lz5xhHh8baJqMbO6_pBR9T__va2ZSnk8byx9iPNLAJ9oyVz-VTDPa7tn7X21Jll0_DYfCidLpHlP2d1IMDxHXZ_XKIq_WtWfdKF8vICuD8HyOxPLkk52M5BQ8wF2vR4irro2gTc_5lJaVZh_Ht3LXdc-p4TNf_K2ayzw46-pnv6gJk8TaqdWKSsROYZBx5PwA9kr-HpDF055nX5Y9k04Rbgy1h19mY'
-  },
-  {
-    id: '2',
-    name: 'Silk Lounge Pants',
-    variant: 'Size: L | Color: Midnight Navy',
-    price: 5200,
-    quantity: 1,
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAvfO2NIxaIgCESyQcNtM9KnBrKiNYbF7ncAfgP-RUU4bZRIUlzs3DmbF5JT_vhDyeU0jBWVop-pmwcivPOHz61VEjqkU1G0R6tzQuvJ9K6bmIsl6QfzQQttZo3o9G2szNxydX8C-REZATP4egaVlqSgtg5twEbhRn_0Y0_2vpFAdYbocuk-_avrPvSnzH5Bjpa5KLyLZsZkT7pKTZSZJMu4jOhIxbTNxwWYOVZ0D0poUYyI1UdojIvIXLyptrhEHgnKsUrJQeD9WY'
-  }
-];
+import { useCart } from '@/hooks/use-cart';
 
 const CartPage = () => {
-  const [items, setItems] = useState(initialCartItems);
+  const { items, updateQuantity, removeItem, getTotalPrice, clearCart } = useCart();
+  const [isMounted, setIsMounted] = useState(false);
 
-  const updateQuantity = (id: string, delta: number) => {
-    setItems(items.map(item => 
-      item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
-    ));
-  };
+  // Avoid hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
-  const removeItem = (id: string) => {
-    setItems(items.filter(item => item.id !== id));
-  };
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
 
-  const subtotal = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const subtotal = getTotalPrice();
   const shipping = 0; // Free shipping
   const total = subtotal + shipping;
 
@@ -58,11 +42,19 @@ const CartPage = () => {
 
   return (
     <div className="min-h-screen bg-background antialiased">
-      
       <main className="pt-32 md:pt-40 pb-24 max-w-screen-xl mx-auto px-6">
-        <div className="mb-12 md:mb-16">
-          <h1 className="text-4xl md:text-6xl font-display font-light text-surface-on tracking-tight">Your Selection</h1>
-          <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mt-4">Review your ethereal comfort pieces</p>
+        <div className="mb-12 md:mb-16 flex justify-between items-end">
+          <div>
+            <h1 className="text-4xl md:text-6xl font-display font-light text-surface-on tracking-tight">Your Selection</h1>
+            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mt-4">Review your ethereal comfort pieces</p>
+          </div>
+          <button
+            onClick={clearCart}
+            className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60 hover:text-primary transition-all flex items-center gap-2 pb-1 border-b border-transparent hover:border-primary/20"
+          >
+            <span className="material-symbols-outlined text-sm font-light">delete_sweep</span>
+            Clear Selection
+          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
@@ -84,10 +76,12 @@ const CartPage = () => {
                   </div>
                   <div className="flex flex-col justify-center gap-1">
                     <h3 className="text-lg md:text-xl font-display font-light text-surface-on">{item.name}</h3>
-                    <p className="text-sm text-surface-on-variant/60">{item.variant}</p>
-                    <button 
+                    <p className="text-sm text-surface-on-variant/60">
+                      {item.size && `Size: ${item.size}`} {item.color && `| Color: ${item.color}`}
+                    </p>
+                    <button
                       onClick={() => removeItem(item.id)}
-                      className="text-[10px] font-bold uppercase tracking-widest text-primary mt-4 hover:underline underline-offset-4 decoration-1"
+                      className="text-[10px] font-bold uppercase tracking-widest text-primary mt-4 hover:underline underline-offset-4 decoration-1 text-left"
                     >
                       Remove
                     </button>
@@ -102,15 +96,15 @@ const CartPage = () => {
                 {/* Quantity Controls */}
                 <div className="col-span-1 md:col-span-2 flex justify-center">
                   <div className="flex items-center gap-4 bg-white border border-stone-100 px-4 py-2 rounded-full shadow-sm">
-                    <button 
-                      onClick={() => updateQuantity(item.id, -1)}
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
                       className="text-stone-400 hover:text-primary transition-colors"
                     >
                       <span className="material-symbols-outlined text-sm">remove</span>
                     </button>
                     <span className="w-4 text-center text-xs font-bold font-body-md">{item.quantity}</span>
-                    <button 
-                      onClick={() => updateQuantity(item.id, 1)}
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       className="text-stone-400 hover:text-primary transition-colors"
                     >
                       <span className="material-symbols-outlined text-sm">add</span>
@@ -133,7 +127,7 @@ const CartPage = () => {
           <aside className="lg:col-span-4 sticky top-32">
             <div className="bg-white p-8 md:p-10 rounded-[2rem] shadow-[0_40px_80px_-20px_rgba(241,145,161,0.08)] border border-stone-50">
               <h2 className="text-2xl font-display font-light text-surface-on mb-8">Order Summary</h2>
-              
+
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between text-sm">
                   <span className="text-surface-on-variant">Subtotal</span>
@@ -150,9 +144,12 @@ const CartPage = () => {
                 </div>
               </div>
 
-              <button className="w-full bg-primary text-white py-5 rounded-full font-bold uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300">
+              <Link
+                href="/checkout"
+                className="w-full bg-primary text-white py-5 rounded-full font-bold uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 block text-center"
+              >
                 Proceed to Checkout
-              </button>
+              </Link>
 
               <div className="mt-8 space-y-4">
                 <div className="flex items-center gap-3 text-stone-400">
@@ -171,7 +168,7 @@ const CartPage = () => {
               <p className="text-[10px] text-surface-on-variant/40 uppercase tracking-widest leading-relaxed">
                 Need assistance? <br />
                 Contact our concierge at <br />
-                <span className="text-primary hover:underline cursor-pointer transition-colors">support@bloomina.com</span>
+                <span className="text-primary hover:underline cursor-pointer transition-colors">support@bloomina.in</span>
               </p>
             </div>
           </aside>

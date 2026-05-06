@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+
+import { createClient } from '@/utils/supabase/client';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -11,6 +13,18 @@ const LoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const supabase = createClient();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        router.push('/account');
+      }
+    };
+    checkUser();
+  }, [supabase, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,24 +32,19 @@ const LoginPage = () => {
     setError(null);
 
     try {
-      // In a real implementation, this would call a Server Action or the Payload API
-      // Example: const res = await loginAction(email, password);
-      
-      // Mocking the backend call for now
-      const response = await fetch('/api/users/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      if (response.ok) {
+      if (authError) {
+        setError(authError.message);
+      } else {
         router.push('/account');
         router.refresh();
-      } else {
-        setError('Invalid credentials. Please try again.');
       }
     } catch (err) {
-      setError('An error occurred. Please try again later.');
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -43,16 +52,16 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col antialiased">
-      
+
       <main className="flex-1 flex items-center justify-center pt-24 px-6 pb-12">
         <div className="w-full max-w-[1100px] bg-white rounded-[2.5rem] overflow-hidden shadow-[0_40px_100px_-20px_rgba(241,145,161,0.15)] flex flex-col md:flex-row min-h-[650px] border border-stone-50">
-          
+
           {/* Left: Editorial Image */}
           <div className="hidden md:block w-1/2 relative">
-            <Image 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAtTWwa3VJHNdsEG9oh5tTD15FG99afrssGfm94XV_lmqu2lz5xhHh8baJqMbO6_pBR9T__va2ZSnk8byx9iPNLAJ9oyVz-VTDPa7tn7X21Jll0_DYfCidLpHlP2d1IMDxHXZ_XKIq_WtWfdKF8vICuD8HyOxPLkk52M5BQ8wF2vR4irro2gTc_5lJaVZh_Ht3LXdc-p4TNf_K2ayzw46-pnv6gJk8TaqdWKSsROYZBx5PwA9kr-HpDF055nX5Y9k04Rbgy1h19mY" 
-              alt="Bloomina Editorial" 
-              fill 
+            <Image
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAtTWwa3VJHNdsEG9oh5tTD15FG99afrssGfm94XV_lmqu2lz5xhHh8baJqMbO6_pBR9T__va2ZSnk8byx9iPNLAJ9oyVz-VTDPa7tn7X21Jll0_DYfCidLpHlP2d1IMDxHXZ_XKIq_WtWfdKF8vICuD8HyOxPLkk52M5BQ8wF2vR4irro2gTc_5lJaVZh_Ht3LXdc-p4TNf_K2ayzw46-pnv6gJk8TaqdWKSsROYZBx5PwA9kr-HpDF055nX5Y9k04Rbgy1h19mY"
+              alt="Bloomina Editorial"
+              fill
               className="object-cover"
             />
             <div className="absolute inset-0 bg-primary/20 backdrop-blur-[2px]" />
@@ -82,11 +91,11 @@ const LoginPage = () => {
             <form onSubmit={handleLogin} className="space-y-8">
               <div className="space-y-2 relative group">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40 px-1">Email Address</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="evelyn@bloomina.com"
+                  placeholder="evelyn@bloomina.in"
                   className="w-full bg-transparent border-0 border-b border-stone-100 py-3 px-1 focus:ring-0 focus:border-primary transition-all placeholder:text-stone-200"
                   required
                 />
@@ -97,8 +106,8 @@ const LoginPage = () => {
                   <label className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40">Password</label>
                   <Link href="#" className="text-[10px] font-bold uppercase tracking-widest text-primary/60 hover:text-primary">Forgot?</Link>
                 </div>
-                <input 
-                  type="password" 
+                <input
+                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
@@ -107,7 +116,7 @@ const LoginPage = () => {
                 />
               </div>
 
-              <button 
+              <button
                 type="submit"
                 disabled={isLoading}
                 className="w-full bg-primary text-white py-5 rounded-full font-bold uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"

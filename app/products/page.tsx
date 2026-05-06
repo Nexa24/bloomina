@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 const ProductsPage = () => {
   const [products, setProducts] = useState<any[]>([]);
@@ -10,38 +11,44 @@ const ProductsPage = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
 
-  // Categories based on the collection definition
+  // Categories based on the database definition
   const categories = [
-    { label: 'All Essentials', value: 'all' },
-    { label: 'Innerwear', value: 'innerwear' },
-    { label: 'Lounge', value: 'lounge' },
-    { label: 'Activewear', value: 'activewear' },
-    { label: 'Accessories', value: 'accessories' },
+    { label: 'All Collections', value: 'all' },
+    { label: 'Bras', value: 'Bras' },
+    { label: 'Panties', value: 'Panties' },
+    { label: 'Luxe', value: 'Luxe' },
+    { label: 'Innerwear', value: 'Innerwear' },
+    { label: 'Bestsellers', value: 'Bestsellers' },
+    { label: 'Combo Packs', value: 'Combo Packs' },
   ];
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('/api/products');
-        if (response.ok) {
-          const data = await response.json();
-          setProducts(data.docs || []);
-          setFilteredProducts(data.docs || []);
+        console.log('Fetching products from Supabase...');
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        
+        if (data) {
+          console.log('Fetched products:', data.length);
+          setProducts(data);
+          setFilteredProducts(data);
         } else {
-          // If no data, use some premium mocks to keep the WOW factor
+          // Fallback mocks
           const mocks = [
-            { id: '1', title: 'The Petal Lace Bra', price: 89, category: 'innerwear', images: [{ url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDAtTWwa3VJHNdsEG9oh5tTD15FG99afrssGfm94XV_lmqu2lz5xhHh8baJqMbO6_pBR9T__va2ZSnk8byx9iPNLAJ9oyVz-VTDPa7tn7X21Jll0_DYfCidLpHlP2d1IMDxHXZ_XKIq_WtWfdKF8vICuD8HyOxPLkk52M5BQ8wF2vR4irro2gTc_5lJaVZh_Ht3LXdc-p4TNf_K2ayzw46-pnv6gJk8TaqdWKSsROYZBx5PwA9kr-HpDF055nX5Y9k04Rbgy1h19mY' }] },
-            { id: '2', title: 'Silk Morning Robe', price: 145, category: 'lounge', images: [{ url: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAvfO2NIxaIgCESyQcNtM9KnBrKiNYbF7ncAfgP-RUU4bZRIUlzs3DmbF5JT_vhDyeU0jBWVop-pmwcivPOHz61VEjqkU1G0R6tzQuvJ9K6bmIsl6QfzQQttZo3o9G2szNxydX8C-REZATP4egaVlqSgtg5twEbhRn_0Y0_2vpFAdYbocuk-_avrPvSnzH5Bjpa5KLyLZsZkT7pKTZSZJMu4jOhIxbTNxwWYOVZ0D0poUYyI1UdojIvIXLyptrhEHgnKsUrJQeD9WY' }] },
-            { id: '3', title: 'Essential High-Waist Panty', price: 32, category: 'innerwear', images: [{ url: 'https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&q=80' }] },
-            { id: '4', title: 'Zen Flow Leggings', price: 78, category: 'activewear', images: [{ url: 'https://images.unsplash.com/photo-1506630448388-4e683c67ddb0?auto=format&fit=crop&q=80' }] },
-            { id: '5', title: 'Signature Silk Scarf', price: 45, category: 'accessories', images: [{ url: 'https://images.unsplash.com/photo-1601924638867-3a6de6b7a5bf?auto=format&fit=crop&q=80' }] },
-            { id: '6', title: 'Midnight Lace Bralette', price: 92, category: 'innerwear', images: [{ url: 'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&q=80' }] },
+            { id: '1', name: 'The Petal Lace Bra', price: 89, categories: ['Bras', 'Innerwear'], images: ['https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&q=80'], slug: 'petal-lace-bra' },
+            { id: '2', name: 'Silk Morning Robe', price: 145, categories: ['Luxe', 'Lounge'], images: ['https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&q=80'], slug: 'silk-robe' },
+            { id: '3', name: 'Essential High-Waist Panty', price: 32, categories: ['Panties', 'Innerwear'], images: ['https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?auto=format&fit=crop&q=80'], slug: 'high-waist-panty' },
           ];
           setProducts(mocks);
           setFilteredProducts(mocks);
         }
       } catch (err) {
-        console.error('Fetch error', err);
+        console.error('Supabase fetch error:', err);
       } finally {
         setIsLoading(false);
       }
@@ -50,15 +57,20 @@ const ProductsPage = () => {
   }, []);
 
   useEffect(() => {
-    let result = products;
+    let result = [...products];
     if (activeCategory !== 'all') {
-      result = result.filter(p => p.category === activeCategory);
+      result = result.filter(p => {
+        const productCats = Array.isArray(p.categories) ? p.categories : (p.category ? [p.category] : []);
+        return productCats.some((c: any) => 
+          typeof c === 'string' && c.trim().toLowerCase() === activeCategory.toLowerCase()
+        );
+      });
     }
     
-    if (sortBy === 'price-low') result.sort((a, b) => a.price - b.price);
-    if (sortBy === 'price-high') result.sort((a, b) => b.price - a.price);
+    if (sortBy === 'price-low') result.sort((a, b) => (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0));
+    if (sortBy === 'price-high') result.sort((a, b) => (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0));
     
-    setFilteredProducts([...result]);
+    setFilteredProducts(result);
   }, [activeCategory, sortBy, products]);
 
   return (
@@ -70,11 +82,11 @@ const ProductsPage = () => {
           <div className="max-w-2xl">
             <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-4">The Bloomina Collection</p>
             <h1 className="text-6xl font-display font-light text-surface-on tracking-tight leading-none mb-6">
-              Essential Elegance <br />
+              {activeCategory === 'all' ? 'Essential Elegance' : activeCategory} <br />
               <span className="italic text-primary/30">for every silhouette.</span>
             </h1>
             <p className="text-sm font-light text-surface-on-variant leading-relaxed max-w-lg">
-              Explore our meticulously curated selection of premium innerwear and lounge essentials, designed to embrace your natural beauty with ethereal comfort.
+              Explore our meticulously curated selection of premium {activeCategory === 'all' ? 'innerwear' : activeCategory.toLowerCase()} essentials, designed to embrace your natural beauty.
             </p>
           </div>
         </div>
@@ -137,25 +149,27 @@ const ProductsPage = () => {
                 >
                   <div className="relative aspect-[3/4] overflow-hidden rounded-[2.5rem] bg-stone-50 mb-6 petal-shadow transition-all duration-700 group-hover:shadow-[0_40px_80px_-20px_rgba(241,145,161,0.25)]">
                     <img 
-                      src={product.images?.[0]?.url || 'https://via.placeholder.com/600x800'} 
-                      alt={product.title} 
+                      src={(Array.isArray(product.images) ? product.images[0] : (product.images?.[0]?.url || product.images?.[0])) || 'https://via.placeholder.com/600x800'} 
+                      alt={product.name} 
                       className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     
                     {/* Quick Add Overlay */}
                     <div className="absolute bottom-6 left-6 right-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                      <button className="w-full py-4 bg-white/90 backdrop-blur-md rounded-2xl text-[10px] font-bold uppercase tracking-widest text-primary shadow-xl hover:bg-primary hover:text-white transition-colors">
-                        Quick View
-                      </button>
+                      <div className="w-full py-4 bg-white/90 backdrop-blur-md rounded-2xl text-[10px] font-bold uppercase tracking-widest text-primary shadow-xl hover:bg-primary hover:text-white transition-colors text-center">
+                        View Product
+                      </div>
                     </div>
                   </div>
                   
                   <div className="space-y-1 px-2">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-primary/40">{product.category}</p>
-                    <h3 className="text-lg font-display text-surface-on group-hover:text-primary transition-colors tracking-tight">{product.title}</h3>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-primary/40">
+                      {Array.isArray(product.categories) ? product.categories[0] : (product.category || 'Bloomina')}
+                    </p>
+                    <h3 className="text-lg font-display text-surface-on group-hover:text-primary transition-colors tracking-tight">{product.name}</h3>
                     <p className="text-sm font-light text-surface-on-variant">
-                      ${product.price ? parseFloat(product.price).toFixed(2) : '0.00'}
+                      ₹{product.price ? parseFloat(product.price).toLocaleString() : '0'}
                     </p>
                   </div>
                 </Link>

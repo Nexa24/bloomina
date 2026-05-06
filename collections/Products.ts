@@ -3,12 +3,12 @@ import { CollectionConfig } from 'payload'
 export const Products: CollectionConfig = {
   slug: 'products',
   admin: {
-    useAsTitle: 'title',
-    defaultColumns: ['title', 'price', 'category'],
+    useAsTitle: 'name',
+    defaultColumns: ['name', 'price', 'categories'],
   },
   fields: [
     {
-      name: 'title',
+      name: 'name',
       type: 'text',
       required: true,
     },
@@ -30,53 +30,78 @@ export const Products: CollectionConfig = {
       min: 0,
     },
     {
-      name: 'category',
-      type: 'select',
+      name: 'categories',
+      type: 'json', // Using JSON to support the array of strings in DB
       required: true,
+    },
+    {
+      name: 'status',
+      type: 'select',
       options: [
-        { label: 'Innerwear', value: 'innerwear' },
-        { label: 'Lounge', value: 'lounge' },
-        { label: 'Activewear', value: 'activewear' },
-        { label: 'Accessories', value: 'accessories' },
+        { label: 'Active', value: 'Active' },
+        { label: 'Draft', value: 'Draft' },
       ],
+      defaultValue: 'Active',
     },
     {
       name: 'images',
-      type: 'upload',
-      relationTo: 'media',
+      type: 'json', // Using JSON to support the array of URLs in DB
       required: true,
-      hasMany: true,
+    },
+    {
+      name: 'colorConfigs',
+      type: 'json', // Using JSON to match the existing JSONB column in DB
     },
     {
       name: 'variants',
-      type: 'array',
-      label: 'Product Variants',
-      fields: [
-        {
-          name: 'color',
-          type: 'text',
-          label: 'Color (Hex code)',
-          required: true,
-        },
-        {
-          name: 'size',
-          type: 'select',
-          required: true,
-          options: [
-            { label: 'S', value: 'S' },
-            { label: 'M', value: 'M' },
-            { label: 'L', value: 'L' },
-            { label: 'XL', value: 'XL' },
-          ],
-        },
-        {
-          name: 'inventory',
-          type: 'number',
-          label: 'Inventory Count',
-          required: true,
-          defaultValue: 0,
-        },
-      ],
+      type: 'json', // Using JSON to match the existing JSONB column in DB
+    },
+    {
+      name: 'specifications',
+      type: 'json',
+    },
+    {
+      name: 'stock',
+      type: 'number',
+      defaultValue: 0,
+    },
+    {
+      name: 'sku',
+      type: 'text',
+    },
+    {
+      name: 'barcode',
+      type: 'text',
+    },
+    {
+      name: 'trackQuantity',
+      type: 'checkbox',
+      defaultValue: false,
+    },
+    {
+      name: 'is_sale',
+      type: 'checkbox',
+      defaultValue: false,
+    },
+    {
+      name: 'comparePrice',
+      type: 'number',
+    },
+    {
+      name: 'cost',
+      type: 'number',
+    },
+    {
+      name: 'supplierRef',
+      type: 'text',
+    },
+    {
+      name: 'material_id',
+      type: 'text',
+    },
+    {
+      name: 'size_guide_id',
+      type: 'text',
     },
   ],
 }

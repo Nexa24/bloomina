@@ -14,6 +14,10 @@ const dirname = path.dirname(filename)
 
 const databaseUri = process.env.DATABASE_URI || 'file:./bloomina.db'
 
+console.log('--- Payload Init: Using DATABASE_URI:', process.env.DATABASE_URI?.substring(0, 20) + '...');
+// Force reload to apply schema changes
+
+
 export default buildConfig({
   admin: {
     user: 'users',
@@ -28,7 +32,18 @@ export default buildConfig({
     {
       slug: 'users',
       auth: true,
-      fields: [],
+      fields: [
+        {
+          name: 'name',
+          type: 'text',
+          required: true,
+        },
+        {
+          name: 'phone',
+          type: 'text',
+          required: false, // Optional by default
+        },
+      ],
     },
   ],
   editor: lexicalEditor({}),
@@ -40,7 +55,11 @@ export default buildConfig({
     ? postgresAdapter({
         pool: {
           connectionString: databaseUri,
+          ssl: {
+            rejectUnauthorized: false,
+          },
         },
+        push: true,
       })
     : sqliteAdapter({
         client: {

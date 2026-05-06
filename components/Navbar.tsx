@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
+import { useCart } from '@/hooks/use-cart';
 
 const navLinks = [
   { 
@@ -14,10 +16,10 @@ const navLinks = [
     name: 'Bras', 
     href: '/category/bras',
     subsections: [
-      { name: 'Wireless Comfort', href: '/category/bras/wireless' },
-      { name: 'Signature Lace', href: '/category/bras/lace' },
-      { name: 'Supportive Contour', href: '/category/bras/contour' },
-      { name: 'Silk Bralettes', href: '/category/bras/silk' },
+      { name: 'Wireless Bras', href: '/category/bras/wireless-bras' },
+      { name: 'Padded & Push-Up', href: '/category/bras/full-coverage' },
+      { name: 'Lace Bras', href: '/category/bras/lace-intimates' },
+      { name: 'Bralettes', href: '/category/bras/bralettes' },
     ],
     featured: {
       title: 'The Petal Bra',
@@ -28,10 +30,10 @@ const navLinks = [
     name: 'Panties', 
     href: '/category/panties',
     subsections: [
-      { name: 'Seamless Invisibles', href: '/category/panties/seamless' },
-      { name: 'High-Waist Luxe', href: '/category/panties/high-waist' },
-      { name: 'Lace Details', href: '/category/panties/lace' },
-      { name: 'Cotton Basics', href: '/category/panties/cotton' },
+      { name: 'Seamless Panties', href: '/category/panties/seamless' },
+      { name: 'High-Waist Panties', href: '/category/panties/high-waisted' },
+      { name: 'Bikini Panties', href: '/category/panties/bikini-panties' },
+      { name: 'Thongs', href: '/category/panties/thongs' },
     ]
   },
   { name: 'Bestsellers', href: '/category/bestsellers' },
@@ -40,23 +42,41 @@ const navLinks = [
     name: 'Luxe', 
     href: '/category/luxe',
     subsections: [
-      { name: 'Bridal Sanctuary', href: '/category/luxe/bridal' },
-      { name: 'Silk Robes', href: '/category/luxe/robes' },
-      { name: 'Night Rituals', href: '/category/luxe/nightwear' },
+      { name: 'Bridal Sets', href: '/category/luxe/bridal' },
+      { name: 'Silk & Satin Robes', href: '/category/luxe/robes' },
+      { name: 'Nightwear', href: '/category/luxe/nightwear' },
       { name: 'Gift Sets', href: '/category/luxe/gifts' },
     ]
   },
+  {
+    name: 'Our World',
+    href: '/about',
+    subsections: [
+      { name: 'Our Story', href: '/about' },
+      { name: 'Craftsmanship', href: '/materials' },
+      { name: 'The Bloomina Philosophy', href: '/about#philosophy' },
+      { name: 'Size Guide', href: '/size-guide' },
+    ],
+    featured: {
+      title: 'The Bloomina Touch',
+      image: '/15996705518239280238_3.png'
+    }
+  }
 ];
 
 const Navbar = () => {
+  const [isMounted, setIsMounted] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const pathname = usePathname();
+  const { user } = useAuth();
+  const { getTotalItems } = useCart();
 
   useEffect(() => {
+    setIsMounted(true);
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
@@ -83,7 +103,14 @@ const Navbar = () => {
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'bg-white/80 backdrop-blur-xl shadow-[0_10px_40px_-15px_rgba(241,145,161,0.1)]' : 'bg-white'}`}
       >
         {/* Announcement Bar */}
-        <div className="bg-primary py-2 text-center overflow-hidden px-4">
+        <div className="bg-primary py-2 text-center overflow-hidden px-4 flex items-center justify-center gap-2">
+          <Image 
+            src="/logo/BLO_TRNSP_LOVE_ICON.png" 
+            alt="Bloomina Icon" 
+            width={12} 
+            height={12} 
+            className="brightness-0 invert opacity-80"
+          />
           <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.05em] md:tracking-[0.3em] text-white animate-pulse whitespace-nowrap overflow-hidden text-ellipsis">
             Ethereal Comfort: Free shipping on all signature collections
           </p>
@@ -151,12 +178,21 @@ const Navbar = () => {
             >
               <span className="material-symbols-outlined text-[20px] md:text-2xl font-light">search</span>
             </button>
-            <Link href="/account" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0">
+            <Link href="/account" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0 flex items-center gap-2">
+              {user ? (
+                <span className="text-[10px] font-bold uppercase tracking-widest text-primary hidden md:block">
+                  Hi, {(user.user_metadata?.name || user.email)?.split(' ')[0]}
+                </span>
+              ) : null}
               <span className="material-symbols-outlined text-[20px] md:text-2xl font-light">person</span>
             </Link>
             <Link href="/cart" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex items-center gap-0.5 group relative flex-shrink-0">
               <span className="material-symbols-outlined text-[20px] md:text-2xl font-light group-hover:scale-110 transition-transform">shopping_cart</span>
-              <span className="text-[9px] md:text-[11px] font-black uppercase tracking-tighter md:tracking-widest">(0)</span>
+              {isMounted && getTotalItems() > 0 && (
+                <span className="absolute -top-2 -right-2 w-4 h-4 bg-primary text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-in zoom-in duration-300">
+                  {getTotalItems()}
+                </span>
+              )}
             </Link>
           </div>
         </div>
@@ -273,7 +309,7 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* Mobile Menu Overlay (Same as before but refined) */}
+      {/* Mobile Menu Overlay */}
       <div className={`fixed inset-0 z-[100] transition-all duration-700 ${isMenuOpen ? 'visible' : 'invisible'}`}>
         <div 
           className={`absolute inset-0 bg-surface-on/20 backdrop-blur-md transition-opacity duration-700 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`}
