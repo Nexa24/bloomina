@@ -52,13 +52,11 @@ const Footer = () => {
           <div className="space-y-8">
             <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-surface-on/40">Assistance</h3>
             <ul className="space-y-4">
-              {['Size Guide', 'Shipping Policy', 'Returns & Exchanges', 'Contact Us', 'FAQ'].map((item) => (
-                <li key={item}>
-                  <Link href="#" className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">
-                    {item}
-                  </Link>
-                </li>
-              ))}
+              <li><Link href="#" className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">Size Guide</Link></li>
+              <li><Link href="/policy" className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">Shipping Policy</Link></li>
+              <li><Link href="/policy" className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">Returns & Exchanges</Link></li>
+              <li><Link href="/contact" className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">Contact Us</Link></li>
+              <li><Link href="#" className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">FAQ</Link></li>
             </ul>
           </div>
 
@@ -92,8 +90,8 @@ const Footer = () => {
               © 2026 Bloomina. Designed with Intention.
             </p>
             <div className="flex justify-center md:justify-end gap-6 text-[9px] font-bold uppercase tracking-[0.1em] text-surface-on/20">
-              <Link href="#" className="hover:text-primary transition-colors">Privacy</Link>
-              <Link href="#" className="hover:text-primary transition-colors">Terms</Link>
+              <Link href="/policy" className="hover:text-primary transition-colors">Privacy</Link>
+              <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
               <Link href="#" className="hover:text-primary transition-colors">Accessibility</Link>
             </div>
           </div>
