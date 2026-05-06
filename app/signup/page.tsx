@@ -3,11 +3,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
-const SignupPage = () => {
+const SignupContent = () => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -18,6 +17,8 @@ const SignupPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get('next') || '/account';
 
   // Initialize Supabase client
   const supabase = createClient();
@@ -48,8 +49,8 @@ const SignupPage = () => {
       if (authError) {
         setError(authError.message || 'Failed to create account.');
       } else {
-        // Success: Redirect directly to account/dashboard instead of login page
-        router.push('/account');
+        // Success: Redirect directly to 'next' destination
+        router.push(next);
         router.refresh();
       }
     } catch (err) {
@@ -184,6 +185,20 @@ const SignupPage = () => {
         <p className="text-[9px] font-bold uppercase tracking-[0.5em] text-surface-on/20">Bloomina Collective — 256-bit Secure Encryption</p>
       </footer>
     </div>
+  );
+};
+
+import { Suspense } from 'react';
+
+const SignupPage = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    }>
+      <SignupContent />
+    </Suspense>
   );
 };
 

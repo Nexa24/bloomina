@@ -3,16 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 
-const LoginPage = () => {
+const LoginContent = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get('next') || '/account';
   const supabase = createClient();
 
   // Redirect if already logged in
@@ -20,11 +21,11 @@ const LoginPage = () => {
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        router.push('/account');
+        router.push(next);
       }
     };
     checkUser();
-  }, [supabase, router]);
+  }, [supabase, router, next]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +41,7 @@ const LoginPage = () => {
       if (authError) {
         setError(authError.message);
       } else {
-        router.push('/account');
+        router.push(next);
         router.refresh();
       }
     } catch (err) {
@@ -143,6 +144,20 @@ const LoginPage = () => {
         <p className="text-[9px] font-bold uppercase tracking-[0.5em] text-surface-on/20">Bloomina Collective — Secure Encryption Enabled</p>
       </footer>
     </div>
+  );
+};
+
+import { Suspense } from 'react';
+
+const LoginPage = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 };
 
