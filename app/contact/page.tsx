@@ -43,7 +43,7 @@ const ContactPage = () => {
                 </div>
                 <div>
                   <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-1">Ethereal Inquiries</h4>
-                  <p className="text-lg font-display text-surface-on">sanctuary@bloomina.in</p>
+                  <p className="text-lg font-display text-surface-on">support@bloomina.in</p>
                 </div>
               </div>
 
@@ -54,8 +54,9 @@ const ContactPage = () => {
                 <div>
                   <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-1">Our Sanctuary</h4>
                   <p className="text-lg font-display text-surface-on">
-                    Design Atelier, 4th Floor <br />
-                    Bandra West, Mumbai 400050
+                    Live Wear Apparels PVT LTD <br />
+                    Annexe -1 Godown, Venappara Road <br />
+                    Omassery.
                   </p>
                 </div>
               </div>

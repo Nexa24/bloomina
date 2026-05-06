@@ -54,7 +54,7 @@ const PolicyPage = () => {
         <div className="mt-24 p-10 bg-white rounded-[2.5rem] border border-stone-100 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="text-center md:text-left">
             <h4 className="text-sm font-semibold text-surface-on mb-1">Data Protection Officer</h4>
-            <p className="text-xs text-surface-on-variant">privacy@bloomina.in</p>
+            <p className="text-xs text-surface-on-variant">support@bloomina.in</p>
           </div>
           <a href="/contact" className="px-8 py-4 bg-primary text-white rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
             Inquire About Data
