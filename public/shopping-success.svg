@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bagGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#faf6f0" stop-opacity="1"/>
+    </linearGradient>
+    <linearGradient id="primaryGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#F191A1" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#f8c8d1" stop-opacity="1"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.08 0"/>
+      <feOffset dy="6" result="offsetBlur"/>
+      <feComposite in="SourceGraphic" in2="offsetBlur" operator="over"/>
+    </filter>
+  </defs>
+
+  <style>
+    /* Animations */
+    .bag-drop {
+      transform-origin: center bottom;
+      animation: dropIn 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      opacity: 0;
+    }
+    
+    .handle {
+      fill: none;
+      stroke: #F191A1;
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      animation: drawHandle 1s ease-out 0.8s forwards;
+    }
+
+    .silk {
+      transform-origin: center bottom;
+      transform: scaleY(0);
+      animation: riseSilk 1.2s cubic-bezier(0.25, 1, 0.5, 1) 1.2s forwards;
+    }
+
+    .sparkle {
+      fill: #F191A1;
+      opacity: 0;
+      transform-origin: center;
+      animation: popSparkle 2.5s ease-out infinite;
+    }
+    .s1 { animation-delay: 1.8s; }
+    .s2 { animation-delay: 2.1s; }
+    .s3 { animation-delay: 2.4s; }
+    .s4 { animation-delay: 2.7s; }
+
+    .check-circle {
+      transform-origin: 100px 115px;
+      transform: scale(0);
+      animation: popCheck 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 1.8s forwards;
+    }
+    
+    .check-mark {
+      fill: none;
+      stroke: white;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 50;
+      stroke-dashoffset: 50;
+      animation: drawMark 0.5s ease-out 2.2s forwards;
+    }
+
+    .float-group {
+      animation: float 4s ease-in-out infinite;
+      transform-origin: center;
+      animation-delay: 2.5s;
+    }
+
+    /* Keyframes */
+    @keyframes dropIn {
+      0% { transform: translateY(-40px) scale(0.9); opacity: 0; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    @keyframes drawHandle {
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes riseSilk {
+      100% { transform: scaleY(1); }
+    }
+    @keyframes popSparkle {
+      0% { transform: translate(0, 0) scale(0); opacity: 0; }
+      15% { opacity: 0.8; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(1.2) rotate(90deg); opacity: 0; }
+    }
+    @keyframes popCheck {
+      0% { transform: scale(0); }
+      70% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+    @keyframes drawMark {
+      100% { stroke-dashoffset: 0; }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+  </style>
+
+  <g class="float-group">
+    <!-- The Shopping Bag -->
+    <g class="bag-drop">
+      <!-- Back inner shadow of bag -->
+      <path d="M65 75 L135 75 L128 82 L72 82 Z" fill="#e8e0d5" />
+      
+      <!-- Ethereal Silk rising out of bag -->
+      <g class="silk">
+        <path d="M75 75 C 80 35, 105 25, 115 50 C 125 75, 125 65, 125 75 Z" fill="url(#primaryGrad)" opacity="0.95" />
+        <path d="M85 75 C 90 45, 115 35, 118 75 Z" fill="#ffffff" opacity="0.5" />
+      </g>
+
+      <!-- Front of bag -->
+      <path d="M60 75 L140 75 L130 155 L70 155 Z" fill="url(#bagGrad)" filter="url(#shadow)" />
+      
+      <!-- Side fold details for 3D effect -->
+      <path d="M60 75 L70 155 M140 75 L130 155" stroke="#f0e9df" stroke-width="1.5" />
+      <path d="M65 75 L73 155 M135 75 L127 155" stroke="#fcfaf7" stroke-width="1" />
+      
+      <!-- Elegant Handles -->
+      <path class="handle" d="M82 75 C 82 40, 118 40, 118 75" />
+      
+      <!-- Subtle Brand Dot -->
+      <circle cx="100" cy="115" r="3" fill="#F191A1" opacity="0.15" />
+    </g>
+
+    <!-- Success Check Badge -->
+    <g class="check-circle">
+      <circle cx="100" cy="115" r="24" fill="#F191A1" filter="url(#shadow)" />
+      <path class="check-mark" d="M 89 116 L 97 124 L 112 106" />
+    </g>
+
+    <!-- Floating Sparkles -->
+    <path class="sparkle s1" d="M80 30 L82 35 L87 37 L82 39 L80 44 L78 39 L73 37 L78 35 Z" style="--tx: -25px; --ty: -35px;" />
+    <path class="sparkle s2" d="M130 40 L132 45 L137 47 L132 49 L130 54 L128 49 L123 47 L128 45 Z" style="--tx: 30px; --ty: -25px;" transform="scale(0.8)" />
+    <path class="sparkle s3" d="M50 90 L52 95 L57 97 L52 99 L50 104 L48 99 L43 97 L48 95 Z" style="--tx: -20px; --ty: -10px;" transform="scale(0.6)" />
+    <path class="sparkle s4" d="M145 100 L147 105 L152 107 L147 109 L145 114 L143 109 L138 107 L143 105 Z" style="--tx: 25px; --ty: 15px;" transform="scale(0.7)" />
+  </g>
+</svg>

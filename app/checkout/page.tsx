@@ -12,6 +12,7 @@ const CheckoutPage = () => {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRedirectingToSuccess, setIsRedirectingToSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -26,10 +27,11 @@ const CheckoutPage = () => {
 
   useEffect(() => {
     setIsMounted(true);
-    if (items.length === 0) {
+    // Only redirect to cart if empty AND we aren't already on our way to the success page
+    if (items.length === 0 && !isRedirectingToSuccess) {
       router.push('/cart');
     }
-  }, [items, router]);
+  }, [items, router, isRedirectingToSuccess]);
 
   if (!isMounted || items.length === 0) {
     return null;
@@ -97,6 +99,7 @@ const CheckoutPage = () => {
           });
 
           if (verification.success) {
+            setIsRedirectingToSuccess(true);
             clearCart();
             router.push(`/order-success?id=${result.orderId}`);
           } else {
@@ -148,6 +151,7 @@ const CheckoutPage = () => {
       }
 
       // Simulate success directly
+      setIsRedirectingToSuccess(true);
       clearCart();
       router.push(`/order-success?id=${result.orderId}`);
     } catch (err: any) {
