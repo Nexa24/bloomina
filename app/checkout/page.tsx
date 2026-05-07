@@ -128,6 +128,34 @@ const CheckoutPage = () => {
     }
   };
 
+  const handleBypassPayment = async () => {
+    // Only allow bypass on localhost for development testing
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') return;
+    
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const result = await createOrder({
+        items,
+        shippingAddress: formData
+      });
+
+      if (result.error) {
+        setError(result.error);
+        setIsLoading(false);
+        return;
+      }
+
+      // Simulate success directly
+      clearCart();
+      router.push(`/order-success?id=${result.orderId}`);
+    } catch (err: any) {
+      setError("Bypass failed: " + err.message);
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background antialiased pt-32 pb-24">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
@@ -319,6 +347,19 @@ const CheckoutPage = () => {
                   </>
                 )}
               </button>
+
+              {/* Dev Only Bypass Button */}
+              {isMounted && typeof window !== 'undefined' && window.location.hostname === 'localhost' && (
+                <button 
+                  type="button"
+                  onClick={handleBypassPayment}
+                  disabled={isLoading}
+                  className="w-full mt-4 bg-stone-100 text-stone-500 py-4 rounded-full font-bold uppercase tracking-[0.2em] text-[9px] hover:bg-stone-200 transition-all flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-sm">developer_mode</span>
+                  Dev Bypass Payment
+                </button>
+              )}
 
               <p className="mt-8 text-center text-[10px] text-stone-400 uppercase tracking-widest leading-relaxed">
                 By completing your purchase you agree to our <br />
