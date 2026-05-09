@@ -12,6 +12,7 @@ const ProductGrid = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
+        console.log('Fetching products from:', process.env.NEXT_PUBLIC_SUPABASE_URL);
         const { data, error } = await supabase
           .from('products')
           .select('*')
@@ -21,8 +22,12 @@ const ProductGrid = () => {
 
         if (error) throw error;
         setProducts(data || []);
-      } catch (err) {
-        console.error('Failed to fetch products:', err);
+      } catch (err: any) {
+        console.error('Product fetch error details:', {
+          message: err.message,
+          stack: err.stack,
+          url: process.env.NEXT_PUBLIC_SUPABASE_URL
+        });
       } finally {
         setIsLoading(false);
       }
@@ -54,8 +59,8 @@ const ProductGrid = () => {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
-      {products.map((product) => (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-x-12 md:gap-y-20">
+      {products.slice(0, 4).map((product) => (
         <ProductCard
           key={product.id}
           id={product.id}

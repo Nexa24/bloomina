@@ -26,11 +26,10 @@
       <stop offset="100%" stop-color="#F8D8DE"/>
     </linearGradient>
 
-    <!-- Richer Rose Gold Foil -->
-    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#FFEA9E"/>
-      <stop offset="50%" stop-color="#D4AF37"/>
-      <stop offset="100%" stop-color="#8C6E1D"/>
+    <!-- Bloomina Dark Rose Tick Base -->
+    <linearGradient id="bloominaTick" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C28793"/>
+      <stop offset="100%" stop-color="#8a4756"/>
     </linearGradient>
   </defs>
 
@@ -166,16 +165,16 @@
 
       <!-- Elegant Silk Ribbons (Drawn on via animation) -->
       <!-- Horizontal ribbon across the isometric top -->
-      <line class="ribbon-h" x1="170" y1="160" x2="330" y2="160" stroke="url(#gold)" stroke-width="6" />
+      <line class="ribbon-h" x1="170" y1="160" x2="330" y2="160" stroke="url(#bloominaTick)" stroke-width="6" />
       <!-- Vertical ribbon across the isometric top -->
-      <line class="ribbon-v" x1="250" y1="120" x2="250" y2="200" stroke="url(#gold)" stroke-width="6" />
+      <line class="ribbon-v" x1="250" y1="120" x2="250" y2="200" stroke="url(#bloominaTick)" stroke-width="6" />
 
       <!-- Minimalist Gold Verification Seal -->
       <g class="seal-group">
         <!-- White Badge Base -->
         <circle cx="250" cy="160" r="15" fill="#ffffff" filter="url(#softShadow)" />
-        <!-- Gold Outline -->
-        <circle cx="250" cy="160" r="13" fill="url(#gold)" />
+        <!-- Bloomina Dark Rose Outline -->
+        <circle cx="250" cy="160" r="13" fill="url(#bloominaTick)" />
         
         <!-- Animated Checkmark -->
         <path class="check-mark" d="M 244 160 L 248 164 L 258 154" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />

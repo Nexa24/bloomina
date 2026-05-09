@@ -6,14 +6,19 @@ import { useRouter } from 'next/navigation';
 import { createOrder, verifyPayment } from '@/app/actions/checkout';
 import Link from 'next/link';
 import Script from 'next/script';
+import { useAuth } from '@/hooks/use-auth';
+import { createClient } from '@/utils/supabase/client';
 
 const CheckoutPage = () => {
   const { items, getTotalPrice, clearCart } = useCart();
+  const { user } = useAuth();
+  const supabase = createClient();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isRedirectingToSuccess, setIsRedirectingToSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveAddress, setSaveAddress] = useState(true);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -27,11 +32,38 @@ const CheckoutPage = () => {
 
   useEffect(() => {
     setIsMounted(true);
-    // Only redirect to cart if empty AND we aren't already on our way to the success page
     if (items.length === 0 && !isRedirectingToSuccess) {
       router.push('/cart');
     }
   }, [items, router, isRedirectingToSuccess]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (profile) {
+          setFormData({
+            fullName: profile.full_name || '',
+            email: profile.email || user.email || '',
+            phone: profile.phone || '',
+            address: profile.address || '',
+            city: profile.city || '',
+            postalCode: profile.postal_code || '',
+            state: profile.state || ''
+          });
+        } else if (user.email) {
+            setFormData(prev => ({ ...prev, email: user.email || '' }));
+        }
+      }
+    };
+
+    fetchProfile();
+  }, [user, supabase]);
 
   if (!isMounted || items.length === 0) {
     return null;
@@ -62,13 +94,11 @@ const CheckoutPage = () => {
     setError(null);
 
     try {
-      // 0. Ensure Razorpay is loaded
       const isLoaded = await loadRazorpay();
       if (!isLoaded) {
         throw new Error("Razorpay SDK failed to load. Check your internet connection.");
       }
 
-      // 1. Create order in backend
       const result = await createOrder({
         items,
         shippingAddress: formData
@@ -80,7 +110,6 @@ const CheckoutPage = () => {
         return;
       }
 
-      // 2. Open Razorpay modal
       const options = {
         key: result.key,
         amount: result.amount,
@@ -90,7 +119,6 @@ const CheckoutPage = () => {
         order_id: result.razorpayOrderId,
         handler: async function (response: any) {
           setIsLoading(true);
-          // 3. Verify payment in backend
           const verification = await verifyPayment({
             razorpay_order_id: response.razorpay_order_id,
             razorpay_payment_id: response.razorpay_payment_id,
@@ -99,6 +127,20 @@ const CheckoutPage = () => {
           });
 
           if (verification.success) {
+            if (user && saveAddress) {
+              await supabase.from('profiles').upsert({
+                id: user.id,
+                full_name: formData.fullName,
+                phone: formData.phone,
+                email: formData.email,
+                address: formData.address,
+                city: formData.city,
+                state: formData.state,
+                postal_code: formData.postalCode,
+                updated_at: new Date().toISOString()
+              });
+            }
+
             setIsRedirectingToSuccess(true);
             clearCart();
             router.push(`/order-success?id=${result.orderId}`);
@@ -132,7 +174,6 @@ const CheckoutPage = () => {
   };
 
   const handleBypassPayment = async () => {
-    // Only allow bypass on localhost for development testing
     if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') return;
     
     setIsLoading(true);
@@ -150,7 +191,20 @@ const CheckoutPage = () => {
         return;
       }
 
-      // Simulate success directly
+      if (user && saveAddress) {
+        await supabase.from('profiles').upsert({
+          id: user.id,
+          full_name: formData.fullName,
+          phone: formData.phone,
+          email: formData.email,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          postal_code: formData.postalCode,
+          updated_at: new Date().toISOString()
+        });
+      }
+
       setIsRedirectingToSuccess(true);
       clearCart();
       router.push(`/order-success?id=${result.orderId}`);
@@ -175,7 +229,6 @@ const CheckoutPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
-          {/* Shipping Details */}
           <div className="lg:col-span-7 space-y-12">
             <section className="bg-white p-8 md:p-12 rounded-[2.5rem] shadow-sm border border-stone-100">
               <h2 className="text-2xl font-display font-light text-surface-on mb-10 flex items-center gap-4">
@@ -270,6 +323,25 @@ const CheckoutPage = () => {
                     />
                   </div>
                 </div>
+
+                {user && (
+                  <div className="pt-4 border-t border-stone-50">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className="relative flex items-center">
+                        <input 
+                          type="checkbox"
+                          checked={saveAddress}
+                          onChange={(e) => setSaveAddress(e.target.checked)}
+                          className="w-5 h-5 rounded-lg border-2 border-stone-200 text-primary focus:ring-primary/20 transition-all cursor-pointer appearance-none checked:bg-primary checked:border-primary"
+                        />
+                        {saveAddress && (
+                          <span className="material-symbols-outlined absolute text-white text-sm pointer-events-none left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">check</span>
+                        )}
+                      </div>
+                      <span className="text-xs font-bold uppercase tracking-widest text-stone-500 group-hover:text-primary transition-colors">Save this address for future lovely orders</span>
+                    </label>
+                  </div>
+                )}
               </div>
             </section>
 
@@ -291,7 +363,6 @@ const CheckoutPage = () => {
             </section>
           </div>
 
-          {/* Order Summary */}
           <aside className="lg:col-span-5 sticky top-32">
             <div className="bg-white p-10 rounded-[3rem] shadow-[0_40px_100px_-20px_rgba(241,145,161,0.1)] border border-stone-50">
               <h2 className="text-2xl font-display font-light text-surface-on mb-10">Order Review</h2>
@@ -309,7 +380,7 @@ const CheckoutPage = () => {
                       </p>
                     </div>
                     <div className="text-sm font-medium text-surface-on">
-                      ₹{(item.price * item.quantity).toLocaleString()}
+                      \u20B9{(item.price * item.quantity).toLocaleString()}
                     </div>
                   </div>
                 ))}
@@ -318,7 +389,7 @@ const CheckoutPage = () => {
               <div className="space-y-4 mb-10 py-8 border-y border-stone-50">
                 <div className="flex justify-between text-sm">
                   <span className="text-surface-on-variant">Subtotal</span>
-                  <span className="font-medium text-surface-on">₹{subtotal.toLocaleString()}</span>
+                  <span className="font-medium text-surface-on">\u20B9{subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-surface-on-variant">Shipping</span>
@@ -326,7 +397,7 @@ const CheckoutPage = () => {
                 </div>
                 <div className="pt-4 flex justify-between items-baseline">
                   <span className="text-lg font-display text-surface-on">Total</span>
-                  <span className="text-3xl font-display text-primary font-medium">₹{total.toLocaleString()}</span>
+                  <span className="text-3xl font-display text-primary font-medium">\u20B9{total.toLocaleString()}</span>
                 </div>
               </div>
 
@@ -352,7 +423,6 @@ const CheckoutPage = () => {
                 )}
               </button>
 
-              {/* Dev Only Bypass Button */}
               {isMounted && typeof window !== 'undefined' && window.location.hostname === 'localhost' && (
                 <button 
                   type="button"
@@ -371,7 +441,6 @@ const CheckoutPage = () => {
               </p>
             </div>
 
-            {/* Trust Badges */}
             <div className="mt-12 grid grid-cols-3 gap-4 px-4">
               <div className="flex flex-col items-center gap-2 text-center opacity-40">
                 <span className="material-symbols-outlined text-xl">encrypted</span>

@@ -10,10 +10,10 @@ const SuccessContent = () => {
   const orderId = searchParams.get('id');
 
   useEffect(() => {
-    // Trigger confetti for a premium feel
-    const duration = 3 * 1000;
+    // Elegant confetti burst
+    const duration = 4 * 1000;
     const animationEnd = Date.now() + duration;
-    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+    const defaults = { startVelocity: 25, spread: 360, ticks: 100, zIndex: 50 };
 
     const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
 
@@ -24,74 +24,110 @@ const SuccessContent = () => {
         return clearInterval(interval);
       }
 
-      const particleCount = 50 * (timeLeft / duration);
-      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
-      confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
-    }, 250);
+      const particleCount = 40 * (timeLeft / duration);
+      // Soft rose and white petals effect
+      const colors = ['#944555', '#F191A1', '#ffffff'];
+      
+      confetti({ 
+        ...defaults, 
+        particleCount, 
+        colors,
+        origin: { x: randomInRange(0.1, 0.4), y: Math.random() - 0.2 } 
+      });
+      confetti({ 
+        ...defaults, 
+        particleCount, 
+        colors,
+        origin: { x: randomInRange(0.6, 0.9), y: Math.random() - 0.2 } 
+      });
+    }, 400);
 
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6 antialiased relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -mr-64 -mt-64" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -ml-64 -mb-64" />
+    <div className="min-h-screen bg-[#F9F9F9] flex flex-col items-center justify-center p-6 antialiased relative overflow-hidden">
+      {/* Editorial Background Accents */}
+      <div className="absolute top-[-10%] right-[-10%] w-[600px] h-[600px] bg-primary/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-primary/5 rounded-full blur-[140px] pointer-events-none" />
 
-      <main className="max-w-xl w-full relative z-10 text-center">
-        <div className="mb-10 w-64 h-48 mx-auto relative animate-fade-in-up">
-          <img src="/order-3d-success.svg" alt="Order Verified" className="w-full h-full object-contain" />
+      <main className="max-w-2xl w-full relative z-10 flex flex-col items-center">
+        {/* The Star: High-Fidelity 3D Animation */}
+        <div className="mb-8 w-full max-w-[400px] h-64 md:h-80 relative animate-fade-in">
+          <img 
+            src="/order-3d-success.svg" 
+            alt="Order Fulfillment Animation" 
+            className="w-full h-full object-contain"
+          />
         </div>
 
-        <h1 className="text-5xl md:text-6xl font-display font-light text-surface-on tracking-tighter mb-4 animate-fade-in-up delay-100">
-          A New Beginning
-        </h1>
-        <p className="text-[11px] font-bold uppercase tracking-[0.5em] text-primary mb-12 animate-fade-in-up delay-200">
-          Your Bloomina selection is confirmed
-        </p>
-
-        <div className="bg-white p-10 md:p-14 rounded-[3.5rem] shadow-[0_40px_100px_-20px_rgba(241,145,161,0.1)] border border-stone-50 mb-12 animate-fade-in-up delay-300">
-          <div className="space-y-1 mb-8">
-            <p className="text-stone-300 text-[10px] font-bold uppercase tracking-[0.3em]">Order Reference</p>
-            <p className="text-2xl font-display text-surface-on tracking-tight">#{orderId?.slice(-8).toUpperCase() || 'BLOOM-SANCTUARY'}</p>
-          </div>
-          
-          <div className="h-px w-12 bg-primary/20 mx-auto mb-8" />
-          
-          <p className="text-sm md:text-base text-surface-on-variant leading-relaxed font-light mb-8">
-            Thank you for choosing Bloomina. We are now meticulously preparing your pieces to ensure they bring the weightless comfort you deserve. A digital summary has been sent to your email sanctuary.
+        {/* Messaging Section */}
+        <div className="text-center mb-12 animate-slide-up">
+          <p className="text-[10px] font-bold uppercase tracking-[0.6em] text-primary mb-4">
+            Payment Successful
           </p>
+          <h1 className="text-5xl md:text-7xl font-display font-light text-[#1A1C1C] tracking-tighter leading-none mb-6">
+            Refined Luxury, <br />
+            <span className="italic font-serif">Now Confirmed.</span>
+          </h1>
+          <div className="h-px w-24 bg-[#944555]/20 mx-auto" />
+        </div>
 
-          <div className="flex items-center justify-center gap-8 py-6 px-4 bg-stone-50/50 rounded-2xl border border-stone-100/50">
-            <div className="text-center">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Status</p>
-              <p className="text-[10px] font-bold uppercase text-primary tracking-tighter flex items-center gap-1 justify-center">
-                <span className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
-                Preparing
-              </p>
+        {/* Order Details Card - Luxury Stationery Style */}
+        <div className="w-full bg-white rounded-[3rem] shadow-[0_50px_120px_-20px_rgba(148,69,85,0.08)] border border-white p-10 md:p-16 mb-12 relative animate-slide-up [animation-delay:200ms]">
+          {/* Sublte pattern overlay */}
+          <div className="absolute inset-0 opacity-[0.02] pointer-events-none rounded-[3rem] overflow-hidden" style={{ backgroundImage: 'radial-gradient(#944555 1px, transparent 0)', backgroundSize: '24px 24px' }} />
+          
+          <div className="relative z-10">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-stone-400 mb-1">Confirmation</p>
+                <p className="text-xl font-display text-[#1A1C1C]">#{orderId?.slice(-8).toUpperCase() || 'BLOOM-777-SUCCESS'}</p>
+              </div>
+              <div className="flex items-center gap-3 py-2 px-5 bg-primary/5 rounded-full border border-primary/10">
+                <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-primary">In Preparation</span>
+              </div>
             </div>
-            <div className="w-px h-8 bg-stone-200" />
-            <div className="text-center">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Timeline</p>
-              <p className="text-[10px] font-bold uppercase text-surface-on tracking-tighter">3-5 Days</p>
+
+            <p className="text-lg text-[#534345] font-light leading-relaxed mb-12 max-w-lg">
+              Your selection has been curated. Our artisans are now preparing your pieces with the meticulous attention to detail that defines the Bloomina standard.
+            </p>
+
+            <div className="grid grid-cols-2 gap-8 py-8 border-t border-stone-50">
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-2">Estimated Arrival</p>
+                <p className="text-sm font-medium text-[#1A1C1C]">3 — 5 Business Days</p>
+              </div>
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-2">Notification Sent</p>
+                <p className="text-sm font-medium text-[#1A1C1C] truncate">{searchParams.get('email') || 'Your Inbox'}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto animate-fade-in-up delay-400">
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-6 w-full max-w-md animate-slide-up [animation-delay:400ms]">
           <Link 
             href="/account"
-            className="flex-1 bg-primary text-white py-6 rounded-full font-bold uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-primary/30 hover:scale-[1.03] active:scale-95 transition-all duration-500"
+            className="group relative flex-1 bg-[#1A1C1C] text-white py-7 rounded-full text-center overflow-hidden transition-all duration-500 hover:scale-[1.02] active:scale-95 shadow-xl shadow-black/10"
           >
-            Track Order
+            <span className="relative z-10 text-[10px] font-bold uppercase tracking-[0.3em]">Track Selection</span>
+            <div className="absolute inset-0 bg-[#944555] translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
           </Link>
+          
           <Link 
             href="/"
-            className="flex-1 bg-white text-surface-on border border-stone-100 py-6 rounded-full font-bold uppercase tracking-[0.2em] text-[11px] hover:bg-stone-50 transition-all duration-500"
+            className="flex-1 bg-white text-[#1A1C1C] border border-stone-200 py-7 rounded-full text-center transition-all duration-500 hover:bg-stone-50 hover:border-stone-300 text-[10px] font-bold uppercase tracking-[0.3em]"
           >
-            Continue Browsing
+            Back to Studio
           </Link>
         </div>
+
+        <p className="mt-16 text-[9px] text-stone-400 uppercase tracking-[0.4em] font-medium text-center opacity-60">
+          Crafted with Passion &middot; Bloomina Fulfillment Studio
+        </p>
       </main>
     </div>
   );
@@ -100,8 +136,8 @@ const SuccessContent = () => {
 const OrderSuccessPage = () => {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#F9F9F9] flex items-center justify-center">
+        <div className="w-10 h-10 border-2 border-primary/10 border-t-primary rounded-full animate-spin" />
       </div>
     }>
       <SuccessContent />

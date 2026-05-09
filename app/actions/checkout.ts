@@ -47,30 +47,24 @@ export async function createOrder(data: {
     // 2. Create Razorpay order
     const rzpOrder = await createRazorpayOrder(total);
 
-    // 3. Insert order using ONLY the columns that exist in the DB:
-    //    id, status, customer_name, items, created_at
-    //    All other info is stored inside the 'items' JSON as extended metadata
-    //    until the SQL migration is applied.
-    const orderRow: Record<string, any> = {
+    // 3. Insert order using the flat table structure:
+    const orderRow = {
       status: 'Payment Pending',
       customer_name: data.shippingAddress.fullName,
-      items: {
-        // Store validated cart items AND customer/payment info here
-        // so nothing is lost even without the extra columns
-        products: validatedItems,
-        total,
-        email: data.shippingAddress.email,
-        phone: data.shippingAddress.phone,
-        shipping_address: {
-          street: data.shippingAddress.address,
-          city: data.shippingAddress.city,
-          state: data.shippingAddress.state,
-          zip: data.shippingAddress.postalCode,
-          country: 'India',
-        },
-        payment_method: 'Razorpay',
-        razorpay_order_id: rzpOrder.id,
+      email: data.shippingAddress.email,
+      phone: data.shippingAddress.phone,
+      total,
+      items: validatedItems, // Array of product objects
+      shipping_address: {
+        street: data.shippingAddress.address,
+        city: data.shippingAddress.city,
+        state: data.shippingAddress.state,
+        zip: data.shippingAddress.postalCode,
+        country: 'India',
       },
+      payment_method: 'Razorpay',
+      razorpay_order_id: rzpOrder.id,
+      user_id: (await supabase.auth.getUser()).data.user?.id || null,
     };
 
     const { data: order, error: orderError } = await supabase
@@ -121,25 +115,13 @@ export async function verifyPayment(data: {
       return { error: 'Invalid payment signature' };
     }
 
-    // 2. Update order — merge payment info into the items JSON
-    const { data: existing } = await supabase
-      .from('orders')
-      .select('items')
-      .eq('id', data.orderId)
-      .single();
-
-    const updatedItems = {
-      ...(existing?.items || {}),
-      razorpay_payment_id: data.razorpay_payment_id,
-      razorpay_signature: data.razorpay_signature,
-      paid_at: new Date().toISOString(),
-    };
-
+    // 2. Update order status and payment IDs
     const { error: updateError } = await supabase
       .from('orders')
       .update({
         status: 'Payment Done',
-        items: updatedItems,
+        razorpay_payment_id: data.razorpay_payment_id,
+        razorpay_signature: data.razorpay_signature,
       })
       .eq('id', data.orderId);
 

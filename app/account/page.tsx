@@ -20,6 +20,7 @@ const AccountPage = () => {
     state: '',
     pincode: '',
   });
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const router = useRouter();
   const supabase = createClient();
 
@@ -52,12 +53,33 @@ const AccountPage = () => {
         setOrderCount(count || 0);
       }
       
-      // Set initial profile values
-      if (user.user_metadata) {
+      // Fetch profile from profiles table
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profile) {
+        setName(profile.full_name || '');
+        setPhone(profile.phone || '');
+        setAddress({
+          line1: profile.address || '',
+          city: profile.city || '',
+          state: profile.state || '',
+          pincode: profile.postal_code || '',
+        });
+      } else if (user.user_metadata) {
+        // Fallback to metadata
         setName(user.user_metadata.name || '');
         setPhone(user.user_metadata.phone || '');
         if (user.user_metadata.address) {
-          setAddress(user.user_metadata.address);
+          setAddress({
+            line1: user.user_metadata.address.line1 || '',
+            city: user.user_metadata.address.city || '',
+            state: user.user_metadata.address.state || '',
+            pincode: user.user_metadata.address.pincode || '',
+          });
         }
       }
     } catch (err) {
@@ -69,21 +91,42 @@ const AccountPage = () => {
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
     setIsDataLoading(true);
-    const { error } = await supabase.auth.updateUser({
-      data: { 
-        name, 
-        phone,
-        address
-      }
-    });
+    
+    try {
+        // Update profiles table
+        const { error: profileError } = await supabase.from('profiles').upsert({
+            id: user.id,
+            full_name: name,
+            phone,
+            address: address.line1,
+            city: address.city,
+            state: address.state,
+            postal_code: address.pincode,
+            email: user.email,
+            updated_at: new Date().toISOString()
+        });
 
-    if (error) {
-      alert('Error updating profile: ' + error.message);
-    } else {
-      alert('Profile updated successfully!');
+        if (profileError) throw profileError;
+
+        // Also update auth metadata for legacy support
+        const { error: authError } = await supabase.auth.updateUser({
+            data: { 
+                name, 
+                phone,
+                address
+            }
+        });
+
+        if (authError) throw authError;
+
+        alert('Profile updated successfully!');
+    } catch (error: any) {
+        alert('Error updating profile: ' + error.message);
+    } finally {
+        setIsDataLoading(false);
     }
-    setIsDataLoading(false);
   };
 
   if (isLoading) {
@@ -216,7 +259,7 @@ const AccountPage = () => {
                                   <p className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40">
                                     {new Date(order.created_at).toLocaleDateString()}
                                   </p>
-                                  <p className={`text-[10px] font-bold uppercase tracking-widest ${order.status === 'delivered' ? 'text-green-500' : 'text-primary'}`}>
+                                  <p className={`text-[10px] font-bold uppercase tracking-widest ${order.status?.toLowerCase() === 'delivered' ? 'text-green-500' : 'text-primary'}`}>
                                     {order.status}
                                   </p>
                                 </div>
@@ -225,9 +268,14 @@ const AccountPage = () => {
                             <div className="flex items-center gap-4">
                               <div className="text-right hidden md:block">
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40 mb-1">Total Amount</p>
-                                <p className="font-display text-lg">₹{order.total || '0'}</p>
+                                <p className="font-display text-lg">₹{(order.total || 0).toLocaleString()}</p>
                               </div>
-                              <button className="px-8 py-4 bg-stone-50 text-surface-on rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all">View Invoice</button>
+                              <button 
+                                onClick={() => setSelectedOrder(order)}
+                                className="px-8 py-4 bg-stone-50 text-surface-on rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all"
+                              >
+                                View Details
+                              </button>
                             </div>
                           </div>
                         ))
@@ -240,6 +288,89 @@ const AccountPage = () => {
                           <Link href="/products" className="mt-8 px-8 py-4 bg-primary text-white rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 transition-transform">Start Shopping</Link>
                         </div>
                       )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Order Details Modal */}
+                {selectedOrder && (
+                  <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+                    <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setSelectedOrder(null)} />
+                    <div className="relative bg-white w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-[3rem] p-10 md:p-16 shadow-2xl animate-in zoom-in-95 duration-300">
+                      <button onClick={() => setSelectedOrder(null)} className="absolute top-8 right-8 text-stone-300 hover:text-stone-900 transition-colors">
+                        <span className="material-symbols-outlined">close</span>
+                      </button>
+                      
+                      <div className="mb-12">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-4">Order Details</p>
+                        <h2 className="text-4xl font-display font-light text-surface-on">#{selectedOrder.id.slice(0, 8).toUpperCase()}</h2>
+                      </div>
+
+                      <div className="space-y-12">
+                        {/* Status & Date */}
+                        <div className="flex justify-between py-6 border-y border-stone-50">
+                          <div>
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Status</p>
+                            <p className="text-sm font-semibold text-primary uppercase tracking-widest">{selectedOrder.status}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Ordered On</p>
+                            <p className="text-sm font-semibold">{new Date(selectedOrder.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                          </div>
+                        </div>
+
+                        {/* Items */}
+                        <div className="space-y-6">
+                          <h3 className="text-xs font-bold uppercase tracking-widest text-stone-900">Purchased Selection</h3>
+                          <div className="space-y-4">
+                            {(selectedOrder.items || []).map((item: any, i: number) => (
+                              <div key={i} className="flex gap-6 items-center">
+                                <div className="w-16 h-20 bg-stone-50 rounded-xl overflow-hidden shrink-0">
+                                  <img src={item.image} alt="" className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="text-sm font-medium text-surface-on">{item.title || item.name}</h4>
+                                  <p className="text-[10px] text-stone-400 uppercase tracking-widest mt-1">Qty: {item.quantity} | {item.size || 'Standard'}</p>
+                                </div>
+                                <div className="text-sm font-medium">₹{(item.price * item.quantity).toLocaleString()}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Totals */}
+                        <div className="bg-stone-50 p-8 rounded-3xl space-y-4">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-stone-400 font-bold uppercase tracking-widest">Subtotal</span>
+                            <span className="font-semibold">₹{(selectedOrder.subtotal || selectedOrder.total).toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="text-stone-400 font-bold uppercase tracking-widest">Shipping</span>
+                            <span className="text-green-600 font-bold uppercase tracking-widest">Complimentary</span>
+                          </div>
+                          <div className="pt-4 border-t border-stone-200 flex justify-between items-baseline">
+                            <span className="text-sm font-black uppercase tracking-widest">Total Amount</span>
+                            <span className="text-2xl font-display text-primary">₹{(selectedOrder.total || 0).toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        {/* Shipping Info */}
+                        {selectedOrder.delivery_method && (
+                          <div className="p-8 border border-stone-100 rounded-3xl">
+                            <h3 className="text-xs font-bold uppercase tracking-widest text-stone-900 mb-4">Tracking Information</h3>
+                            <div className="grid grid-cols-2 gap-8">
+                              <div>
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Carrier</p>
+                                <p className="text-sm font-semibold">{selectedOrder.delivery_method}</p>
+                              </div>
+                              <div>
+                                <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Tracking Number</p>
+                                <p className="text-sm font-semibold text-primary">{selectedOrder.tracking_number}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

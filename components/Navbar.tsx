@@ -72,7 +72,6 @@ const Navbar = () => {
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const pathname = usePathname();
-  const { user } = useAuth();
   const { getTotalItems } = useCart();
 
   useEffect(() => {
@@ -117,16 +116,23 @@ const Navbar = () => {
         </div>
 
         <div className="max-w-screen-xl mx-auto px-4 md:px-6 h-16 md:h-20 flex justify-between items-center antialiased relative">
-          {/* Left: Mobile Menu / Desktop Logo */}
-          <div className="flex items-center justify-start gap-4 z-10">
+          {/* MOBILE ONLY: Left Side (Menu & Home) */}
+          <div className="flex lg:hidden items-center justify-start gap-4 z-10 flex-1">
             <button 
               onClick={() => setIsMenuOpen(true)}
-              className="lg:hidden text-surface-on-variant hover:text-primary transition-colors flex-shrink-0"
+              className="text-surface-on-variant hover:text-primary transition-all duration-300 flex-shrink-0"
             >
               <span className="material-symbols-outlined font-light scale-110">menu</span>
             </button>
             
-            <Link href="/" className="hidden lg:flex items-center">
+            <Link href="/" className="text-surface-on-variant hover:text-primary transition-all duration-300 flex-shrink-0">
+              <span className="material-symbols-outlined font-light scale-110">home</span>
+            </Link>
+          </div>
+
+          {/* DESKTOP ONLY: Left Side (Logo) */}
+          <div className="hidden lg:flex items-center justify-start flex-1 z-10">
+            <Link href="/" className="flex items-center">
               <Image 
                 src="/logo/BLO_TRNSP_PINK_LRG.png" 
                 alt="Bloomina Logo" 
@@ -138,20 +144,23 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Center: Absolute Logo (Mobile) / Desktop Nav */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center lg:static lg:translate-x-0 lg:flex-1">
-            <Link href="/" className="lg:hidden flex items-center">
+          {/* MOBILE ONLY: Center (Logo) */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex lg:hidden items-center justify-center">
+            <Link href="/" className="flex items-center">
               <Image 
                 src="/logo/BLO_TRNSP_PINK_LRG.png" 
                 alt="Bloomina Logo" 
                 width={120} 
                 height={32} 
-                className="h-5 w-auto object-contain"
+                className="h-7 w-auto object-contain"
                 priority
               />
             </Link>
+          </div>
 
-            <nav className="hidden lg:flex items-center gap-8 px-4 h-full">
+          {/* DESKTOP ONLY: Center (Nav Links) */}
+          <div className="hidden lg:flex items-center justify-center flex-[2]">
+            <nav className="flex items-center gap-10 px-4 h-full">
               {navLinks.map((link) => (
                 <div 
                   key={link.name} 
@@ -160,7 +169,7 @@ const Navbar = () => {
                 >
                   <Link 
                     href={link.href} 
-                    className={`text-[11px] font-black uppercase tracking-[0.15em] transition-all duration-300 whitespace-nowrap relative group py-2 ${pathname === link.href || hoveredLink === link.name ? 'text-primary' : 'text-surface-on hover:text-primary'}`}
+                    className={`text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 whitespace-nowrap relative group py-2 ${pathname === link.href || hoveredLink === link.name ? 'text-primary' : 'text-surface-on hover:text-primary'}`}
                   >
                     {link.name}
                     <span className={`absolute -bottom-1 left-0 h-[2px] bg-primary transition-all duration-300 ${pathname === link.href ? 'w-full' : 'w-0 group-hover:w-full'}`} />
@@ -170,26 +179,21 @@ const Navbar = () => {
             </nav>
           </div>
 
-          {/* Right: Icons */}
-          <div className="flex items-center justify-end gap-1.5 md:gap-8 z-10">
+          {/* RIGHT SIDE: Icons (Universal) */}
+          <div className="flex items-center justify-end gap-3 md:gap-8 z-10 flex-1">
             <button 
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               className={`text-surface-on-variant hover:text-primary transition-all duration-300 flex-shrink-0 ${isSearchOpen ? 'text-primary scale-110' : ''}`}
             >
               <span className="material-symbols-outlined text-[20px] md:text-2xl font-light">search</span>
             </button>
-            <Link href="/account" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0 flex items-center gap-2">
-              {user ? (
-                <span className="text-[10px] font-bold uppercase tracking-widest text-primary hidden md:block">
-                  Hi, {(user.user_metadata?.name || user.email)?.split(' ')[0]}
-                </span>
-              ) : null}
+            <Link href="/account" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0">
               <span className="material-symbols-outlined text-[20px] md:text-2xl font-light">person</span>
             </Link>
             <Link href="/cart" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex items-center gap-0.5 group relative flex-shrink-0">
               <span className="material-symbols-outlined text-[20px] md:text-2xl font-light group-hover:scale-110 transition-transform">shopping_cart</span>
               {isMounted && getTotalItems() > 0 && (
-                <span className="absolute -top-2 -right-2 w-4 h-4 bg-primary text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-in zoom-in duration-300">
+                <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 bg-primary text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-in zoom-in duration-300">
                   {getTotalItems()}
                 </span>
               )}
@@ -222,7 +226,7 @@ const Navbar = () => {
 
               {/* Featured Card */}
               <div className="col-span-4 border-l border-stone-100 pl-12 flex flex-col justify-center">
-                {navLinks.find(l => l.name === hoveredLink)?.featured ? (
+                {hoveredLink && navLinks.find(l => l.name === hoveredLink)?.featured ? (
                   <div className="relative group cursor-pointer overflow-hidden rounded-2xl aspect-[4/3] petal-shadow">
                     <img 
                       src={navLinks.find(l => l.name === hoveredLink)?.featured?.image} 
@@ -240,7 +244,7 @@ const Navbar = () => {
                     <p className="text-sm font-light leading-relaxed text-surface-on-variant">
                       Crafted for the feminine silhouette, our collections embrace the philosophy of ethereal comfort and timeless elegance.
                     </p>
-                    <Link href="/story" className="inline-block text-[10px] font-bold uppercase tracking-widest text-primary underline underline-offset-8">Our Philosophy</Link>
+                    <Link href="/about" className="inline-block text-[10px] font-bold uppercase tracking-widest text-primary underline underline-offset-8">Our Philosophy</Link>
                   </div>
                 )}
               </div>
