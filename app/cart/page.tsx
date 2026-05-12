@@ -3,10 +3,13 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/hooks/use-cart';
+import CouponSection from '@/components/CouponSection';
 
 const CartPage = () => {
   const { items, updateQuantity, removeItem, getTotalPrice, clearCart } = useCart();
   const [isMounted, setIsMounted] = useState(false);
+
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
 
   // Avoid hydration mismatch
   useEffect(() => {
@@ -23,7 +26,8 @@ const CartPage = () => {
 
   const subtotal = getTotalPrice();
   const shipping = 0; // Free shipping
-  const total = subtotal + shipping;
+  const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const total = Math.max(0, subtotal - discount + shipping);
 
   if (items.length === 0) {
     return (
@@ -128,11 +132,27 @@ const CartPage = () => {
             <div className="bg-white p-8 md:p-10 rounded-[2rem] shadow-[0_40px_80px_-20px_rgba(241,145,161,0.08)] border border-stone-50">
               <h2 className="text-2xl font-display font-light text-surface-on mb-8">Order Summary</h2>
 
+              <div className="mb-10">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-3 ml-1">Have a coupon?</p>
+                <CouponSection 
+                  cartTotal={subtotal}
+                  appliedCoupon={appliedCoupon}
+                  onApply={(coupon) => setAppliedCoupon(coupon)}
+                  onRemove={() => setAppliedCoupon(null)}
+                />
+              </div>
+
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between text-sm">
                   <span className="text-surface-on-variant">Subtotal</span>
                   <span className="font-medium text-surface-on">₹{subtotal.toLocaleString()}</span>
                 </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-sm animate-fade-in-up">
+                    <span className="text-primary">Discount ({appliedCoupon.code})</span>
+                    <span className="font-medium text-primary">-₹{appliedCoupon.discountAmount.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-surface-on-variant">Shipping</span>
                   <span className="text-green-600 font-medium uppercase text-[10px] tracking-widest">Free</span>
@@ -145,7 +165,10 @@ const CartPage = () => {
               </div>
 
               <Link
-                href="/checkout"
+                href={{
+                  pathname: '/checkout',
+                  query: appliedCoupon ? { coupon: appliedCoupon.code } : {}
+                }}
                 className="w-full bg-primary text-white py-5 rounded-full font-bold uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 block text-center"
               >
                 Proceed to Checkout

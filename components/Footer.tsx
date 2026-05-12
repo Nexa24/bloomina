@@ -56,6 +56,7 @@ const Footer = () => {
               <li><Link href="/shipping-policy" className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">Shipping Policy</Link></li>
               <li><Link href="/returns-exchanges" className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">Returns & Exchanges</Link></li>
               <li><Link href="/cancellation-policy" className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">Cancellation Policy</Link></li>
+              <li><Link href="/feedback" className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">Brand Feedback</Link></li>
               <li><Link href="/contact" className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">Contact Us</Link></li>
             </ul>
           </div>
@@ -90,8 +91,8 @@ const Footer = () => {
               © 2026 Bloomina. Designed with Intention.
             </p>
             <div className="flex justify-center md:justify-end gap-6 text-[9px] font-bold uppercase tracking-[0.1em] text-surface-on/20">
-              <Link href="/policy" className="hover:text-primary transition-colors">Privacy</Link>
-              <Link href="/terms" className="hover:text-primary transition-colors">Terms</Link>
+              <Link href="/privacy-policy" className="hover:text-primary transition-colors">Privacy</Link>
+              <Link href="/terms-of-service" className="hover:text-primary transition-colors">Terms</Link>
               <Link href="#" className="hover:text-primary transition-colors">Accessibility</Link>
             </div>
           </div>

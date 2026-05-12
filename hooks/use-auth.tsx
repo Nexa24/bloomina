@@ -9,6 +9,7 @@ type AuthContextType = {
   isLoading: boolean;
   refreshUser: () => Promise<void>;
   logout: () => Promise<void>;
+  signInWithGoogle: () => Promise<any>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -44,13 +45,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, []);
 
+  const signInWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      if (error) throw error;
+      return data;
+    } catch (err) {
+      console.error('Google Sign In Error:', err);
+      throw err;
+    }
+  };
+
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, refreshUser: fetchUser, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, refreshUser: fetchUser, logout, signInWithGoogle }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,36 +2,70 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from "next/image";
+import { supabase } from '../lib/supabase';
 
-const images = [
-    "/2ebec6153d7f836685b7397e8670d46f.jpg",
-    "/d31c416a1c344d8d7a9bdadbada23d87.jpg",
-    "/29b1b71c71dc10ed5838d1934fea3dc8.jpg"
-];
+interface HeroSlide {
+    id: string;
+    image_url: string;
+    order_index: number;
+}
 
 const HeroSlideshow = () => {
+    const [slides, setSlides] = useState<HeroSlide[]>([]);
     const [current, setCurrent] = useState(0);
-
-    const next = useCallback(() => {
-        setCurrent((prev) => (prev + 1) % images.length);
-    }, []);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const fetchSlides = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('hero_slides')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('order_index', { ascending: true });
+
+                if (error) throw error;
+                if (data && data.length > 0) {
+                    setSlides(data);
+                }
+            } catch (err) {
+                console.error("Error fetching hero slides:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchSlides();
+    }, []);
+
+    const next = useCallback(() => {
+        if (slides.length === 0) return;
+        setCurrent((prev) => (prev + 1) % slides.length);
+    }, [slides.length]);
+
+    useEffect(() => {
+        if (slides.length <= 1) return;
         const timer = setInterval(next, 5000); // Change image every 5 seconds
         return () => clearInterval(timer);
-    }, [next]);
+    }, [next, slides.length]);
+
+    if (loading || slides.length === 0) {
+        return (
+            <div className="absolute inset-0 -z-20 bg-slate-100 animate-pulse" />
+        );
+    }
 
     return (
         <div className="absolute inset-0 -z-20">
-            {images.map((img, idx) => (
+            {slides.map((slide, idx) => (
                 <div
-                    key={img}
+                    key={slide.id}
                     className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
                         idx === current ? 'opacity-100' : 'opacity-0'
                     }`}
                 >
                     <Image
-                        src={img}
+                        src={slide.image_url}
                         alt={`Bloomina Hero ${idx + 1}`}
                         fill
                         className="object-cover brightness-[0.85]"
@@ -43,18 +77,20 @@ const HeroSlideshow = () => {
             <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-transparent pointer-events-none" />
             
             {/* Slide Indicators */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                {images.map((_, idx) => (
-                    <button
-                        key={idx}
-                        onClick={() => setCurrent(idx)}
-                        className={`h-1 rounded-full transition-all duration-500 ${
-                            idx === current ? 'w-8 bg-primary' : 'w-2 bg-white/40'
-                        }`}
-                        aria-label={`Go to slide ${idx + 1}`}
-                    />
-                ))}
-            </div>
+            {slides.length > 1 && (
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                    {slides.map((_, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => setCurrent(idx)}
+                            className={`h-1 rounded-full transition-all duration-500 ${
+                                idx === current ? 'w-8 bg-primary' : 'w-2 bg-white/40'
+                            }`}
+                            aria-label={`Go to slide ${idx + 1}`}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

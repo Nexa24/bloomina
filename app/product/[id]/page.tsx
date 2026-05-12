@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/hooks/use-cart';
 import { supabase } from '@/lib/supabase';
+import ProductReviews from '@/components/ProductReviews';
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = React.use(params);
@@ -350,6 +351,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             </div>
           </div>
         )}
+
+        {/* Feedback Section */}
+        <ProductReviews productId={product.id} title={`${product.name} Feedback`} />
       </main>
     </div>
   );

@@ -3,22 +3,35 @@
 import React, { useEffect, useState } from 'react';
 import { useCart } from '@/hooks/use-cart';
 import { useRouter } from 'next/navigation';
-import { createOrder, verifyPayment } from '@/app/actions/checkout';
+import { createOrder, verifyPayment, validateCoupon } from '@/app/actions/checkout';
 import Link from 'next/link';
 import Script from 'next/script';
 import { useAuth } from '@/hooks/use-auth';
 import { createClient } from '@/utils/supabase/client';
+import { useSearchParams } from 'next/navigation';
+import CouponSection from '@/components/CouponSection';
 
 const CheckoutPage = () => {
   const { items, getTotalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const supabase = createClient();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialCouponCode = searchParams.get('coupon');
+
   const [isMounted, setIsMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isRedirectingToSuccess, setIsRedirectingToSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveAddress, setSaveAddress] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState<'Razorpay' | 'COD'>('Razorpay');
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
+
+  const [checkoutConfig, setCheckoutConfig] = useState({
+    cod_enabled: true,
+    cod_min_order: 0,
+    whatsapp_enabled: true
+  });
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -36,6 +49,42 @@ const CheckoutPage = () => {
       router.push('/cart');
     }
   }, [items, router, isRedirectingToSuccess]);
+
+  // Handle initial coupon from query
+  useEffect(() => {
+    const applyInitialCoupon = async () => {
+      if (initialCouponCode && items.length > 0) {
+        const subtotal = getTotalPrice();
+        const result = await validateCoupon(initialCouponCode, subtotal);
+        if (result.success && result.coupon) {
+          setAppliedCoupon({
+            code: result.coupon.code,
+            discountAmount: result.coupon.discountAmount
+          });
+        }
+      }
+    };
+    applyInitialCoupon();
+  }, [initialCouponCode, items.length, getTotalPrice]);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      const { data } = await supabase
+        .from('system_config')
+        .select('value')
+        .eq('key', 'payment_gateway_config')
+        .single();
+      
+      if (data?.value) {
+        setCheckoutConfig({
+          cod_enabled: data.value.cod_enabled ?? true,
+          cod_min_order: data.value.cod_min_order ?? 0,
+          whatsapp_enabled: data.value.whatsapp_payments_enabled ?? true
+        });
+      }
+    };
+    fetchConfig();
+  }, [supabase]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -71,7 +120,9 @@ const CheckoutPage = () => {
 
   const subtotal = getTotalPrice();
   const shipping = 0;
-  const total = subtotal + shipping;
+  const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const total = Math.max(0, subtotal - discount + shipping);
+  const isCodEligible = checkoutConfig.cod_enabled && total >= checkoutConfig.cod_min_order;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -94,20 +145,30 @@ const CheckoutPage = () => {
     setError(null);
 
     try {
-      const isLoaded = await loadRazorpay();
-      if (!isLoaded) {
-        throw new Error("Razorpay SDK failed to load. Check your internet connection.");
-      }
-
+      // 1. Create Order via Server Action
       const result = await createOrder({
         items,
-        shippingAddress: formData
+        shippingAddress: formData,
+        paymentMethod: paymentMethod,
+        couponCode: appliedCoupon?.code
       });
 
       if (result.error) {
         setError(result.error);
         setIsLoading(false);
         return;
+      }
+
+      // 2. Handle Success for COD
+      if (result.isCOD) {
+        await finalizeOrder(result.orderId);
+        return;
+      }
+
+      // 3. Handle Razorpay Payment
+      const isLoaded = await loadRazorpay();
+      if (!isLoaded) {
+        throw new Error("Razorpay SDK failed to load. Check your internet connection.");
       }
 
       const options = {
@@ -127,23 +188,7 @@ const CheckoutPage = () => {
           });
 
           if (verification.success) {
-            if (user && saveAddress) {
-              await supabase.from('profiles').upsert({
-                id: user.id,
-                full_name: formData.fullName,
-                phone: formData.phone,
-                email: formData.email,
-                address: formData.address,
-                city: formData.city,
-                state: formData.state,
-                postal_code: formData.postalCode,
-                updated_at: new Date().toISOString()
-              });
-            }
-
-            setIsRedirectingToSuccess(true);
-            clearCart();
-            router.push(`/order-success?id=${result.orderId}`);
+            await finalizeOrder(result.orderId);
           } else {
             setError(verification.error || "Payment verification failed");
             setIsLoading(false);
@@ -173,6 +218,26 @@ const CheckoutPage = () => {
     }
   };
 
+  const finalizeOrder = async (orderId: string) => {
+    if (user && saveAddress) {
+      await supabase.from('profiles').upsert({
+        id: user.id,
+        full_name: formData.fullName,
+        phone: formData.phone,
+        email: formData.email,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        postal_code: formData.postalCode,
+        updated_at: new Date().toISOString()
+      });
+    }
+
+    setIsRedirectingToSuccess(true);
+    clearCart();
+    router.push(`/order-success?id=${orderId}`);
+  };
+
   const handleBypassPayment = async () => {
     if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') return;
     
@@ -182,7 +247,8 @@ const CheckoutPage = () => {
     try {
       const result = await createOrder({
         items,
-        shippingAddress: formData
+        shippingAddress: formData,
+        paymentMethod: 'COD'
       });
 
       if (result.error) {
@@ -191,23 +257,7 @@ const CheckoutPage = () => {
         return;
       }
 
-      if (user && saveAddress) {
-        await supabase.from('profiles').upsert({
-          id: user.id,
-          full_name: formData.fullName,
-          phone: formData.phone,
-          email: formData.email,
-          address: formData.address,
-          city: formData.city,
-          state: formData.state,
-          postal_code: formData.postalCode,
-          updated_at: new Date().toISOString()
-        });
-      }
-
-      setIsRedirectingToSuccess(true);
-      clearCart();
-      router.push(`/order-success?id=${result.orderId}`);
+      await finalizeOrder(result.orderId);
     } catch (err: any) {
       setError("Bypass failed: " + err.message);
       setIsLoading(false);
@@ -350,15 +400,46 @@ const CheckoutPage = () => {
                 <span className="w-8 h-8 bg-primary/5 rounded-full flex items-center justify-center text-primary text-sm font-bold">2</span>
                 Payment Method
               </h2>
-              <div className="p-6 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <span className="material-symbols-outlined text-primary">payments</span>
-                  <div>
-                    <p className="text-sm font-semibold text-surface-on">Pay with Razorpay</p>
-                    <p className="text-[10px] text-surface-on-variant uppercase tracking-widest">Cards, UPI, Netbanking</p>
+              <div className="space-y-4">
+                <div 
+                  onClick={() => setPaymentMethod('Razorpay')}
+                  className={`p-6 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${paymentMethod === 'Razorpay' ? 'bg-primary/5 border-primary/20' : 'bg-stone-50 border-transparent hover:border-stone-100'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <span className={`material-symbols-outlined ${paymentMethod === 'Razorpay' ? 'text-primary' : 'text-stone-400'}`}>payments</span>
+                    <div>
+                      <p className={`text-sm font-semibold ${paymentMethod === 'Razorpay' ? 'text-surface-on' : 'text-stone-500'}`}>Pay with Razorpay</p>
+                      <p className="text-[10px] text-stone-400 uppercase tracking-widest">Cards, UPI, Netbanking</p>
+                    </div>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${paymentMethod === 'Razorpay' ? 'border-primary' : 'border-stone-200'}`}>
+                    {paymentMethod === 'Razorpay' && <div className="w-2.5 h-2.5 rounded-full bg-primary animate-scale-in" />}
                   </div>
                 </div>
-                <div className="w-5 h-5 rounded-full border-4 border-primary" />
+
+                {isCodEligible && (
+                  <div 
+                    onClick={() => setPaymentMethod('COD')}
+                    className={`p-6 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${paymentMethod === 'COD' ? 'bg-primary/5 border-primary/20' : 'bg-stone-50 border-transparent hover:border-stone-100'}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <span className={`material-symbols-outlined ${paymentMethod === 'COD' ? 'text-primary' : 'text-stone-400'}`}>local_shipping</span>
+                      <div>
+                        <p className={`text-sm font-semibold ${paymentMethod === 'COD' ? 'text-surface-on' : 'text-stone-500'}`}>Cash on Delivery</p>
+                        <p className="text-[10px] text-stone-400 uppercase tracking-widest">Pay when you receive</p>
+                      </div>
+                    </div>
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${paymentMethod === 'COD' ? 'border-primary' : 'border-stone-200'}`}>
+                      {paymentMethod === 'COD' && <div className="w-2.5 h-2.5 rounded-full bg-primary animate-scale-in" />}
+                    </div>
+                  </div>
+                )}
+
+                {!isCodEligible && checkoutConfig.cod_enabled && (
+                  <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest px-6 italic">
+                    COD available for orders above ₹{checkoutConfig.cod_min_order}
+                  </p>
+                )}
               </div>
             </section>
           </div>
@@ -380,24 +461,40 @@ const CheckoutPage = () => {
                       </p>
                     </div>
                     <div className="text-sm font-medium text-surface-on">
-                      \u20B9{(item.price * item.quantity).toLocaleString()}
+                      ₹{(item.price * item.quantity).toLocaleString()}
                     </div>
                   </div>
                 ))}
               </div>
 
+              <div className="mb-10">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-3 ml-1">Promotional Code</p>
+                <CouponSection 
+                  cartTotal={subtotal}
+                  appliedCoupon={appliedCoupon}
+                  onApply={(coupon) => setAppliedCoupon(coupon)}
+                  onRemove={() => setAppliedCoupon(null)}
+                />
+              </div>
+
               <div className="space-y-4 mb-10 py-8 border-y border-stone-50">
                 <div className="flex justify-between text-sm">
                   <span className="text-surface-on-variant">Subtotal</span>
-                  <span className="font-medium text-surface-on">\u20B9{subtotal.toLocaleString()}</span>
+                  <span className="font-medium text-surface-on">₹{subtotal.toLocaleString()}</span>
                 </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-sm animate-fade-in-up">
+                    <span className="text-primary font-bold uppercase text-[10px] tracking-widest">Discount ({appliedCoupon.code})</span>
+                    <span className="font-medium text-primary">-₹{appliedCoupon.discountAmount.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-surface-on-variant">Shipping</span>
                   <span className="text-green-600 font-medium uppercase text-[10px] tracking-widest">Complimentary</span>
                 </div>
                 <div className="pt-4 flex justify-between items-baseline">
                   <span className="text-lg font-display text-surface-on">Total</span>
-                  <span className="text-3xl font-display text-primary font-medium">\u20B9{total.toLocaleString()}</span>
+                  <span className="text-3xl font-display text-primary font-medium">₹{total.toLocaleString()}</span>
                 </div>
               </div>
 
@@ -417,7 +514,7 @@ const CheckoutPage = () => {
                   <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
-                    Complete Purchase
+                    {paymentMethod === 'COD' ? 'Confirm COD Order' : 'Complete Purchase'}
                     <span className="material-symbols-outlined text-sm">arrow_forward</span>
                   </>
                 )}

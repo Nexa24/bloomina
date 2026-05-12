@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ProductGrid from "@/components/ProductGrid";
 import CategorySection from "@/components/CategorySection";
+import OtherCategoriesSection from "@/components/OtherCategoriesSection";
 import HeroSlideshow from "@/components/HeroSlideshow";
 
 export default function Home() {
@@ -48,6 +49,9 @@ export default function Home() {
           </Link>
         </div>
       </section>
+
+      {/* Other Categories Section - New */}
+      <OtherCategoriesSection />
     </div>
   );
 }

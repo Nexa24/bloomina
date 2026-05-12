@@ -122,10 +122,24 @@ const AccountPage = () => {
         if (authError) throw authError;
 
         alert('Profile updated successfully!');
-    } catch (error: any) {
-        alert('Error updating profile: ' + error.message);
     } finally {
         setIsDataLoading(false);
+    }
+  };
+
+  const handleTriggerReset = async () => {
+    if (!user?.email) return;
+    setIsDataLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/account/update-password`,
+      });
+      if (error) throw error;
+      alert('A password reset link has been sent to your email.');
+    } catch (error: any) {
+      alert('Error: ' + error.message);
+    } finally {
+      setIsDataLoading(false);
     }
   };
 
@@ -155,7 +169,7 @@ const AccountPage = () => {
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-3">Welcome Back</p>
               <h1 className="text-5xl font-display font-light text-surface-on tracking-tight">
-                {(user?.user_metadata?.name || user?.email)?.split(' ')[0] || 'Member'} <span className="text-primary/20 font-sans italic">.</span>
+                {(name || user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email)?.split(' ')[0] || 'Member'} <span className="text-primary/20 font-sans italic">.</span>
               </h1>
             </div>
             <button 
@@ -469,6 +483,54 @@ const AccountPage = () => {
                         {isDataLoading ? 'Saving...' : 'Update Address'}
                       </button>
                     </form>
+                  </div>
+                )}
+
+                {activeTab === 'settings' && (
+                  <div className="max-w-xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <h2 className="text-2xl font-display mb-8">Account Settings</h2>
+                    <div className="space-y-12">
+                      <section className="space-y-6">
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-surface-on">Security</h3>
+                        <p className="text-sm text-surface-on/60 font-light leading-relaxed">
+                          To update your password or enable two-factor authentication, please use the secure portal link below.
+                        </p>
+                        <button 
+                          onClick={handleTriggerReset}
+                          disabled={isDataLoading}
+                          className="text-[10px] font-bold uppercase tracking-widest text-primary hover:underline underline-offset-4 disabled:opacity-50"
+                        >
+                          {isDataLoading ? 'Processing...' : 'Reset Account Password'}
+                        </button>
+                      </section>
+
+                      <section className="space-y-6">
+                        <h3 className="text-xs font-bold uppercase tracking-widest text-surface-on">Communication</h3>
+                        <div className="space-y-4">
+                          {[
+                            { label: 'Newsletter', desc: 'New editorial collections and insights.' },
+                            { label: 'Order Updates', desc: 'Real-time tracking and delivery notices.' }
+                          ].map((item, i) => (
+                            <div key={i} className="flex items-center justify-between p-6 rounded-2xl bg-stone-50 border border-stone-100">
+                              <div>
+                                <p className="text-sm font-semibold mb-1">{item.label}</p>
+                                <p className="text-[10px] text-surface-on/40">{item.desc}</p>
+                              </div>
+                              <div className="w-10 h-5 bg-primary/20 rounded-full relative">
+                                <div className="absolute right-1 top-1 w-3 h-3 bg-primary rounded-full shadow-sm" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="pt-12 border-t border-stone-100">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-red-400 mb-2">Danger Zone</p>
+                        <button className="text-[10px] font-bold uppercase tracking-widest text-surface-on/20 hover:text-red-500 transition-colors">
+                          Request Account Deletion
+                        </button>
+                      </section>
+                    </div>
                   </div>
                 )}
 

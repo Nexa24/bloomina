@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -16,10 +17,26 @@ const ContactPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsSubmitting(false);
-    setIsSubmitted(true);
+    
+    try {
+      const { error } = await supabase
+        .from('leads')
+        .insert([{
+          name: formData.name,
+          email: formData.email,
+          type: formData.subject,
+          message: formData.message,
+          status: 'new'
+        }]);
+
+      if (error) throw error;
+      setIsSubmitted(true);
+    } catch (err) {
+      console.error('Submission error:', err);
+      alert('Something went wrong. Please try again later.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

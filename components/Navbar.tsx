@@ -56,6 +56,7 @@ const navLinks = [
       { name: 'Craftsmanship', href: '/materials' },
       { name: 'The Bloomina Philosophy', href: '/about#philosophy' },
       { name: 'Size Guide', href: '/size-guide' },
+      { name: 'Feedback', href: '/feedback' },
     ],
     featured: {
       title: 'The Bloomina Touch',

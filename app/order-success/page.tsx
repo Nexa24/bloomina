@@ -8,6 +8,21 @@ import confetti from 'canvas-confetti';
 const SuccessContent = () => {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('id');
+  const [orderInfo, setOrderInfo] = React.useState<any>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      if (!orderId) return;
+      const { data } = await supabase
+        .from('orders')
+        .select('payment_method, email, status')
+        .eq('id', orderId)
+        .single();
+      setOrderInfo(data);
+    };
+    fetchOrder();
+  }, [orderId, supabase]);
 
   useEffect(() => {
     // Elegant confetti burst
@@ -45,6 +60,8 @@ const SuccessContent = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const isCOD = orderInfo?.payment_method === 'COD';
+
   return (
     <div className="min-h-screen bg-[#F9F9F9] flex flex-col items-center justify-center p-6 antialiased relative overflow-hidden">
       {/* Editorial Background Accents */}
@@ -64,11 +81,11 @@ const SuccessContent = () => {
         {/* Messaging Section */}
         <div className="text-center mb-12 animate-slide-up">
           <p className="text-[10px] font-bold uppercase tracking-[0.6em] text-primary mb-4">
-            Payment Successful
+            {isCOD ? 'Order Confirmed' : 'Payment Successful'}
           </p>
           <h1 className="text-5xl md:text-7xl font-display font-light text-[#1A1C1C] tracking-tighter leading-none mb-6">
             Refined Luxury, <br />
-            <span className="italic font-serif">Now Confirmed.</span>
+            <span className="italic font-serif">{isCOD ? 'Reserved for You.' : 'Now Confirmed.'}</span>
           </h1>
           <div className="h-px w-24 bg-[#944555]/20 mx-auto" />
         </div>
@@ -86,12 +103,17 @@ const SuccessContent = () => {
               </div>
               <div className="flex items-center gap-3 py-2 px-5 bg-primary/5 rounded-full border border-primary/10">
                 <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                <span className="text-[10px] font-bold uppercase tracking-widest text-primary">In Preparation</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
+                  {isCOD ? 'Awaiting Dispatch' : 'In Preparation'}
+                </span>
               </div>
             </div>
 
             <p className="text-lg text-[#534345] font-light leading-relaxed mb-12 max-w-lg">
-              Your selection has been curated. Our artisans are now preparing your pieces with the meticulous attention to detail that defines the Bloomina standard.
+              {isCOD 
+                ? "Your order has been logged into our system. We will contact you shortly to verify your delivery details before dispatching your lovely selection."
+                : "Your selection has been curated. Our artisans are now preparing your pieces with the meticulous attention to detail that defines the Bloomina standard."
+              }
             </p>
 
             <div className="grid grid-cols-2 gap-8 py-8 border-t border-stone-50">
@@ -101,7 +123,7 @@ const SuccessContent = () => {
               </div>
               <div>
                 <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-2">Notification Sent</p>
-                <p className="text-sm font-medium text-[#1A1C1C] truncate">{searchParams.get('email') || 'Your Inbox'}</p>
+                <p className="text-sm font-medium text-[#1A1C1C] truncate">{orderInfo?.email || 'Your Inbox'}</p>
               </div>
             </div>
           </div>

@@ -16,24 +16,24 @@ const CategorySection = () => {
         const { data, error } = await supabase
           .from('categories')
           .select('*')
-          .limit(4);
+          .eq('display_on_home', true)
+          .order('sort_order', { ascending: true })
+          .limit(3);
 
-        if (error) throw error;
+        if (error) {
+            // Fallback if column doesn't exist
+            const { data: fallbackData, error: fallbackError } = await supabase
+              .from('categories')
+              .select('*')
+              .limit(3);
+            
+            if (fallbackError) throw fallbackError;
+            setCategories(fallbackData || []);
+        } else {
+            setCategories(data || []);
+        }
         
-        // Add layout spans for the grid
-        const layouts = [
-          'md:col-span-2 md:row-span-2',
-          'md:col-span-1 md:row-span-1',
-          'md:col-span-1 md:row-span-2',
-          'md:col-span-1 md:row-span-1'
-        ];
-
-        const mapped = (data || []).map((cat, i) => ({
-          ...cat,
-          gridSpan: layouts[i % layouts.length]
-        }));
-
-        setCategories(mapped);
+        // Removed unnecessary gridSpan mapping as we use a fixed 3-column grid now
       } catch (err: any) {
         console.error('Category fetch error details:', {
           message: err.message,
