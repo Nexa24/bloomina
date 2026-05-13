@@ -248,7 +248,7 @@ const CheckoutPage = () => {
           </Link>
           <div>
             <h1 className="text-4xl font-display font-light text-surface-on tracking-tight">Checkout</h1>
-            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mt-2">Finalize your selection</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mt-2">Finalize your selection [v1.0.2-live]</p>
           </div>
         </div>
 
