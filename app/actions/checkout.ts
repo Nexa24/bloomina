@@ -184,6 +184,9 @@ export async function createOrder(data: {
         const { instance, keyId } = await getRazorpayInstance();
         rzpKey = keyId;
         
+        const host = (await import('next/headers')).headers().get('host');
+        console.log(`[Checkout] Creating Razorpay order on domain: ${host}`);
+
         const rzpOrder = await instance.orders.create({
           amount: Math.round(total * 100),
           currency: 'INR',
@@ -192,7 +195,7 @@ export async function createOrder(data: {
         razorpayOrderId = rzpOrder.id;
       } catch (rzpErr: any) {
         console.error('Razorpay Order Error:', rzpErr);
-        throw new Error(`Payment Gateway Error: ${rzpErr.error?.description || rzpErr.message || 'Failed to initialize payment'}`);
+        throw new Error(`Payment Gateway Error: ${rzpErr.error?.description || rzpErr.message || 'Authentication failed'}`);
       }
     } else if (data.paymentMethod === 'COD') {
       if (!config.cod_enabled || total < (config.cod_min_order || 0)) {
