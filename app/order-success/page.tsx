@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useEffect, Suspense } from 'react';
+import React, { useEffect, Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import confetti from 'canvas-confetti';
+import { createClient } from '@/utils/supabase/client';
 
 const SuccessContent = () => {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('id');
-  const [orderInfo, setOrderInfo] = React.useState<any>(null);
+  const [orderInfo, setOrderInfo] = useState<any>(null);
   const supabase = createClient();
 
   useEffect(() => {

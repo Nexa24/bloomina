@@ -63,7 +63,7 @@ const LoginContent = () => {
     setIsLoading(true);
     setError(null);
     try {
-      await signInWithGoogle();
+      await signInWithGoogle(next);
     } catch (err: any) {
       setError(err.message || 'Failed to sign in with Google');
       setIsLoading(false);

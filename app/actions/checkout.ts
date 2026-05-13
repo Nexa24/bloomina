@@ -58,11 +58,11 @@ export async function validateCoupon(code: string, cartTotal: number) {
       return { error: 'Invalid coupon code.' };
     }
 
-    if (coupon.status !== 'Active') {
+    if (!coupon.is_active) {
       return { error: 'This coupon is no longer active.' };
     }
 
-    if (coupon.expiry && new Date(coupon.expiry) < new Date()) {
+    if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
       return { error: 'This coupon has expired.' };
     }
 
@@ -70,19 +70,19 @@ export async function validateCoupon(code: string, cartTotal: number) {
       return { error: 'This coupon has reached its maximum usage limit.' };
     }
 
-    if (cartTotal < (coupon.min_cart_value || 0)) {
-      return { error: `This coupon requires a minimum purchase of ₹${coupon.min_cart_value}.` };
+    if (cartTotal < (coupon.min_order_value || 0)) {
+      return { error: `This coupon requires a minimum purchase of ₹${coupon.min_order_value}.` };
     }
 
-    // Logic for 'new_user_only' could be added here if we check user order history
-
     let discountAmount = 0;
-    if (coupon.type === 'flat') {
-      discountAmount = Number(coupon.value);
-    } else if (coupon.type === 'percent') {
-      discountAmount = (cartTotal * Number(coupon.value)) / 100;
-    } else if (coupon.type === 'freeship') {
-      // Handled separately or as 0 discount if shipping is already free
+    if (coupon.discount_type === 'fixed') {
+      discountAmount = Number(coupon.discount_value);
+    } else if (coupon.discount_type === 'percentage') {
+      discountAmount = (cartTotal * Number(coupon.discount_value)) / 100;
+      if (coupon.max_discount) {
+        discountAmount = Math.min(discountAmount, Number(coupon.max_discount));
+      }
+    } else if (coupon.discount_type === 'freeship') {
       discountAmount = 0;
     }
 
@@ -91,8 +91,8 @@ export async function validateCoupon(code: string, cartTotal: number) {
       coupon: {
         id: coupon.id,
         code: coupon.code,
-        type: coupon.type,
-        value: coupon.value,
+        type: coupon.discount_type,
+        value: coupon.discount_value,
         discountAmount: Math.min(discountAmount, cartTotal)
       }
     };

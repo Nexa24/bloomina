@@ -122,6 +122,9 @@ const AccountPage = () => {
         if (authError) throw authError;
 
         alert('Profile updated successfully!');
+    } catch (err: any) {
+        console.error('Update error:', err);
+        alert('Error updating profile: ' + (err.message || 'An unexpected error occurred'));
     } finally {
         setIsDataLoading(false);
     }

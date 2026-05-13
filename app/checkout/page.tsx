@@ -238,32 +238,6 @@ const CheckoutPage = () => {
     router.push(`/order-success?id=${orderId}`);
   };
 
-  const handleBypassPayment = async () => {
-    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') return;
-    
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await createOrder({
-        items,
-        shippingAddress: formData,
-        paymentMethod: 'COD'
-      });
-
-      if (result.error) {
-        setError(result.error);
-        setIsLoading(false);
-        return;
-      }
-
-      await finalizeOrder(result.orderId);
-    } catch (err: any) {
-      setError("Bypass failed: " + err.message);
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background antialiased pt-32 pb-24">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
@@ -320,9 +294,11 @@ const CheckoutPage = () => {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
+                    disabled={!!user}
                     placeholder="elena@mystic.com"
-                    className="w-full bg-stone-50 border-none rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-stone-300"
+                    className={`w-full bg-stone-50 border-none rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-stone-300 ${user ? 'opacity-60 cursor-not-allowed' : ''}`}
                   />
+                  {user && <p className="text-[8px] font-bold text-primary/40 uppercase tracking-widest ml-1">Linked to your sanctuary account</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -519,18 +495,6 @@ const CheckoutPage = () => {
                   </>
                 )}
               </button>
-
-              {isMounted && typeof window !== 'undefined' && window.location.hostname === 'localhost' && (
-                <button 
-                  type="button"
-                  onClick={handleBypassPayment}
-                  disabled={isLoading}
-                  className="w-full mt-4 bg-stone-100 text-stone-500 py-4 rounded-full font-bold uppercase tracking-[0.2em] text-[9px] hover:bg-stone-200 transition-all flex items-center justify-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-sm">developer_mode</span>
-                  Dev Bypass Payment
-                </button>
-              )}
 
               <p className="mt-8 text-center text-[10px] text-stone-400 uppercase tracking-widest leading-relaxed">
                 By completing your purchase you agree to our <br />
