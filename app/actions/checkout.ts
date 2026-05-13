@@ -40,7 +40,8 @@ async function getRazorpayInstance() {
           key_id: config.razorpay_key_id,
           key_secret: config.razorpay_key_secret,
         }),
-        keyId: config.razorpay_key_id
+        keyId: config.razorpay_key_id,
+        source: 'DB'
       };
   }
 
@@ -49,7 +50,8 @@ async function getRazorpayInstance() {
       key_id: keyId,
       key_secret: keySecret,
     }),
-    keyId: keyId
+    keyId: keyId,
+    source: 'Env'
   };
 }
 
@@ -180,9 +182,13 @@ export async function createOrder(data: {
     let rzpKey = null;
 
     if (data.paymentMethod === 'Razorpay') {
+      let keySource = 'Unknown';
+      let partialKey = 'None';
       try {
-        const { instance, keyId } = await getRazorpayInstance();
+        const { instance, keyId, source } = await getRazorpayInstance();
         rzpKey = keyId;
+        keySource = source;
+        partialKey = keyId ? keyId.substring(0, 6) + '...' : 'None';
         
         const host = (await import('next/headers')).headers().get('host');
         console.log(`[Checkout] Creating Razorpay order on domain: ${host}`);
@@ -195,7 +201,7 @@ export async function createOrder(data: {
         razorpayOrderId = rzpOrder.id;
       } catch (rzpErr: any) {
         console.error('Razorpay Order Error:', rzpErr);
-        throw new Error(`Payment Gateway Error: ${rzpErr.error?.description || rzpErr.message || 'Authentication failed'}`);
+        throw new Error(`Payment Gateway Error: ${rzpErr.error?.description || rzpErr.message || 'Authentication failed'} (Source: ${keySource}, Key: ${partialKey})`);
       }
     } else if (data.paymentMethod === 'COD') {
       if (!config.cod_enabled || total < (config.cod_min_order || 0)) {
