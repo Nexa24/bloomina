@@ -24,12 +24,17 @@ async function getRazorpayInstance() {
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
+  if (keyId) {
+    console.log(`[Razorpay] Using Key ID from Environment: ${keyId.substring(0, 8)}...`);
+  }
+
   if (!keyId || !keySecret) {
     // Fallback to DB if env vars are missing
     const config = await getPaymentConfig();
     if (!config.razorpay_key_id || !config.razorpay_key_secret) {
         throw new Error('Payment gateway is not fully configured. Please contact support.');
     }
+    console.log(`[Razorpay] Falling back to DB Key ID: ${config.razorpay_key_id.substring(0, 8)}...`);
     return {
         instance: new Razorpay({
           key_id: config.razorpay_key_id,
