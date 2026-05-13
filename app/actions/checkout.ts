@@ -175,14 +175,20 @@ export async function createOrder(data: {
     let rzpKey = null;
 
     if (data.paymentMethod === 'Razorpay') {
-      const { instance, keyId } = await getRazorpayInstance();
-      const rzpOrder = await instance.orders.create({
-        amount: Math.round(total * 100),
-        currency: 'INR',
-        receipt: `receipt_${Date.now()}`,
-      });
-      razorpayOrderId = rzpOrder.id;
-      rzpKey = keyId;
+      try {
+        const { instance, keyId } = await getRazorpayInstance();
+        rzpKey = keyId;
+        
+        const rzpOrder = await instance.orders.create({
+          amount: Math.round(total * 100),
+          currency: 'INR',
+          receipt: `receipt_${Date.now()}`,
+        });
+        razorpayOrderId = rzpOrder.id;
+      } catch (rzpErr: any) {
+        console.error('Razorpay Order Error:', rzpErr);
+        throw new Error(`Payment Gateway Error: ${rzpErr.error?.description || rzpErr.message || 'Failed to initialize payment'}`);
+      }
     } else if (data.paymentMethod === 'COD') {
       if (!config.cod_enabled || total < (config.cod_min_order || 0)) {
         throw new Error('Cash on Delivery is not available for this order.');
@@ -219,11 +225,15 @@ export async function createOrder(data: {
       .select()
       .single();
 
-    if (orderError) throw new Error(orderError.message);
+    if (orderError) {
+      console.error('Database Insert Error:', orderError);
+      throw new Error(`Database Error: ${orderError.message}`);
+    }
 
     // 5. Update coupon usage count if applied
     if (appliedCouponId) {
-      await supabase.rpc('increment_coupon_usage', { coupon_id: appliedCouponId });
+      const { error: rpcError } = await supabase.rpc('increment_coupon_usage', { coupon_id: appliedCouponId });
+      if (rpcError) console.error('Coupon Usage Update Error:', rpcError);
     }
 
     return {
