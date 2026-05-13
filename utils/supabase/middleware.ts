@@ -41,10 +41,13 @@ export async function updateSession(request: NextRequest) {
     (request.nextUrl.pathname.startsWith('/checkout') || 
      request.nextUrl.pathname.startsWith('/account'))
   ) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    url.searchParams.set('next', request.nextUrl.pathname)
-    return NextResponse.redirect(url)
+    const host = request.headers.get('host');
+    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const origin = host ? `${protocol}://${host}` : request.nextUrl.origin;
+    
+    const redirectUrl = new URL('/login', origin);
+    redirectUrl.searchParams.set('next', request.nextUrl.pathname);
+    return NextResponse.redirect(redirectUrl);
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're

@@ -18,19 +18,33 @@ async function getPaymentConfig() {
 }
 
 /**
- * Initializes a Razorpay instance using the dynamic config.
+ * Initializes a Razorpay instance using environment variables.
  */
 async function getRazorpayInstance() {
-  const config = await getPaymentConfig();
-  if (!config.razorpay_key_id || !config.razorpay_key_secret) {
-    throw new Error('Payment gateway is not fully configured. Please contact support.');
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!keyId || !keySecret) {
+    // Fallback to DB if env vars are missing
+    const config = await getPaymentConfig();
+    if (!config.razorpay_key_id || !config.razorpay_key_secret) {
+        throw new Error('Payment gateway is not fully configured. Please contact support.');
+    }
+    return {
+        instance: new Razorpay({
+          key_id: config.razorpay_key_id,
+          key_secret: config.razorpay_key_secret,
+        }),
+        keyId: config.razorpay_key_id
+      };
   }
+
   return {
     instance: new Razorpay({
-      key_id: config.razorpay_key_id,
-      key_secret: config.razorpay_key_secret,
+      key_id: keyId,
+      key_secret: keySecret,
     }),
-    keyId: config.razorpay_key_id
+    keyId: keyId
   };
 }
 
@@ -235,9 +249,15 @@ export async function verifyPayment(data: {
 }) {
   try {
     const supabase = await createClient();
-    const config = await getPaymentConfig();
     
-    const secret = config.razorpay_key_secret;
+    // Prioritize env var for secret
+    let secret = process.env.RAZORPAY_KEY_SECRET;
+    
+    if (!secret) {
+        const config = await getPaymentConfig();
+        secret = config.razorpay_key_secret;
+    }
+
     if (!secret) throw new Error('Razorpay secret not configured');
 
     const body = `${data.razorpay_order_id}|${data.razorpay_payment_id}`;
