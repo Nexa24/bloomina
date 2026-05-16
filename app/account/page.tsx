@@ -146,6 +146,45 @@ const AccountPage = () => {
     }
   };
 
+  const handleCancelOrder = async (orderId: string) => {
+    if (!confirm('Are you sure you want to cancel this order?')) return;
+    
+    setIsDataLoading(true);
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status: 'Cancelled' })
+        .eq('id', orderId)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+      
+      // Update local state
+      setOrders(orders.map(o => o.id === orderId ? { ...o, status: 'Cancelled' } : o));
+      alert('Order cancelled successfully.');
+    } catch (err: any) {
+      console.error('Cancel error:', err);
+      alert('Failed to cancel order: ' + err.message);
+    } finally {
+      setIsDataLoading(false);
+    }
+  };
+
+  const steps = [
+    { status: 'Payment Pending', icon: 'payments', label: 'Order Placed' },
+    { status: 'Payment Done', icon: 'verified', label: 'Payment Confirmed' },
+    { status: 'Processing', icon: 'inventory_2', label: 'In Preparation' },
+    { status: 'Shipped', icon: 'local_shipping', label: 'Dispatched' },
+    { status: 'Delivered', icon: 'task_alt', label: 'Delivered' }
+  ];
+
+  const getStatusIndex = (currentStatus: string) => {
+    if (currentStatus === 'Cancelled') return -1;
+    const index = steps.findIndex(s => s.status === currentStatus);
+    if (index === -1) return 1; // Default for payment done
+    return index;
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -248,7 +287,12 @@ const AccountPage = () => {
                                   </p>
                                 </div>
                               </div>
-                              <button className="text-[10px] font-bold uppercase tracking-widest text-primary">Details</button>
+                              <button 
+                                onClick={() => setSelectedOrder(order)}
+                                className="text-[10px] font-bold uppercase tracking-widest text-primary hover:underline"
+                              >
+                                Details
+                              </button>
                             </div>
                           ))
                         ) : (
@@ -287,12 +331,22 @@ const AccountPage = () => {
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40 mb-1">Total Amount</p>
                                 <p className="font-display text-lg">₹{(order.total || 0).toLocaleString()}</p>
                               </div>
-                              <button 
-                                onClick={() => setSelectedOrder(order)}
-                                className="px-8 py-4 bg-stone-50 text-surface-on rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all"
-                              >
-                                View Details
-                              </button>
+                              <div className="flex flex-wrap gap-3 justify-end">
+                                {['Payment Pending', 'Payment Canceled', 'Declined'].includes(order.status) && (
+                                  <button 
+                                    onClick={() => handleCancelOrder(order.id)}
+                                    className="px-6 py-4 border border-red-100 text-red-400 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-red-50 transition-all"
+                                  >
+                                    Cancel
+                                  </button>
+                                )}
+                                <button 
+                                  onClick={() => setSelectedOrder(order)}
+                                  className="px-8 py-4 bg-stone-50 text-surface-on rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all"
+                                >
+                                  View Details
+                                </button>
+                              </div>
                             </div>
                           </div>
                         ))
@@ -309,88 +363,7 @@ const AccountPage = () => {
                   </div>
                 )}
 
-                {/* Order Details Modal */}
-                {selectedOrder && (
-                  <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-                    <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setSelectedOrder(null)} />
-                    <div className="relative bg-white w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-[3rem] p-10 md:p-16 shadow-2xl animate-in zoom-in-95 duration-300">
-                      <button onClick={() => setSelectedOrder(null)} className="absolute top-8 right-8 text-stone-300 hover:text-stone-900 transition-colors">
-                        <span className="material-symbols-outlined">close</span>
-                      </button>
-                      
-                      <div className="mb-12">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-4">Order Details</p>
-                        <h2 className="text-4xl font-display font-light text-surface-on">#{selectedOrder.id.slice(0, 8).toUpperCase()}</h2>
-                      </div>
-
-                      <div className="space-y-12">
-                        {/* Status & Date */}
-                        <div className="flex justify-between py-6 border-y border-stone-50">
-                          <div>
-                            <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Status</p>
-                            <p className="text-sm font-semibold text-primary uppercase tracking-widest">{selectedOrder.status}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Ordered On</p>
-                            <p className="text-sm font-semibold">{new Date(selectedOrder.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-                          </div>
-                        </div>
-
-                        {/* Items */}
-                        <div className="space-y-6">
-                          <h3 className="text-xs font-bold uppercase tracking-widest text-stone-900">Purchased Selection</h3>
-                          <div className="space-y-4">
-                            {(selectedOrder.items || []).map((item: any, i: number) => (
-                              <div key={i} className="flex gap-6 items-center">
-                                <div className="w-16 h-20 bg-stone-50 rounded-xl overflow-hidden shrink-0">
-                                  <img src={item.image} alt="" className="w-full h-full object-cover" />
-                                </div>
-                                <div className="flex-1">
-                                  <h4 className="text-sm font-medium text-surface-on">{item.title || item.name}</h4>
-                                  <p className="text-[10px] text-stone-400 uppercase tracking-widest mt-1">Qty: {item.quantity} | {item.size || 'Standard'}</p>
-                                </div>
-                                <div className="text-sm font-medium">₹{(item.price * item.quantity).toLocaleString()}</div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Totals */}
-                        <div className="bg-stone-50 p-8 rounded-3xl space-y-4">
-                          <div className="flex justify-between text-xs">
-                            <span className="text-stone-400 font-bold uppercase tracking-widest">Subtotal</span>
-                            <span className="font-semibold">₹{(selectedOrder.subtotal || selectedOrder.total).toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between text-xs">
-                            <span className="text-stone-400 font-bold uppercase tracking-widest">Shipping</span>
-                            <span className="text-green-600 font-bold uppercase tracking-widest">Complimentary</span>
-                          </div>
-                          <div className="pt-4 border-t border-stone-200 flex justify-between items-baseline">
-                            <span className="text-sm font-black uppercase tracking-widest">Total Amount</span>
-                            <span className="text-2xl font-display text-primary">₹{(selectedOrder.total || 0).toLocaleString()}</span>
-                          </div>
-                        </div>
-
-                        {/* Shipping Info */}
-                        {selectedOrder.delivery_method && (
-                          <div className="p-8 border border-stone-100 rounded-3xl">
-                            <h3 className="text-xs font-bold uppercase tracking-widest text-stone-900 mb-4">Tracking Information</h3>
-                            <div className="grid grid-cols-2 gap-8">
-                              <div>
-                                <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Carrier</p>
-                                <p className="text-sm font-semibold">{selectedOrder.delivery_method}</p>
-                              </div>
-                              <div>
-                                <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Tracking Number</p>
-                                <p className="text-sm font-semibold text-primary">{selectedOrder.tracking_number}</p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* Modal slot */}
 
                 {activeTab === 'profile' && (
                   <div className="max-w-xl animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -540,6 +513,160 @@ const AccountPage = () => {
               </div>
             </div>
           </div>
+          
+          {/* Order Details Modal */}
+          {selectedOrder && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+              <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setSelectedOrder(null)} />
+              <div className="relative bg-white w-full max-w-2xl max-h-[80vh] overflow-y-auto rounded-[3rem] p-10 md:p-16 shadow-2xl animate-in zoom-in-95 duration-300">
+                <button onClick={() => setSelectedOrder(null)} className="absolute top-8 right-8 text-stone-300 hover:text-stone-900 transition-colors">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+                
+                <div className="mb-12">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-4">Order Details</p>
+                  <h2 className="text-4xl font-display font-light text-surface-on">#{selectedOrder.id.slice(0, 8).toUpperCase()}</h2>
+                </div>
+
+                <div className="space-y-12">
+                  {/* Status & Date */}
+                  <div className="flex justify-between py-6 border-y border-stone-50">
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Status</p>
+                      <p className="text-sm font-semibold text-primary uppercase tracking-widest">{selectedOrder.status}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Ordered On</p>
+                      <p className="text-sm font-semibold">{new Date(selectedOrder.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                    </div>
+                  </div>
+
+                  {/* Tracking Stepper */}
+                  {selectedOrder.status !== 'Cancelled' && (
+                    <div className="py-8 px-4 bg-stone-50/50 rounded-[2rem] border border-stone-100">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-8 text-center">Fulfillment Journey</p>
+                      <div className="relative">
+                        <div className="absolute top-5 left-8 right-8 h-[2px] bg-stone-100 hidden md:block" />
+                        <div 
+                          className="absolute top-5 left-8 h-[2px] bg-primary transition-all duration-1000 hidden md:block" 
+                          style={{ width: `${Math.max(0, (getStatusIndex(selectedOrder.status) / (steps.length - 1)) * 100 - 10)}%` }}
+                        />
+                        <div className="relative flex flex-col md:flex-row justify-between gap-8 md:gap-0">
+                          {steps.map((step, i) => {
+                            const currentStep = getStatusIndex(selectedOrder.status);
+                            const isCompleted = i <= currentStep;
+                            const isActive = i === currentStep;
+                            
+                            return (
+                              <div key={i} className="flex md:flex-col items-center gap-4 md:gap-3 text-center flex-1">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 z-10 ${
+                                  isCompleted ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white text-stone-200 border border-stone-100'
+                                } ${isActive ? 'ring-4 ring-primary/10 scale-110' : ''}`}>
+                                  <span className="material-symbols-outlined text-lg">{step.icon}</span>
+                                </div>
+                                <div>
+                                  <p className={`text-[9px] font-bold uppercase tracking-widest ${isCompleted ? 'text-surface-on' : 'text-stone-300'}`}>
+                                    {step.label}
+                                  </p>
+                                  {isActive && (
+                                    <p className="text-[8px] text-primary font-bold mt-0.5 animate-pulse italic">Current</p>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {['Payment Pending', 'Payment Canceled', 'Declined'].includes(selectedOrder.status) && (
+                    <div className="p-8 rounded-3xl bg-red-50 border border-red-100 flex flex-col md:flex-row items-center justify-between gap-6">
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-red-900 uppercase tracking-widest">Incomplete Order</p>
+                        <p className="text-[10px] text-red-700 font-medium">This order was not finalized. You can cancel it to remove it from your history.</p>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          handleCancelOrder(selectedOrder.id);
+                          setSelectedOrder(null);
+                        }}
+                        className="px-10 py-4 bg-red-500 text-white rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-600 transition-all shrink-0"
+                      >
+                        Cancel Order
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Items */}
+                  <div className="space-y-6">
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-stone-900">Purchased Selection</h3>
+                    <div className="space-y-4">
+                      {(() => {
+                        let items = selectedOrder.items || [];
+                        if (typeof items === 'string') {
+                          try { items = JSON.parse(items); } catch(e) { items = []; }
+                        }
+                        return (items || []).map((item: any, i: number) => (
+                          <div key={i} className="flex gap-6 items-center">
+                            <div className="w-16 h-20 bg-stone-50 rounded-xl overflow-hidden shrink-0">
+                              <img src={item.image} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-sm font-medium text-surface-on">{item.title || item.name}</h4>
+                              <p className="text-[10px] text-stone-400 uppercase tracking-widest mt-1">Qty: {item.quantity} | {item.size || 'Standard'}</p>
+                            </div>
+                            <div className="text-sm font-medium">₹{(item.price * item.quantity).toLocaleString()}</div>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Totals */}
+                  <div className="bg-stone-50 p-8 rounded-3xl space-y-4">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-stone-400 font-bold uppercase tracking-widest">Subtotal</span>
+                      <span className="font-semibold">₹{(selectedOrder.subtotal || selectedOrder.total).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-stone-400 font-bold uppercase tracking-widest">Shipping</span>
+                      <span className="text-green-600 font-bold uppercase tracking-widest">Complimentary</span>
+                    </div>
+                    <div className="pt-4 border-t border-stone-200 flex justify-between items-baseline">
+                      <span className="text-sm font-black uppercase tracking-widest">Total Amount</span>
+                      <span className="text-2xl font-display text-primary">₹{(selectedOrder.total || 0).toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  {/* Shipping Info */}
+                  {selectedOrder.delivery_method && (
+                    <div className="p-8 border border-stone-100 rounded-3xl">
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-stone-900 mb-4">Tracking Information</h3>
+                      <div className="grid grid-cols-2 gap-8">
+                        <div>
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Carrier</p>
+                          <p className="text-sm font-semibold">{selectedOrder.delivery_method}</p>
+                        </div>
+                        <div className="flex justify-between items-end">
+                          <div>
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Tracking Number</p>
+                            <p className="text-sm font-semibold text-primary">{selectedOrder.tracking_number}</p>
+                          </div>
+                          <Link 
+                            href={`/track?id=${selectedOrder.id.slice(0, 8)}`}
+                            className="px-4 py-2 bg-primary/10 text-primary rounded-full text-[8px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all"
+                          >
+                            Live Track
+                          </Link>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 

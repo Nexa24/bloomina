@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useCart } from '@/hooks/use-cart';
 import { useRouter } from 'next/navigation';
-import { createOrder, verifyPayment, validateCoupon } from '@/app/actions/checkout';
+import { createOrder, verifyPayment, validateCoupon, deleteOrder } from '@/app/actions/checkout';
 import Link from 'next/link';
 import Script from 'next/script';
 import { useAuth } from '@/hooks/use-auth';
@@ -203,8 +203,12 @@ const CheckoutPage = () => {
           color: "#F191A1"
         },
         modal: {
-          ondismiss: function() {
+          ondismiss: async function() {
             setIsLoading(false);
+            if (result.orderId) {
+              console.log("[Checkout] Payment dismissed. Cleaning up pending order:", result.orderId);
+              await deleteOrder(result.orderId);
+            }
           }
         }
       };
@@ -220,7 +224,8 @@ const CheckoutPage = () => {
 
   const finalizeOrder = async (orderId: string) => {
     if (user && saveAddress) {
-      await supabase.from('profiles').upsert({
+      console.log('Attempting to save address for user:', user.id);
+      const { error: profileError } = await supabase.from('profiles').upsert({
         id: user.id,
         full_name: formData.fullName,
         phone: formData.phone,
@@ -231,6 +236,12 @@ const CheckoutPage = () => {
         postal_code: formData.postalCode,
         updated_at: new Date().toISOString()
       });
+
+      if (profileError) {
+        console.error('Error saving profile address:', profileError);
+      } else {
+        console.log('Address saved successfully');
+      }
     }
 
     setIsRedirectingToSuccess(true);

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useCart } from '@/hooks/use-cart';
+import { useWishlist } from '@/hooks/use-wishlist';
 
 const navLinks = [
   { 
@@ -56,6 +57,7 @@ const navLinks = [
       { name: 'Craftsmanship', href: '/materials' },
       { name: 'The Bloomina Philosophy', href: '/about#philosophy' },
       { name: 'Size Guide', href: '/size-guide' },
+      { name: 'Track Order', href: '/track' },
       { name: 'Feedback', href: '/feedback' },
     ],
     featured: {
@@ -74,6 +76,7 @@ const Navbar = () => {
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const pathname = usePathname();
   const { getTotalItems } = useCart();
+  const { items: wishlistItems } = useWishlist();
 
   useEffect(() => {
     setIsMounted(true);
@@ -190,6 +193,14 @@ const Navbar = () => {
             </button>
             <Link href="/account" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0">
               <span className="material-symbols-outlined text-[20px] md:text-2xl font-light">person</span>
+            </Link>
+            <Link href="/wishlist" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex items-center gap-0.5 group relative flex-shrink-0">
+              <span className="material-symbols-outlined text-[20px] md:text-2xl font-light group-hover:scale-110 transition-transform">favorite</span>
+              {isMounted && wishlistItems.length > 0 && (
+                <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 bg-primary text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-in zoom-in duration-300">
+                  {wishlistItems.length}
+                </span>
+              )}
             </Link>
             <Link href="/cart" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex items-center gap-0.5 group relative flex-shrink-0">
               <span className="material-symbols-outlined text-[20px] md:text-2xl font-light group-hover:scale-110 transition-transform">shopping_cart</span>

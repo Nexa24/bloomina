@@ -311,3 +311,22 @@ export async function verifyPayment(data: {
     return { error: 'Payment verification failed' };
   }
 }
+
+export async function deleteOrder(orderId: string) {
+  try {
+    const supabase = await createClient();
+    
+    // Only delete if it's still in 'Payment Pending' status to be safe
+    const { error } = await supabase
+      .from('orders')
+      .delete()
+      .eq('id', orderId)
+      .eq('status', 'Payment Pending');
+
+    if (error) throw error;
+    return { success: true };
+  } catch (error: any) {
+    console.error('Order deletion error:', error);
+    return { error: 'Failed to cleanup order' };
+  }
+}

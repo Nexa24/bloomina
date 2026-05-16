@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useWishlist } from '@/hooks/use-wishlist';
 
 interface ProductCardProps {
   id: string;
@@ -11,6 +12,19 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ id, title, price, image, category }) => {
+  const { addItem, removeItem, isInWishlist } = useWishlist();
+  const isFavorite = isInWishlist(id);
+
+  const toggleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isFavorite) {
+      removeItem(id);
+    } else {
+      addItem({ id, name: title, price, image, category });
+    }
+  };
+
   return (
     <Link href={`/product/${id}`} className="group block animate-fade-in">
       <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-surface-container-low transition-all duration-500 group-hover:petal-shadow">
@@ -25,6 +39,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, price, image, cate
             {category}
           </span>
         </div>
+        <button 
+          onClick={toggleWishlist}
+          className={`absolute top-4 right-4 w-8 h-8 rounded-full backdrop-blur-md flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 z-10 ${isFavorite ? 'bg-primary text-white shadow-lg' : 'bg-white/60 text-surface-on-variant hover:bg-white hover:text-primary'}`}
+        >
+          <span className={`material-symbols-outlined text-lg ${isFavorite ? 'fill-1' : ''}`} style={{ fontVariationSettings: isFavorite ? "'FILL' 1" : "'FILL' 0" }}>
+            favorite
+          </span>
+        </button>
       </div>
       
       <div className="mt-6 text-center space-y-1">

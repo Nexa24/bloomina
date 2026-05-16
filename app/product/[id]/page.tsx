@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/hooks/use-cart';
+import { useWishlist } from '@/hooks/use-wishlist';
 import { supabase } from '@/lib/supabase';
 import ProductReviews from '@/components/ProductReviews';
 
@@ -106,6 +107,23 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 3000);
+  };
+
+  const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist();
+  const isFavorite = isInWishlist(id);
+
+  const toggleWishlist = () => {
+    if (isFavorite) {
+      removeFromWishlist(id);
+    } else {
+      addToWishlist({
+        id,
+        name: product.name,
+        price: product.price,
+        image: currentImages[0],
+        category: product.categories?.[0] || 'Collection'
+      });
+    }
   };
 
   if (isLoading) {
@@ -249,8 +267,13 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     Added to Cart
                   </span>
                 </button>
-                <button className="px-6 py-5 border border-primary/20 rounded-full flex items-center justify-center hover:bg-primary/5 transition-all text-primary">
-                  <span className="material-symbols-outlined">favorite</span>
+                <button 
+                  onClick={toggleWishlist}
+                  className={`px-6 py-5 border rounded-full flex items-center justify-center transition-all ${isFavorite ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' : 'border-primary/20 text-primary hover:bg-primary/5'}`}
+                >
+                  <span className={`material-symbols-outlined ${isFavorite ? 'fill-1' : ''}`} style={{ fontVariationSettings: isFavorite ? "'FILL' 1" : "'FILL' 0" }}>
+                    favorite
+                  </span>
                 </button>
               </div>
             </div>
