@@ -1,17 +1,16 @@
 import Link from "next/link";
-import ProductGrid from "@/components/ProductGrid";
 import CategorySection from "@/components/CategorySection";
 import OtherCategoriesSection from "@/components/OtherCategoriesSection";
 import HeroSlideshow from "@/components/HeroSlideshow";
 
 export default function Home() {
   return (
-    <div className="space-y-12 md:space-y-24 pb-24 md:pb-32 overflow-x-hidden">
-      {/* Hero Section */}
-      <section className="relative h-[45vh] md:h-[85vh] flex items-center justify-center overflow-hidden">
+    <div className="relative pb-12 md:pb-20 overflow-x-hidden bg-background">
+      {/* Hero Section - Sticky to allow CategorySection to slide over it */}
+      <section className="sticky top-0 h-[65vh] md:h-[85vh] w-full flex items-center justify-center overflow-hidden z-0 bg-stone-50">
         <HeroSlideshow />
 
-        <div className="max-w-5xl mx-auto px-6 text-center space-y-8 animate-slide-up">
+        <div className="max-w-5xl mx-auto px-6 text-center space-y-8 animate-slide-up relative z-10">
           <div className="space-y-4">
             <span className="inline-block px-6 py-2 rounded-full bg-white/90 backdrop-blur-sm border border-primary/10 text-[10px] font-bold uppercase tracking-[0.4em] text-primary shadow-sm">
               Bloomina — Est. 2026
@@ -31,26 +30,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Category Section - Now Second */}
+      {/* Category Section - Stacked with z-10 and negative margin */}
       <CategorySection />
 
-      {/* Featured Products - Now Third */}
-      <section className="max-w-screen-xl mx-auto px-6 space-y-16 pb-24">
-        <div className="text-center space-y-4">
-          <h2 className="text-sm font-bold uppercase tracking-[0.5em] text-primary/60 italic">Featured Selection</h2>
-          <h3 className="text-4xl md:text-5xl font-display font-light text-surface-on">The Signature Collection</h3>
-        </div>
-        
-        <ProductGrid />
-        
-        <div className="pt-10 text-center">
-          <Link href="/products" className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary border-b-2 border-primary/20 pb-2 hover:border-primary transition-all">
-            Explore All Pieces
-          </Link>
-        </div>
-      </section>
-
-      {/* Other Categories Section - New */}
+      {/* Other Categories Section - Stacked with z-20 and negative margin */}
       <OtherCategoriesSection />
     </div>
   );

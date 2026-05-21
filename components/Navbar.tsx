@@ -10,7 +10,7 @@ import { useWishlist } from '@/hooks/use-wishlist';
 
 const navLinks = [
   { 
-    name: 'All Products', 
+    name: 'Shop by Collection', 
     href: '/products' 
   },
   { 
@@ -40,13 +40,13 @@ const navLinks = [
   { name: 'Bestsellers', href: '/category/bestsellers' },
   { name: 'Combo Packs', href: '/category/combos' },
   { 
-    name: 'Luxe', 
-    href: '/category/luxe',
+    name: 'Sale%', 
+    href: '/category/sale',
     subsections: [
-      { name: 'Bridal Sets', href: '/category/luxe/bridal' },
-      { name: 'Silk & Satin Robes', href: '/category/luxe/robes' },
-      { name: 'Nightwear', href: '/category/luxe/nightwear' },
-      { name: 'Gift Sets', href: '/category/luxe/gifts' },
+      { name: 'Bras on Sale', href: '/category/sale/bras' },
+      { name: 'Panties on Sale', href: '/category/sale/panties' },
+      { name: 'Combo Pack Offers', href: '/category/sale/combos' },
+      { name: 'Clearance', href: '/category/sale/clearance' },
     ]
   },
   {
@@ -54,15 +54,15 @@ const navLinks = [
     href: '/about',
     subsections: [
       { name: 'Our Story', href: '/about' },
-      { name: 'Craftsmanship', href: '/materials' },
+      { name: 'Craftsmanship', href: '/craftsmanship' },
       { name: 'The Bloomina Philosophy', href: '/about#philosophy' },
       { name: 'Size Guide', href: '/size-guide' },
-      { name: 'Track Order', href: '/track' },
+      { name: 'Contact Details', href: '/contact' },
       { name: 'Feedback', href: '/feedback' },
     ],
     featured: {
       title: 'The Bloomina Touch',
-      image: '/15996705518239280238_3.png'
+      image: '/our_story.png'
     }
   }
 ];
@@ -390,7 +390,9 @@ const Navbar = () => {
           <div className="mt-auto space-y-8 pt-12 border-t border-primary/5">
             <div className="flex flex-col gap-4">
               <Link href="/account" className="text-xs font-bold uppercase tracking-widest text-surface-on/40 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>My Account</Link>
-              <Link href="#" className="text-xs font-bold uppercase tracking-widest text-surface-on/40 hover:text-primary transition-colors">Size Guide</Link>
+              <Link href="/size-guide" className="text-xs font-bold uppercase tracking-widest text-surface-on/40 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Size Guide</Link>
+              <Link href="/contact" className="text-xs font-bold uppercase tracking-widest text-surface-on/40 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Contact Us</Link>
+              <Link href="/feedback" className="text-xs font-bold uppercase tracking-widest text-surface-on/40 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Feedback</Link>
             </div>
             <p className="text-[10px] text-surface-on-variant font-light">
               Crafting elegance since 2026. <br />

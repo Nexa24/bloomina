@@ -42,7 +42,7 @@ export async function updateSession(request: NextRequest) {
      request.nextUrl.pathname.startsWith('/account'))
   ) {
     const host = request.headers.get('host');
-    const protocol = request.headers.get('x-forwarded-proto') || 'https';
+    const protocol = request.headers.get('x-forwarded-proto') || request.nextUrl.protocol.replace(':', '');
     const origin = host ? `${protocol}://${host}` : request.nextUrl.origin;
     
     const redirectUrl = new URL('/login', origin);

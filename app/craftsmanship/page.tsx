@@ -3,28 +3,35 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Image from 'next/image';
 
-const MaterialsPage = () => {
+const CraftsmanshipPage = () => {
   const materials = [
     {
-      title: "Mulberry Silk",
-      subtitle: "Grade 6A Excellence",
-      description: "Our silk is sourced from the finest mulberry leaves, resulting in long-fiber threads that create a fabric of unparalleled smoothness and natural sheen.",
+      title: "Lenzing Modal",
+      subtitle: "Buttery Soft Comfort",
+      description: "Sourced from sustainable beechwood pulp, our modal is twice as soft as cotton and drapes beautifully to adapt to your body's every move, offering an organic second-skin feel.",
+      image: "/micro_modal.png",
+      benefits: ["Buttery-soft texture", "Natural stretch & recovery", "Carbon-neutral process"]
+    },
+    {
+      title: "Premium Nylon Spandex",
+      subtitle: "Sleek & Seamless Support",
+      description: "Engineered with a high-performance blend of 85% Nylon and 15% Spandex. It provides a lightweight, invisible finish under clothing with exceptional multi-directional stretch.",
+      image: "/our_story.png",
+      benefits: ["Invisible, seamless edge", "Premium four-way stretch", "Moisture-wicking finish"]
+    },
+    {
+      title: "Combed Cotton Elastane",
+      subtitle: "Everyday Breathability",
+      description: "Crafted from long-staple combed cotton blended with flexible elastane fibers. This natural-knit fabric offers maximum breathability and reliable comfort for everyday wear.",
       image: "/d31c416a1c344d8d7a9bdadbada23d87.jpg",
-      benefits: ["Naturally Hypoallergenic", "Temperature Regulating", "Protein-Rich Surface"]
+      benefits: ["Naturally hypoallergenic", "Highly breathable knit", "Durable everyday comfort"]
     },
     {
-      title: "European Lace",
-      subtitle: "Responsibly Crafted",
-      description: "Intricate patterns woven on heritage looms in France and Italy. Our lace is designed to be soft against the skin, eliminating the irritation common in mass-market alternatives.",
-      image: "https://images.unsplash.com/photo-1584273143981-43c26a09f8d7?q=80&w=2069&auto=format&fit=crop",
-      benefits: ["Breathable Patterns", "Dimensional Texture", "Durable Elegance"]
-    },
-    {
-      title: "Bio-Based Micro-Modal",
-      subtitle: "The Second Skin",
-      description: "Extracted from beechwood pulp, our micro-modal is twice as soft as cotton and significantly more absorbent, keeping you cool and dry throughout the day.",
-      image: "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?q=80&w=1912&auto=format&fit=crop",
-      benefits: ["Carbon Neutral Process", "Shrink Resistant", "Silk-Like Drape"]
+      title: "Powernet Mesh Support",
+      subtitle: "Sculpted Comfort Wings",
+      description: "Designed with an open-knit powernet mesh that provides targeted back and side support, smoothing your silhouette while ensuring maximum ventilation and airflow.",
+      image: "/european_lace.png",
+      benefits: ["Power-mesh structure", "Breathable, airy weave", "Smooth silhouette control"]
     }
   ];
 
@@ -35,18 +42,19 @@ const MaterialsPage = () => {
       <main className="pt-32 pb-24">
         {/* Header */}
         <section className="max-w-screen-xl mx-auto px-6 mb-24 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-4">The Bloomina Archive</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-4">The Bloomina Atelier</p>
           <h1 className="text-5xl md:text-6xl font-display font-light text-surface-on mb-8">Craftsmanship in Every Fiber</h1>
           <p className="text-lg text-stone-500 font-light max-w-2xl mx-auto leading-relaxed">
-            We believe that the foundation of luxury lies in the integrity of materials. Explore the elements that make Bloomina a sensory experience.
+            We believe that the foundation of luxury lies in the integrity of materials. Explore the actual elements that make the Bloomina collection a sensory experience.
           </p>
         </section>
 
         {/* Materials List */}
         <section className="max-w-screen-xl mx-auto px-6 space-y-40">
           {materials.map((mat, index) => (
-            <div key={mat.title} className={`grid grid-cols-1 lg:grid-cols-12 gap-16 items-center ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
-              <div className={`lg:col-span-6 space-y-8 ${index % 2 === 1 ? 'lg:order-2' : ''}`}>
+            <div key={mat.title} className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+              {/* Text Column */}
+              <div className={`lg:col-span-6 space-y-8 ${index % 2 === 1 ? 'lg:order-2' : 'lg:order-1'}`}>
                 <div className="space-y-2">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-primary">{mat.subtitle}</p>
                   <h2 className="text-4xl font-display font-light text-surface-on">{mat.title}</h2>
@@ -63,7 +71,9 @@ const MaterialsPage = () => {
                   ))}
                 </ul>
               </div>
-              <div className={`lg:col-span-6 relative aspect-[4/3] rounded-[3rem] overflow-hidden petal-shadow group ${index % 2 === 1 ? 'lg:order-1' : ''}`}>
+
+              {/* Image Column */}
+              <div className={`lg:col-span-6 relative aspect-[4/3] rounded-[3rem] overflow-hidden petal-shadow group ${index % 2 === 1 ? 'lg:order-1' : 'lg:order-2'}`}>
                 <Image 
                   src={mat.image} 
                   alt={mat.title} 
@@ -95,4 +105,4 @@ const MaterialsPage = () => {
   );
 };
 
-export default MaterialsPage;
+export default CraftsmanshipPage;

@@ -63,25 +63,25 @@ const categoryMap: { [key: string]: CategoryEntry } = {
       }
     ],
   },
-  'luxe': {
-    label: 'Luxe Collection',
-    dbName: 'Luxe',
+  'sale': {
+    label: 'Sale%',
+    dbName: 'Sale%',
     subs: [
       {
-        name: 'Bridal Sets', slug: 'bridal',
-        dbNames: ['Bridal Sets', 'Bridal Collection', 'Bridal Sanctuary', 'bridal', 'Bridal'],
+        name: 'Bras on Sale', slug: 'bras',
+        dbNames: ['Bras on Sale', 'Sale Bras', 'bras-on-sale'],
       },
       {
-        name: 'Silk & Satin Robes', slug: 'robes',
-        dbNames: ['Silk Robes', 'Silk & Satin Robes', 'robes', 'Robes', 'Satin'],
+        name: 'Panties on Sale', slug: 'panties',
+        dbNames: ['Panties on Sale', 'Sale Panties', 'panties-on-sale'],
       },
       {
-        name: 'Nightwear', slug: 'nightwear',
-        dbNames: ['Nightwear', 'Night Rituals', 'nightwear', 'Loungewear', 'Lounge'],
+        name: 'Combo Pack Offers', slug: 'combos',
+        dbNames: ['Combo Pack Offers', 'Combo Packs on Sale', 'combos-on-sale'],
       },
       {
-        name: 'Gift Sets', slug: 'gifts',
-        dbNames: ['Gift Sets', 'gifts', 'Gifts', 'The Aura Series'],
+        name: 'Clearance', slug: 'clearance',
+        dbNames: ['Clearance', 'Clearance Sale', 'clearance-sale'],
       },
     ],
   },
@@ -154,15 +154,43 @@ const CategoryPage = () => {
               : p.category ? [p.category] : [];
 
             // ── Main category match (case-insensitive) ──
-            const matchesMain = productCats.some(c => {
-              if (typeof c !== 'string') return false;
-              const low = c.trim().toLowerCase();
-              return low === currentCategory.dbName.toLowerCase() ||
-                     low === mainSlug.toLowerCase();
-            });
+            const isSaleSection = mainSlug.toLowerCase() === 'sale' || currentCategory.dbName.toLowerCase() === 'sale%';
+            const matchesMain = isSaleSection 
+              ? (p.is_sale === true || productCats.some(c => typeof c === 'string' && c.trim().toLowerCase() === 'sale%'))
+              : productCats.some(c => {
+                  if (typeof c !== 'string') return false;
+                  const low = c.trim().toLowerCase();
+                  return low === currentCategory.dbName.toLowerCase() ||
+                         low === mainSlug.toLowerCase();
+                });
 
             if (!matchesMain) return false;
             if (!subSlug)     return true;   // no sub-filter → show everything in main cat
+
+            // If we are in the sale section and there is a subSlug:
+            if (isSaleSection) {
+              const aliasesLow = currentSub?.dbNames ? currentSub.dbNames.map(n => n.toLowerCase()) : [];
+              const hasSaleSubcat = productCats.some(c => typeof c === 'string' && aliasesLow.includes(c.trim().toLowerCase()));
+              if (hasSaleSubcat) return true;
+
+              // Otherwise, check if the product is on sale AND matches the corresponding main category
+              const isSaleProduct = p.is_sale === true || productCats.some(c => typeof c === 'string' && c.trim().toLowerCase() === 'sale%');
+              if (isSaleProduct) {
+                if (subSlug === 'bras') {
+                  return /bra/i.test(p.name || '') || productCats.some(c => /bra/i.test(c));
+                }
+                if (subSlug === 'panties') {
+                  return /pantie|panties|panty|brief/i.test(p.name || '') || productCats.some(c => /pantie|panties|panty|brief/i.test(c));
+                }
+                if (subSlug === 'combos') {
+                  return /combo|set|pack/i.test(p.name || '') || productCats.some(c => /combo|pack/i.test(c));
+                }
+                if (subSlug === 'clearance') {
+                  return productCats.some(c => /clearance/i.test(c));
+                }
+              }
+              return false;
+            }
 
             // ── Sub-category match using all known DB aliases ──
             if (currentSub?.dbNames) {
@@ -170,8 +198,6 @@ const CategoryPage = () => {
               return productCats.some(c => {
                 if (typeof c !== 'string') return false;
                 const low = c.trim().toLowerCase();
-                // Use exact match to avoid main categories (e.g. "Bras") 
-                // matching sub-categories that contain that word (e.g. "Wireless Bras")
                 return aliasesLow.some(alias => low === alias);
               });
             }

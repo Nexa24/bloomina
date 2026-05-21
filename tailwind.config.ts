@@ -61,8 +61,8 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["Manrope", "ui-sans-serif", "system-ui"],
-        serif: ["Plus Jakarta Sans", "ui-serif", "Georgia"],
-        display: ["Plus Jakarta Sans", "sans-serif"],
+        serif: ["Cormorant Garamond", "ui-serif", "Georgia"],
+        display: ["Cormorant Garamond", "Georgia", "serif"],
         body: ["Manrope", "sans-serif"],
       },
       spacing: {

@@ -142,9 +142,27 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const sizes = product.variants?.find((v: any) => v.name === 'Size')?.values || [];
   const categories = Array.isArray(product.categories) ? product.categories : [product.categories || 'Uncategorized'];
   
-  const mainCategoriesList = ['Bras', 'Panties', 'Luxe', 'Innerwear', 'Bestsellers', 'Combo Packs'];
+  const mainCategoriesList = ['Bras', 'Panties', 'Sale%', 'Innerwear', 'Bestsellers', 'Combo Packs'];
   const mainCat = categories.find(c => mainCategoriesList.includes(c)) || categories[0];
   const subCat = categories.find(c => c !== mainCat && c !== 'Uncategorized');
+
+  const isBra = 
+    /bra/i.test(product.name || '') || 
+    categories.some((c: string) => /bra/i.test(c)) || 
+    (product.sizeGuide?.name && /bra/i.test(product.sizeGuide.name));
+
+  const isPantie = 
+    /pantie|panties|panty|brief/i.test(product.name || '') || 
+    categories.some((c: string) => /pantie|panties|panty|brief/i.test(c)) || 
+    (product.sizeGuide?.name && /pantie|panties|panty|brief/i.test(product.sizeGuide.name));
+
+  // Prioritize the linked sizeGuide name, fall back to product category
+  const sizeGuideImage = 
+    (product.sizeGuide?.name && /bra/i.test(product.sizeGuide.name)) ? '/how-to-measure_bra.png' :
+    (product.sizeGuide?.name && /pantie|panties|panty|brief/i.test(product.sizeGuide.name)) ? '/how-to-measure_pantie.png' :
+    isBra ? '/how-to-measure_bra.png' :
+    isPantie ? '/how-to-measure_pantie.png' :
+    '/how-to-measure.png';
 
   return (
     <div className="bg-white min-h-screen antialiased overflow-x-hidden">
@@ -155,9 +173,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           <div className="w-full space-y-4 lg:sticky lg:top-32 self-start">
             <div className="relative w-full aspect-[4/5] rounded-3xl overflow-hidden bg-surface-container-low petal-shadow group">
               <Image 
+                key={`${selectedColorIndex}-${activeImageIndex}`}
                 src={currentImages[activeImageIndex] || currentImages[0] || 'https://placehold.co/600x800?text=No+Image'} 
                 alt={product.name} 
                 fill 
+                sizes="(max-width: 768px) 100vw, 50vw"
                 className="object-cover transition-all duration-700 group-hover:scale-105"
                 priority
               />
@@ -171,7 +191,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   onClick={() => setActiveImageIndex(idx)}
                   className={`relative w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden border-2 transition-all ${activeImageIndex === idx ? 'border-primary' : 'border-transparent opacity-60 hover:opacity-100'}`}
                 >
-                  <Image src={img} alt={`View ${idx}`} fill className="object-cover" />
+                  <Image src={img} alt={`View ${idx}`} fill sizes="80px" className="object-cover" />
                 </button>
               ))}
             </div>
@@ -230,7 +250,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-surface-on/40">Select Size</h3>
-                  {product.sizeGuide && (
+                  {(product.sizeGuide || sizes.length > 0) && (
                     <button 
                       onClick={() => setShowSizeGuide(true)}
                       className="text-[10px] font-bold uppercase tracking-widest text-primary underline underline-offset-4 flex items-center gap-1 hover:text-primary/70 transition-colors"
@@ -305,7 +325,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         )}
 
         {/* Size Guide Modal */}
-        {showSizeGuide && product.sizeGuide && (
+        {showSizeGuide && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 animate-fade-in">
             <div 
               className="absolute inset-0 bg-surface-on/40 backdrop-blur-md"
@@ -315,8 +335,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               {/* Header */}
               <div className="px-8 pt-8 pb-6 flex justify-between items-start border-b border-stone-50">
                 <div className="space-y-1">
-                  <h3 className="text-2xl font-display text-surface-on">{product.sizeGuide.name}</h3>
-                  <p className="text-xs text-surface-on-variant font-light">{product.sizeGuide.description}</p>
+                  <h3 className="text-2xl font-display text-surface-on">{product.sizeGuide?.name || "Sizing Guide"}</h3>
+                  <p className="text-xs text-surface-on-variant font-light">{product.sizeGuide?.description || "Find your perfect fit with our comprehensive sizing guide."}</p>
                 </div>
                 <button 
                   onClick={() => setShowSizeGuide(false)}
@@ -332,36 +352,42 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   {/* Technical Drawing */}
                   <div className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden border border-stone-100">
                     <Image 
-                      src="/how-to-measure.png" 
-                      alt="How to Measure" 
+                      src={sizeGuideImage} 
+                      alt={isBra ? "Bra Sizing Guide" : isPantie ? "Pantie Sizing Guide" : "Sizing Guide"} 
                       fill 
+                      sizes="(max-width: 768px) 100vw, 672px"
                       className="object-cover"
                     />
                   </div>
 
                   {/* Chart */}
-                  <div className="rounded-3xl border border-stone-100 overflow-hidden">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-stone-50/50">
-                          {product.sizeGuide.chart_data?.[0] && Object.keys(product.sizeGuide.chart_data[0]).map(key => (
-                            <th key={key} className="px-6 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60 border-b border-stone-100">{key}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {product.sizeGuide.chart_data?.map((row: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-stone-50/30 transition-colors">
-                            {Object.values(row).map((val: any, vidx: number) => (
-                              <td key={vidx} className={`px-6 py-4 text-sm font-light text-surface-on border-b border-stone-50/50 ${vidx === 0 ? 'font-bold' : ''}`}>
-                                {val}
-                              </td>
+                  {product.sizeGuide?.chart_data && product.sizeGuide.chart_data.length > 0 && (
+                    <div className="rounded-3xl border border-stone-100 overflow-hidden">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-stone-50/50">
+                            {Object.keys(product.sizeGuide.chart_data[0]).map(key => (
+                              <th key={key} className="px-6 py-4 text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60 border-b border-stone-100">{key}</th>
                             ))}
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {(() => {
+                            const headers = Object.keys(product.sizeGuide.chart_data[0]);
+                            return product.sizeGuide.chart_data.map((row: any, idx: number) => (
+                              <tr key={idx} className="hover:bg-stone-50/30 transition-colors">
+                                {headers.map((key: string, vidx: number) => (
+                                  <td key={key} className={`px-6 py-4 text-sm font-light text-surface-on border-b border-stone-50/50 ${vidx === 0 ? 'font-bold' : ''}`}>
+                                    {row[key]}
+                                  </td>
+                                ))}
+                              </tr>
+                            ));
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
 
                   <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10">
                     <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">Pro Tip</p>

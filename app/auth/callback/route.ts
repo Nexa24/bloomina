@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   
   // Use the request host to determine the origin, which is more reliable behind proxies
   const host = request.headers.get('host');
-  const protocol = request.headers.get('x-forwarded-proto') || 'https';
+  const protocol = request.headers.get('x-forwarded-proto') || requestUrl.protocol.replace(':', '');
   const origin = host ? `${protocol}://${host}` : requestUrl.origin;
 
   if (code) {
