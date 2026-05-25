@@ -5,12 +5,12 @@ import HeroSlideshow from "@/components/HeroSlideshow";
 
 export default function Home() {
   return (
-    <div className="relative pb-12 md:pb-20 overflow-x-hidden bg-background">
-      {/* Hero Section - Sticky to allow CategorySection to slide over it */}
-      <section className="sticky top-0 h-[65vh] md:h-[85vh] w-full flex items-center justify-center overflow-hidden z-0 bg-stone-50">
+    <div className="space-y-12 md:space-y-24 pb-24 md:pb-32 overflow-x-hidden">
+      {/* Hero Section */}
+      <section className="relative h-[45vh] md:h-[85vh] flex items-center justify-center overflow-hidden">
         <HeroSlideshow />
 
-        <div className="max-w-5xl mx-auto px-6 text-center space-y-8 animate-slide-up relative z-10">
+        <div className="max-w-5xl mx-auto px-6 text-center space-y-8 animate-slide-up">
           <div className="space-y-4">
             <span className="inline-block px-6 py-2 rounded-full bg-white/90 backdrop-blur-sm border border-primary/10 text-[10px] font-bold uppercase tracking-[0.4em] text-primary shadow-sm">
               Bloomina — Est. 2026
@@ -30,10 +30,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Category Section - Stacked with z-10 and negative margin */}
+      {/* Category Section - Now Second */}
       <CategorySection />
 
-      {/* Other Categories Section - Stacked with z-20 and negative margin */}
+
+      {/* Other Categories Section - New */}
       <OtherCategoriesSection />
     </div>
   );
