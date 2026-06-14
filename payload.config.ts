@@ -47,7 +47,13 @@ export default buildConfig({
     },
   ],
   editor: lexicalEditor({}),
-  secret: process.env.PAYLOAD_SECRET || 'bloomina-secret-key-dev',
+  secret: (() => {
+    const secret = process.env.PAYLOAD_SECRET;
+    if (!secret && process.env.NODE_ENV === 'production') {
+      throw new Error('PAYLOAD_SECRET is required in production');
+    }
+    return secret || 'bloomina-secret-key-dev';
+  })(),
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },

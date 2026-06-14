@@ -75,11 +75,16 @@ const CartPage = () => {
               <div key={item.id} className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center pb-10 border-b border-stone-50 group">
                 {/* Product Info */}
                 <div className="col-span-1 md:col-span-6 flex gap-6">
-                  <div className="w-24 h-32 md:w-32 md:h-40 bg-stone-50 rounded-2xl overflow-hidden flex-shrink-0 petal-shadow">
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                  </div>
+                  <Link href={`/product/${item.productId}`} className="w-24 h-32 md:w-32 md:h-40 bg-stone-50 rounded-2xl overflow-hidden flex-shrink-0 petal-shadow relative group/img block">
+                    <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors duration-300 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-white opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 text-lg drop-shadow">open_in_new</span>
+                    </div>
+                  </Link>
                   <div className="flex flex-col justify-center gap-1">
-                    <h3 className="text-lg md:text-xl font-display font-light text-surface-on">{item.name}</h3>
+                    <Link href={`/product/${item.productId}`} className="group/name">
+                      <h3 className="text-lg md:text-xl font-display font-light text-surface-on group-hover/name:text-primary transition-colors duration-200 underline-offset-4 group-hover/name:underline decoration-primary/30">{item.name}</h3>
+                    </Link>
                     <p className="text-sm text-surface-on-variant/60">
                       {item.size && `Size: ${item.size}`} {item.color && `| Color: ${item.color}`}
                     </p>

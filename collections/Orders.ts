@@ -7,10 +7,10 @@ export const Orders: CollectionConfig = {
     defaultColumns: ['id', 'customer_name', 'total', 'status'],
   },
   access: {
-    read: () => true,
-    create: () => true,
-    update: () => true,
-    delete: () => true,
+    read: ({ req: { user } }) => !!user,
+    create: ({ req: { user } }) => !!user,
+    update: ({ req: { user } }) => !!user,
+    delete: ({ req: { user } }) => !!user,
   },
   fields: [
     {

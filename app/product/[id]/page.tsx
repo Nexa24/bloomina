@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/hooks/use-cart';
 import { useWishlist } from '@/hooks/use-wishlist';
 import { supabase } from '@/lib/supabase';
@@ -20,8 +21,10 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const [showSizeGuide, setShowSizeGuide] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   
   const { addItem } = useCart();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -99,7 +102,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       productId: id,
       name: product.name,
       price: product.price,
-      quantity: 1,
+      quantity,
       image: currentImages[0],
       size: selectedSize,
       color: colorName
@@ -107,6 +110,24 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 3000);
+  };
+
+  const handleBuyNow = () => {
+    if (!product) return;
+    const colorName = product.colorConfigs?.[selectedColorIndex]?.name || 'Default';
+    const cartItemId = `${id}-${selectedSize}-${colorName}`;
+    const buyNowItem = {
+      id: cartItemId,
+      productId: id,
+      name: product.name,
+      price: product.price,
+      quantity,
+      image: currentImages[0],
+      size: selectedSize,
+      color: colorName
+    };
+    sessionStorage.setItem('buyNowItem', JSON.stringify(buyNowItem));
+    router.push('/checkout?buyNow=true');
   };
 
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlist();
@@ -273,27 +294,61 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 pt-4 relative">
-                <button 
-                  onClick={handleAddToCart}
-                  className={`flex-1 px-10 py-5 rounded-full font-bold uppercase tracking-[0.2em] text-[11px] transition-all duration-500 overflow-hidden relative ${isAdded ? 'bg-green-500 shadow-green-100 text-white' : 'bg-primary text-white shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95'}`}
+              {/* Quantity + Action Buttons */}
+              <div className="flex flex-col gap-5 pt-4">
+
+                {/* Quantity Stepper */}
+                <div className="flex items-center justify-between">
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-surface-on/40">Quantity</h3>
+                  <div className="flex items-center gap-0 bg-stone-50 rounded-2xl border border-stone-100 overflow-hidden">
+                    <button
+                      onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                      className="w-11 h-11 flex items-center justify-center text-surface-on/40 hover:text-primary hover:bg-primary/5 transition-all"
+                    >
+                      <span className="material-symbols-outlined text-lg">remove</span>
+                    </button>
+                    <span className="w-10 text-center text-sm font-bold text-surface-on tabular-nums">{quantity}</span>
+                    <button
+                      onClick={() => setQuantity(q => q + 1)}
+                      className="w-11 h-11 flex items-center justify-center text-surface-on/40 hover:text-primary hover:bg-primary/5 transition-all"
+                    >
+                      <span className="material-symbols-outlined text-lg">add</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Row 1: Add to Cart + Wishlist */}
+                <div className="flex gap-4">
+                  <button 
+                    onClick={handleAddToCart}
+                    className={`flex-1 px-10 py-5 rounded-full font-bold uppercase tracking-[0.2em] text-[11px] transition-all duration-500 overflow-hidden relative border ${isAdded ? 'bg-green-500 border-green-500 text-white shadow-green-100' : 'border-primary text-primary hover:bg-primary/5 hover:scale-[1.02] active:scale-95'}`}
+                  >
+                    <span className={`flex items-center justify-center gap-2 transition-transform duration-500 ${isAdded ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'}`}>
+                      <span className="material-symbols-outlined text-base font-light">shopping_bag</span>
+                      Add to Cart
+                    </span>
+                    <span className={`absolute inset-0 flex items-center justify-center gap-2 transition-transform duration-500 ${isAdded ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+                      <span className="material-symbols-outlined text-base">check</span>
+                      Added!
+                    </span>
+                  </button>
+                  <button 
+                    onClick={toggleWishlist}
+                    className={`px-5 py-5 border rounded-full flex items-center justify-center transition-all ${isFavorite ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' : 'border-primary/20 text-primary hover:bg-primary/5'}`}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontVariationSettings: isFavorite ? "'FILL' 1" : "'FILL' 0" }}>
+                      favorite
+                    </span>
+                  </button>
+                </div>
+
+                {/* Row 2: Buy Now — full width, solid primary */}
+                <button
+                  onClick={handleBuyNow}
+                  className="w-full py-5 rounded-full bg-primary text-white font-bold uppercase tracking-[0.2em] text-[11px] shadow-xl shadow-primary/25 hover:scale-[1.02] hover:shadow-primary/40 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2"
                 >
-                  <span className={`flex items-center justify-center gap-2 transition-transform duration-500 ${isAdded ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'}`}>
-                    Add to Cart
-                  </span>
-                  <span className={`absolute inset-0 flex items-center justify-center gap-2 transition-transform duration-500 ${isAdded ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
-                    <span className="material-symbols-outlined text-base">check</span>
-                    Added to Cart
-                  </span>
-                </button>
-                <button 
-                  onClick={toggleWishlist}
-                  className={`px-6 py-5 border rounded-full flex items-center justify-center transition-all ${isFavorite ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' : 'border-primary/20 text-primary hover:bg-primary/5'}`}
-                >
-                  <span className={`material-symbols-outlined ${isFavorite ? 'fill-1' : ''}`} style={{ fontVariationSettings: isFavorite ? "'FILL' 1" : "'FILL' 0" }}>
-                    favorite
-                  </span>
+                  <span className="material-symbols-outlined text-base font-light">bolt</span>
+                  Buy Now
                 </button>
               </div>
             </div>

@@ -69,15 +69,42 @@ export async function validateCoupon(code: string, cartTotal: number) {
   try {
     const supabase = await createClient();
     
-    const { data: coupon, error } = await supabase
+    const { data: rawCoupon, error } = await supabase
       .from('coupons')
       .select('*')
       .eq('code', code.toUpperCase())
       .single();
 
-    if (error || !coupon) {
+    if (error || !rawCoupon) {
       return { error: 'Invalid coupon code.' };
     }
+
+    // Normalize coupon schema dynamically to support both structures
+    let is_active = true;
+    if (rawCoupon.status === 'Inactive' || rawCoupon.is_active === false) {
+      is_active = false;
+    } else if (rawCoupon.status === 'Active' || rawCoupon.is_active === true) {
+      is_active = true;
+    } else {
+      is_active = (rawCoupon.is_active !== null && rawCoupon.is_active !== undefined) ? !!rawCoupon.is_active : true;
+    }
+
+    const coupon = {
+      id: rawCoupon.id,
+      code: rawCoupon.code,
+      is_active: is_active,
+      expires_at: rawCoupon.expires_at || rawCoupon.expiry,
+      max_uses: rawCoupon.max_uses,
+      uses: rawCoupon.uses || 0,
+      min_order_value: (rawCoupon.min_order_value !== null && rawCoupon.min_order_value !== undefined)
+        ? Number(rawCoupon.min_order_value)
+        : Number(rawCoupon.min_cart_value || 0),
+      discount_type: rawCoupon.discount_type || (rawCoupon.type === 'percent' ? 'percentage' : rawCoupon.type),
+      discount_value: (rawCoupon.discount_value !== null && rawCoupon.discount_value !== undefined)
+        ? Number(rawCoupon.discount_value)
+        : Number(rawCoupon.value || 0),
+      max_discount: rawCoupon.max_discount
+    };
 
     if (!coupon.is_active) {
       return { error: 'This coupon is no longer active.' };
@@ -190,7 +217,7 @@ export async function createOrder(data: {
         keySource = source;
         partialKey = keyId ? keyId.substring(0, 6) + '...' : 'None';
         
-        const host = (await import('next/headers')).headers().get('host');
+        const host = (await (await import('next/headers')).headers()).get('host');
         console.log(`[Checkout] Creating Razorpay order on domain: ${host}`);
 
         const rzpOrder = await instance.orders.create({
@@ -292,6 +319,21 @@ export async function verifyPayment(data: {
 
     if (expectedSignature !== data.razorpay_signature) {
       return { error: 'Invalid payment signature' };
+    }
+
+    // Fetch the order to verify binding with Razorpay order ID
+    const { data: order, error: fetchError } = await supabase
+      .from('orders')
+      .select('razorpay_order_id, status')
+      .eq('id', data.orderId)
+      .single();
+
+    if (fetchError || !order) {
+      return { error: 'Order not found for payment verification' };
+    }
+
+    if (order.razorpay_order_id !== data.razorpay_order_id) {
+      return { error: 'Payment verification binding mismatch' };
     }
 
     const { error: updateError } = await supabase

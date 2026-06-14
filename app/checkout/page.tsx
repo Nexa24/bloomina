@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useCart } from '@/hooks/use-cart';
 import { useRouter } from 'next/navigation';
-import { createOrder, verifyPayment, validateCoupon, deleteOrder } from '@/app/actions/checkout';
+import { createOrder, verifyPayment, validateCoupon, deleteOrder, getCheckoutConfig } from '@/app/actions/checkout';
 import Link from 'next/link';
 import Script from 'next/script';
 import { useAuth } from '@/hooks/use-auth';
@@ -12,12 +12,13 @@ import { useSearchParams } from 'next/navigation';
 import CouponSection from '@/components/CouponSection';
 
 const CheckoutPage = () => {
-  const { items, getTotalPrice, clearCart } = useCart();
+  const { items: cartItems, getTotalPrice: getCartTotal, clearCart } = useCart();
   const { user } = useAuth();
   const supabase = createClient();
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialCouponCode = searchParams.get('coupon');
+  const isBuyNow = searchParams.get('buyNow') === 'true';
 
   const [isMounted, setIsMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,6 +27,10 @@ const CheckoutPage = () => {
   const [saveAddress, setSaveAddress] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState<'Razorpay' | 'COD'>('Razorpay');
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
+  const [buyNowItem, setBuyNowItem] = useState<any>(null);
+
+  // The items used for this checkout session
+  const items = isBuyNow && buyNowItem ? [buyNowItem] : cartItems;
 
   const [checkoutConfig, setCheckoutConfig] = useState({
     cod_enabled: true,
@@ -45,16 +50,26 @@ const CheckoutPage = () => {
 
   useEffect(() => {
     setIsMounted(true);
-    if (items.length === 0 && !isRedirectingToSuccess) {
+    // In buyNow mode, load the single item from sessionStorage
+    if (isBuyNow) {
+      const stored = sessionStorage.getItem('buyNowItem');
+      if (stored) {
+        setBuyNowItem(JSON.parse(stored));
+      } else {
+        router.push('/cart');
+      }
+      return;
+    }
+    if (cartItems.length === 0 && !isRedirectingToSuccess) {
       router.push('/cart');
     }
-  }, [items, router, isRedirectingToSuccess]);
+  }, [isBuyNow, cartItems, router, isRedirectingToSuccess]);
 
   // Handle initial coupon from query
   useEffect(() => {
     const applyInitialCoupon = async () => {
       if (initialCouponCode && items.length > 0) {
-        const subtotal = getTotalPrice();
+        const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
         const result = await validateCoupon(initialCouponCode, subtotal);
         if (result.success && result.coupon) {
           setAppliedCoupon({
@@ -65,26 +80,23 @@ const CheckoutPage = () => {
       }
     };
     applyInitialCoupon();
-  }, [initialCouponCode, items.length, getTotalPrice]);
+  }, [initialCouponCode, items.length]);
 
   useEffect(() => {
     const fetchConfig = async () => {
-      const { data } = await supabase
-        .from('system_config')
-        .select('value')
-        .eq('key', 'payment_gateway_config')
-        .single();
-      
-      if (data?.value) {
+      try {
+        const config = await getCheckoutConfig();
         setCheckoutConfig({
-          cod_enabled: data.value.cod_enabled ?? true,
-          cod_min_order: data.value.cod_min_order ?? 0,
-          whatsapp_enabled: data.value.whatsapp_payments_enabled ?? true
+          cod_enabled: config.cod_enabled,
+          cod_min_order: config.cod_min_order,
+          whatsapp_enabled: config.whatsapp_enabled
         });
+      } catch (err) {
+        console.error('Failed to load checkout config:', err);
       }
     };
     fetchConfig();
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -118,7 +130,7 @@ const CheckoutPage = () => {
     return null;
   }
 
-  const subtotal = getTotalPrice();
+  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const shipping = 0;
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const total = Math.max(0, subtotal - discount + shipping);
@@ -245,7 +257,12 @@ const CheckoutPage = () => {
     }
 
     setIsRedirectingToSuccess(true);
-    clearCart();
+    // In buyNow mode only clear the sessionStorage entry, leave the cart intact
+    if (isBuyNow) {
+      sessionStorage.removeItem('buyNowItem');
+    } else {
+      clearCart();
+    }
     router.push(`/order-success?id=${orderId}`);
   };
 

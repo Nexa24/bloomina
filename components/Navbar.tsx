@@ -132,6 +132,13 @@ const Navbar = () => {
             <Link href="/" className="text-surface-on-variant hover:text-primary transition-all duration-300 flex-shrink-0">
               <span className="material-symbols-outlined font-light scale-110">home</span>
             </Link>
+
+            <button 
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              className={`text-surface-on-variant hover:text-primary transition-all duration-300 flex-shrink-0 ${isSearchOpen ? 'text-primary scale-110' : ''}`}
+            >
+              <span className="material-symbols-outlined text-[20px] font-light">search</span>
+            </button>
           </div>
 
           {/* DESKTOP ONLY: Left Side (Logo) */}
@@ -185,9 +192,10 @@ const Navbar = () => {
 
           {/* RIGHT SIDE: Icons (Universal) */}
           <div className="flex items-center justify-end gap-3 md:gap-8 z-10 flex-1">
+            {/* Search — leftmost icon */}
             <button 
               onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className={`text-surface-on-variant hover:text-primary transition-all duration-300 flex-shrink-0 ${isSearchOpen ? 'text-primary scale-110' : ''}`}
+              className={`hidden lg:block text-surface-on-variant hover:text-primary transition-all duration-300 flex-shrink-0 ${isSearchOpen ? 'text-primary scale-110' : ''}`}
             >
               <span className="material-symbols-outlined text-[20px] md:text-2xl font-light">search</span>
             </button>
