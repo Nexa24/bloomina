@@ -4,26 +4,21 @@ import React, { useEffect, Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import confetti from 'canvas-confetti';
-import { createClient } from '@/utils/supabase/client';
+import { getOrderConfirmation } from '@/app/actions/checkout';
 
 const SuccessContent = () => {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('id');
   const [orderInfo, setOrderInfo] = useState<any>(null);
-  const supabase = createClient();
 
   useEffect(() => {
     const fetchOrder = async () => {
       if (!orderId) return;
-      const { data } = await supabase
-        .from('orders')
-        .select('payment_method, email, status')
-        .eq('id', orderId)
-        .single();
-      setOrderInfo(data);
+      const result = await getOrderConfirmation(orderId);
+      setOrderInfo(result.data || null);
     };
     fetchOrder();
-  }, [orderId, supabase]);
+  }, [orderId]);
 
   useEffect(() => {
     // Elegant confetti burst

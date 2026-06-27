@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { createClient } from '@/utils/supabase/client';
+import { cancelOrder } from '@/app/actions/checkout';
 
 const AccountPage = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -151,13 +152,8 @@ const AccountPage = () => {
     
     setIsDataLoading(true);
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: 'Cancelled' })
-        .eq('id', orderId)
-        .eq('user_id', user?.id);
-
-      if (error) throw error;
+      const result = await cancelOrder(orderId);
+      if (result.error) throw new Error(result.error);
       
       // Update local state
       setOrders(orders.map(o => o.id === orderId ? { ...o, status: 'Cancelled' } : o));
@@ -654,7 +650,7 @@ const AccountPage = () => {
                             <p className="text-sm font-semibold text-primary">{selectedOrder.tracking_number}</p>
                           </div>
                           <Link 
-                            href={`/track?id=${selectedOrder.id.slice(0, 8)}`}
+                            href={`/track?id=${selectedOrder.id}`}
                             className="px-4 py-2 bg-primary/10 text-primary rounded-full text-[8px] font-bold uppercase tracking-widest hover:bg-primary hover:text-white transition-all"
                           >
                             Live Track

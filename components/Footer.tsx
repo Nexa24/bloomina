@@ -38,10 +38,17 @@ const Footer = () => {
           <div className="space-y-8">
             <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-surface-on/40">Collections</h3>
             <ul className="space-y-4">
-              {['Signature Bras', 'Silk Panties', 'Lounge Sets', 'Active Bloom', 'Accessories'].map((item) => (
-                <li key={item}>
-                  <Link href="#" className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">
-                    {item}
+              {[
+                { name: 'Bras', href: '/category/bras' },
+                { name: 'Panties', href: '/category/panties' },
+                { name: 'New Arrivals', href: '/category/new-arrivals' },
+                { name: 'Bestsellers', href: '/category/bestsellers' },
+                { name: 'Clearance', href: '/category/clearance' },
+                { name: 'Sale%', href: '/category/sale' }
+              ].map((item) => (
+                <li key={item.name}>
+                  <Link href={item.href} className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">
+                    {item.name}
                   </Link>
                 </li>
               ))}

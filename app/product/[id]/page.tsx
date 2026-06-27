@@ -92,6 +92,28 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     return product.images || [];
   }, [product, selectedColorIndex]);
 
+  const availableSizes = useMemo(() => {
+    return product?.variants?.find((v: any) => v.name === 'Size')?.values || [];
+  }, [product]);
+
+  const guideSizes = useMemo(() => {
+    if (!product?.sizeGuide?.chart_data) return [];
+    const chartRows = product.sizeGuide.chart_data;
+    if (!Array.isArray(chartRows) || chartRows.length === 0) return [];
+    return chartRows.map((row: any) => {
+      const keys = Object.keys(row);
+      const sizeKey = keys.find(k => k.toLowerCase() === 'size') || keys[0];
+      return row[sizeKey];
+    }).filter(Boolean);
+  }, [product]);
+
+  const sizes = useMemo(() => {
+    if (guideSizes.length > 0) {
+      return [...new Set([...guideSizes, ...availableSizes])];
+    }
+    return availableSizes;
+  }, [guideSizes, availableSizes]);
+
   const handleAddToCart = () => {
     if (!product) return;
     
@@ -160,7 +182,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     </div>;
   }
 
-  const sizes = product.variants?.find((v: any) => v.name === 'Size')?.values || [];
+
   const categories = Array.isArray(product.categories) ? product.categories : [product.categories || 'Uncategorized'];
   
   const mainCategoriesList = ['Bras', 'Panties', 'Sale%', 'Innerwear', 'Bestsellers', 'Combo Packs'];
@@ -282,15 +304,25 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   )}
                 </div>
                 <div className="grid grid-cols-4 gap-3">
-                  {sizes.map((size: string) => (
-                    <button 
-                      key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`py-4 rounded-xl text-sm transition-all border ${selectedSize === size ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' : 'border-primary/10 text-surface-on-variant hover:border-primary/40'}`}
-                    >
-                      {size}
-                    </button>
-                  ))}
+                  {sizes.map((size: string) => {
+                    const isAvailable = availableSizes.includes(size);
+                    return (
+                      <button 
+                        key={size}
+                        disabled={!isAvailable}
+                        onClick={() => setSelectedSize(size)}
+                        className={`py-4 rounded-xl text-sm transition-all border ${
+                          !isAvailable 
+                            ? 'border-stone-200/40 text-surface-on-variant/30 opacity-30 cursor-not-allowed line-through bg-stone-50/20' 
+                            : selectedSize === size 
+                              ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' 
+                              : 'border-primary/10 text-surface-on-variant hover:border-primary/40'
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

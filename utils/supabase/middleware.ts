@@ -41,11 +41,9 @@ export async function updateSession(request: NextRequest) {
     (request.nextUrl.pathname.startsWith('/checkout') || 
      request.nextUrl.pathname.startsWith('/account'))
   ) {
-    const host = request.headers.get('host');
-    const protocol = request.headers.get('x-forwarded-proto') || request.nextUrl.protocol.replace(':', '');
-    const origin = host ? `${protocol}://${host}` : request.nextUrl.origin;
-    
-    const redirectUrl = new URL('/login', origin);
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = '/login';
+    redirectUrl.search = '';
     redirectUrl.searchParams.set('next', request.nextUrl.pathname);
     return NextResponse.redirect(redirectUrl);
   }

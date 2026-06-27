@@ -61,9 +61,6 @@ export default buildConfig({
     ? postgresAdapter({
         pool: {
           connectionString: databaseUri,
-          ssl: {
-            rejectUnauthorized: false,
-          },
         },
         push: false,
       })

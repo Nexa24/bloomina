@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "payload": "payload"
+    "payload": "payload",
+    "security:lockdown": "node scratch/apply-security-lockdown.js"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "latest",

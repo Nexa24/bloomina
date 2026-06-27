@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { createClient } from '@/utils/supabase/client';
 import { useSearchParams } from 'next/navigation';
+import { trackOrder } from '@/app/actions/checkout';
 
 const TrackPage = () => {
   const searchParams = useSearchParams();
@@ -15,7 +15,6 @@ const TrackPage = () => {
   const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const supabase = createClient();
 
   useEffect(() => {
     if (urlId) setOrderId(urlId.toUpperCase());
@@ -28,33 +27,11 @@ const TrackPage = () => {
     setOrder(null);
 
     try {
-      let query = supabase.from('orders').select('*');
-      
-      if (orderId.includes('-')) {
-        // Full UUID
-        query = query.eq('id', orderId);
+      const result = await trackOrder(orderId, email);
+      if (result.error || !result.data) {
+        setError(result.error || 'No order found for those details.');
       } else {
-        // Partial ID search
-        query = query.ilike('id', `${orderId}%`);
-      }
-
-      const { data, error: fetchError } = await query;
-
-      if (fetchError) throw fetchError;
-      
-      if (!data || data.length === 0) {
-        setError('No order found with this ID.');
-      } else {
-        // If multiple found (partial ID), try to match email or just take the first if email wasn't provided
-        const matchedOrder = email 
-          ? data.find(o => o.customer_email?.toLowerCase() === email.toLowerCase() || o.shipping_address?.email?.toLowerCase() === email.toLowerCase())
-          : data[0];
-
-        if (!matchedOrder) {
-          setError('Order ID found, but email verification failed.');
-        } else {
-          setOrder(matchedOrder);
-        }
+        setOrder(result.data);
       }
     } catch (err: any) {
       console.error('Tracking error:', err);
@@ -105,7 +82,7 @@ const TrackPage = () => {
                     <input 
                       type="text" 
                       required
-                      placeholder="e.g. 8B50E2DD"
+                      placeholder="Full order ID"
                       value={orderId}
                       onChange={(e) => setOrderId(e.target.value)}
                       className="w-full bg-transparent border-0 border-b border-stone-100 py-4 px-1 focus:ring-0 focus:border-primary transition-all placeholder:text-stone-200 text-lg font-display" 

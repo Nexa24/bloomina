@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 export async function submitReview(data: {
   productId?: string;
@@ -10,16 +10,27 @@ export async function submitReview(data: {
   customerEmail?: string;
 }) {
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
+    const rating = Number(data.rating);
+    const comment = data.comment?.trim();
+    const customerName = data.customerName?.trim();
+    const customerEmail = data.customerEmail?.trim().toLowerCase();
+
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return { success: false, error: 'Rating must be between 1 and 5.' };
+    }
+    if (!comment || comment.length > 2000 || !customerName || customerName.length > 100) {
+      return { success: false, error: 'Review details are invalid.' };
+    }
     
     const { error } = await supabase
       .from('reviews')
       .insert([{
         product_id: data.productId || null,
-        rating: data.rating,
-        comment: data.comment,
-        customer_name: data.customerName,
-        customer_email: data.customerEmail,
+        rating,
+        comment,
+        customer_name: customerName,
+        customer_email: customerEmail || null,
         status: 'pending' // Always start as pending for moderation
       }]);
 
@@ -34,11 +45,11 @@ export async function submitReview(data: {
 
 export async function getApprovedReviews(productId?: string) {
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     
     let query = supabase
       .from('reviews')
-      .select('*')
+      .select('id, product_id, rating, comment, customer_name, created_at')
       .eq('status', 'approved')
       .order('created_at', { ascending: false });
 

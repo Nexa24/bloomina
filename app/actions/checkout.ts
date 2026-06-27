@@ -1,14 +1,32 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
+import { createAdminClient } from '@/utils/supabase/admin';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
+
+const MAX_ITEMS_PER_ORDER = 20;
+const MAX_QUANTITY_PER_ITEM = 10;
+
+function cleanText(value: unknown, name: string, maxLength: number) {
+  if (typeof value !== 'string') throw new Error(`${name} is required.`);
+  const cleaned = value.trim();
+  if (!cleaned || cleaned.length > maxLength) throw new Error(`${name} is invalid.`);
+  return cleaned;
+}
+
+async function requireUser() {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) throw new Error('You must be signed in to continue.');
+  return user;
+}
 
 /**
  * Fetches the dynamic payment configuration from the database.
  */
 async function getPaymentConfig() {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
   const { data } = await supabase
     .from('system_config')
     .select('value')
@@ -29,20 +47,7 @@ async function getRazorpayInstance() {
   }
 
   if (!keyId || !keySecret) {
-    // Fallback to DB if env vars are missing
-    const config = await getPaymentConfig();
-    if (!config.razorpay_key_id || !config.razorpay_key_secret) {
-        throw new Error('Payment gateway is not fully configured. Please contact support.');
-    }
-    console.log(`[Razorpay] Falling back to DB Key ID: ${config.razorpay_key_id.substring(0, 8)}...`);
-    return {
-        instance: new Razorpay({
-          key_id: config.razorpay_key_id,
-          key_secret: config.razorpay_key_secret,
-        }),
-        keyId: config.razorpay_key_id,
-        source: 'DB'
-      };
+    throw new Error('Payment gateway is not fully configured. Please contact support.');
   }
 
   return {
@@ -67,12 +72,14 @@ export async function getCheckoutConfig() {
 
 export async function validateCoupon(code: string, cartTotal: number) {
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
+    const normalizedCode = cleanText(code, 'Coupon code', 64).toUpperCase();
+    if (!Number.isFinite(cartTotal) || cartTotal < 0) return { error: 'Invalid cart total.' };
     
     const { data: rawCoupon, error } = await supabase
       .from('coupons')
       .select('*')
-      .eq('code', code.toUpperCase())
+      .eq('code', normalizedCode)
       .single();
 
     if (error || !rawCoupon) {
@@ -99,7 +106,11 @@ export async function validateCoupon(code: string, cartTotal: number) {
       min_order_value: (rawCoupon.min_order_value !== null && rawCoupon.min_order_value !== undefined)
         ? Number(rawCoupon.min_order_value)
         : Number(rawCoupon.min_cart_value || 0),
-      discount_type: rawCoupon.discount_type || (rawCoupon.type === 'percent' ? 'percentage' : rawCoupon.type),
+      discount_type: (rawCoupon.discount_type === 'flat' || rawCoupon.type === 'flat' || rawCoupon.discount_type === 'fixed' || rawCoupon.type === 'fixed')
+        ? 'fixed'
+        : (rawCoupon.discount_type === 'percent' || rawCoupon.type === 'percent' || rawCoupon.discount_type === 'percentage' || rawCoupon.type === 'percentage')
+          ? 'percentage'
+          : rawCoupon.discount_type || rawCoupon.type,
       discount_value: (rawCoupon.discount_value !== null && rawCoupon.discount_value !== undefined)
         ? Number(rawCoupon.discount_value)
         : Number(rawCoupon.value || 0),
@@ -157,18 +168,44 @@ export async function createOrder(data: {
   couponCode?: string;
 }) {
   try {
-    const supabase = await createClient();
+    const user = await requireUser();
+    const supabase = createAdminClient();
     const config = await getPaymentConfig();
 
     // 1. Validate prices server-side
+    if (!Array.isArray(data.items) || data.items.length === 0 || data.items.length > MAX_ITEMS_PER_ORDER) {
+      throw new Error('Your cart is empty or contains too many items.');
+    }
+    if (!['Razorpay', 'COD'].includes(data.paymentMethod)) {
+      throw new Error('Invalid payment method.');
+    }
+
+    const shippingAddress = {
+      fullName: cleanText(data.shippingAddress?.fullName, 'Full name', 100),
+      email: cleanText(data.shippingAddress?.email, 'Email', 254).toLowerCase(),
+      phone: cleanText(data.shippingAddress?.phone, 'Phone', 24),
+      address: cleanText(data.shippingAddress?.address, 'Address', 300),
+      city: cleanText(data.shippingAddress?.city, 'City', 100),
+      state: cleanText(data.shippingAddress?.state, 'State', 100),
+      postalCode: cleanText(data.shippingAddress?.postalCode, 'Postal code', 20),
+    };
+    if (shippingAddress.email !== user.email?.toLowerCase()) {
+      throw new Error('Checkout email must match your signed-in account.');
+    }
+
     let subtotal = 0;
     const validatedItems: any[] = [];
 
     for (const item of data.items) {
+      const quantity = Number(item.quantity);
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY_PER_ITEM) {
+        throw new Error('Invalid item quantity.');
+      }
+      const productId = cleanText(item.productId, 'Product ID', 100);
       const { data: product, error: productError } = await supabase
         .from('products')
         .select('id, name, price')
-        .eq('id', item.productId)
+        .eq('id', productId)
         .single();
 
       if (productError || !product) {
@@ -176,16 +213,17 @@ export async function createOrder(data: {
       }
 
       const price = Number(product.price);
-      subtotal += price * item.quantity;
+      if (!Number.isFinite(price) || price < 0) throw new Error('Product price is invalid.');
+      subtotal += price * quantity;
 
       validatedItems.push({
-        id: item.productId,
+        id: productId,
         title: product.name,
         price,
-        quantity: item.quantity,
-        image: item.image,
-        size: item.size,
-        color: item.color,
+        quantity,
+        image: typeof item.image === 'string' ? item.image.slice(0, 500) : '',
+        size: typeof item.size === 'string' ? item.size.slice(0, 100) : '',
+        color: typeof item.color === 'string' ? item.color.slice(0, 100) : '',
       });
     }
 
@@ -217,7 +255,8 @@ export async function createOrder(data: {
         keySource = source;
         partialKey = keyId ? keyId.substring(0, 6) + '...' : 'None';
         
-        const host = (await (await import('next/headers')).headers()).get('host');
+        const headersList = await (await import('next/headers')).headers();
+        const host = headersList.get('host');
         console.log(`[Checkout] Creating Razorpay order on domain: ${host}`);
 
         const rzpOrder = await instance.orders.create({
@@ -240,24 +279,24 @@ export async function createOrder(data: {
     // 4. Insert order
     const orderRow = {
       status: orderStatus,
-      customer_name: data.shippingAddress.fullName,
-      email: data.shippingAddress.email,
-      phone: data.shippingAddress.phone,
+      customer_name: shippingAddress.fullName,
+      email: shippingAddress.email,
+      phone: shippingAddress.phone,
       subtotal,
       discount_amount: discountAmount,
       total,
       applied_coupon_id: appliedCouponId,
       items: validatedItems,
       shipping_address: {
-        street: data.shippingAddress.address,
-        city: data.shippingAddress.city,
-        state: data.shippingAddress.state,
-        zip: data.shippingAddress.postalCode,
+        street: shippingAddress.address,
+        city: shippingAddress.city,
+        state: shippingAddress.state,
+        zip: shippingAddress.postalCode,
         country: 'India',
       },
       payment_method: data.paymentMethod,
       razorpay_order_id: razorpayOrderId,
-      user_id: (await supabase.auth.getUser()).data.user?.id || null,
+      user_id: user.id,
     };
 
     const { data: order, error: orderError } = await supabase
@@ -299,15 +338,9 @@ export async function verifyPayment(data: {
   orderId: string;
 }) {
   try {
-    const supabase = await createClient();
-    
-    // Prioritize env var for secret
-    let secret = process.env.RAZORPAY_KEY_SECRET;
-    
-    if (!secret) {
-        const config = await getPaymentConfig();
-        secret = config.razorpay_key_secret;
-    }
+    const user = await requireUser();
+    const supabase = createAdminClient();
+    const secret = process.env.RAZORPAY_KEY_SECRET;
 
     if (!secret) throw new Error('Razorpay secret not configured');
 
@@ -317,15 +350,21 @@ export async function verifyPayment(data: {
       .update(body)
       .digest('hex');
 
-    if (expectedSignature !== data.razorpay_signature) {
+    const providedSignature = Buffer.from(data.razorpay_signature, 'utf8');
+    const calculatedSignature = Buffer.from(expectedSignature, 'utf8');
+    if (
+      providedSignature.length !== calculatedSignature.length ||
+      !crypto.timingSafeEqual(providedSignature, calculatedSignature)
+    ) {
       return { error: 'Invalid payment signature' };
     }
 
     // Fetch the order to verify binding with Razorpay order ID
     const { data: order, error: fetchError } = await supabase
       .from('orders')
-      .select('razorpay_order_id, status')
+      .select('razorpay_order_id, status, user_id')
       .eq('id', data.orderId)
+      .eq('user_id', user.id)
       .single();
 
     if (fetchError || !order) {
@@ -343,7 +382,10 @@ export async function verifyPayment(data: {
         razorpay_payment_id: data.razorpay_payment_id,
         razorpay_signature: data.razorpay_signature,
       })
-      .eq('id', data.orderId);
+      .eq('id', data.orderId)
+      .eq('user_id', user.id)
+      .eq('razorpay_order_id', data.razorpay_order_id)
+      .eq('status', 'Payment Pending');
 
     if (updateError) throw updateError;
 
@@ -356,13 +398,15 @@ export async function verifyPayment(data: {
 
 export async function deleteOrder(orderId: string) {
   try {
-    const supabase = await createClient();
+    const user = await requireUser();
+    const supabase = createAdminClient();
     
     // Only delete if it's still in 'Payment Pending' status to be safe
     const { error } = await supabase
       .from('orders')
       .delete()
       .eq('id', orderId)
+      .eq('user_id', user.id)
       .eq('status', 'Payment Pending');
 
     if (error) throw error;
@@ -370,5 +414,60 @@ export async function deleteOrder(orderId: string) {
   } catch (error: any) {
     console.error('Order deletion error:', error);
     return { error: 'Failed to cleanup order' };
+  }
+}
+
+export async function cancelOrder(orderId: string) {
+  try {
+    const user = await requireUser();
+    const supabase = createAdminClient();
+    const { error } = await supabase
+      .from('orders')
+      .update({ status: 'Cancelled' })
+      .eq('id', cleanText(orderId, 'Order ID', 100))
+      .eq('user_id', user.id)
+      .in('status', ['Payment Pending', 'Processing']);
+
+    if (error) throw error;
+    return { success: true };
+  } catch {
+    return { error: 'Failed to cancel order.' };
+  }
+}
+
+export async function getOrderConfirmation(orderId: string) {
+  try {
+    const user = await requireUser();
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from('orders')
+      .select('payment_method, email, status')
+      .eq('id', cleanText(orderId, 'Order ID', 100))
+      .eq('user_id', user.id)
+      .single();
+
+    if (error || !data) return { error: 'Order not found.' };
+    return { success: true, data };
+  } catch {
+    return { error: 'Unable to load order confirmation.' };
+  }
+}
+
+export async function trackOrder(orderId: string, email: string) {
+  try {
+    const supabase = createAdminClient();
+    const normalizedOrderId = cleanText(orderId, 'Order ID', 100);
+    const normalizedEmail = cleanText(email, 'Email', 254).toLowerCase();
+    const { data, error } = await supabase
+      .from('orders')
+      .select('id, status, shipping_address, delivery_method, tracking_number')
+      .eq('id', normalizedOrderId)
+      .ilike('email', normalizedEmail)
+      .single();
+
+    if (error || !data) return { error: 'No order found for those details.' };
+    return { success: true, data };
+  } catch {
+    return { error: 'Unable to track this order.' };
   }
 }
