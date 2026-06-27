@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Suspense } from 'react';
+import { checkUserExists } from '@/app/actions/auth';
 
 const LoginContent = () => {
   const [email, setEmail] = useState('');
@@ -75,10 +76,25 @@ const LoginContent = () => {
     setIsLoading(true);
     setError(null);
     try {
+      // Check if user exists in database first
+      const checkResult = await checkUserExists(email);
+      if (!checkResult.success) {
+        throw new Error(checkResult.error || 'Failed to verify account.');
+      }
+      if (!checkResult.exists) {
+        setError('No account found with this email address.');
+        setIsLoading(false);
+        return;
+      }
+
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/callback?next=/account/update-password`,
       });
       if (resetError) throw resetError;
+      
+      // Flag that a password reset was requested on this device
+      localStorage.setItem('bloomina_reset_password_requested', 'true');
+      
       setResetEmailSent(true);
     } catch (err: any) {
       setError(err.message || 'Failed to send reset email');

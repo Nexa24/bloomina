@@ -31,6 +31,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
+    // Intercept code query parameter (fallback when Supabase ignores redirectTo)
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get('code');
+      if (code) {
+        const wasReset = localStorage.getItem('bloomina_reset_password_requested') === 'true';
+        localStorage.removeItem('bloomina_reset_password_requested');
+        const nextPath = wasReset ? '/account/update-password' : '/account';
+        
+        // Redirect to the server callback
+        window.location.href = `/auth/callback?code=${code}&next=${encodeURIComponent(nextPath)}`;
+        return;
+      }
+    }
+
     // Check user on mount
     fetchUser();
 
