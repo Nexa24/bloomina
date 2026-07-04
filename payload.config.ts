@@ -61,6 +61,9 @@ export default buildConfig({
     ? postgresAdapter({
         pool: {
           connectionString: databaseUri,
+          ssl: databaseUri.includes('supabase') || databaseUri.includes('sslmode=require')
+            ? { rejectUnauthorized: false }
+            : false,
         },
         push: false,
       })
