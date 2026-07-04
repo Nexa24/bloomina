@@ -49,7 +49,7 @@ const UpdatePasswordPage = () => {
       
       setSuccess(true);
       setTimeout(() => {
-        router.push('/account/settings');
+        router.push('/account');
       }, 2000);
     } catch (err: any) {
       setError(err.message || 'Failed to update password');

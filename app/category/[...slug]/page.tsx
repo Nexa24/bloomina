@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 // Each sub-category has a dbNames array: all possible values stored in the DB
@@ -123,16 +123,21 @@ const categoryMap: { [key: string]: CategoryEntry } = {
 
 const CategoryPage = () => {
   const params = useParams();
+  const searchParams = useSearchParams();
   const slugArray = params.slug as string[];
   const mainSlug = slugArray?.[0] || '';
   const subSlug  = slugArray?.[1] || '';
+  const searchQuery = searchParams ? (searchParams.get('q') || '') : '';
 
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState('newest');
 
-  const currentCategory = categoryMap[mainSlug] || { label: mainSlug?.toUpperCase(), dbName: mainSlug };
-  const currentSub = (currentCategory.subs as SubCategory[] | undefined)?.find(s => s.slug === subSlug);
+  const isSearchPage = mainSlug.toLowerCase() === 'search';
+  const currentCategory = isSearchPage
+    ? { label: 'Search Results', dbName: 'Search' }
+    : categoryMap[mainSlug] || { label: mainSlug?.toUpperCase(), dbName: mainSlug };
+  const currentSub = !isSearchPage && (currentCategory.subs as SubCategory[] | undefined)?.find(s => s.slug === subSlug);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -148,6 +153,18 @@ const CategoryPage = () => {
         if (data) {
           const filtered = data.filter((p: any) => {
             if (p.status && p.status !== 'Active') return false;
+
+            if (isSearchPage) {
+              if (!searchQuery) return true;
+              const q = searchQuery.toLowerCase().trim();
+              const nameMatch = (p.name || '').toLowerCase().includes(q);
+              const descMatch = (p.description || '').toLowerCase().includes(q);
+              const productCats: string[] = Array.isArray(p.categories)
+                ? p.categories
+                : p.category ? [p.category] : [];
+              const catMatch = productCats.some(c => typeof c === 'string' && c.trim().toLowerCase().includes(q));
+              return nameMatch || descMatch || catMatch;
+            }
 
             const productCats: string[] = Array.isArray(p.categories)
               ? p.categories
@@ -221,7 +238,7 @@ const CategoryPage = () => {
     };
 
     if (mainSlug) fetchProducts();
-  }, [mainSlug, subSlug]);
+  }, [mainSlug, subSlug, searchQuery]);
 
   const sortedProducts = [...products].sort((a, b) => {
     if (sortBy === 'price-low') return (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0);
@@ -233,50 +250,7 @@ const CategoryPage = () => {
     <div className="min-h-screen bg-white flex flex-col antialiased">
       <main className="flex-1 pt-32 pb-24">
 
-        {/* ── Category Header ── */}
-        <div className="max-w-screen-xl mx-auto px-6 mb-16">
-          <div className="max-w-2xl">
-            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-4">Bloomina Collection</p>
-            <h1 className="text-6xl font-display font-light text-surface-on tracking-tight leading-none mb-8 capitalize">
-              {currentSub ? currentSub.name : currentCategory.label} <br />
-              <span className="italic text-primary/30">refined for you.</span>
-            </h1>
 
-            {/* Sub-category Pills */}
-            {currentCategory.subs && (
-              <div className="flex flex-wrap gap-3 mb-10">
-                <Link
-                  href={`/category/${mainSlug}`}
-                  className={`px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
-                    !subSlug
-                      ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                      : 'bg-stone-50 text-surface-on/40 hover:bg-stone-100'
-                  }`}
-                >
-                  All {currentCategory.label}
-                </Link>
-                {(currentCategory.subs as SubCategory[]).map(sub => (
-                  <Link
-                    key={sub.slug}
-                    href={`/category/${mainSlug}/${sub.slug}`}
-                    className={`px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
-                      subSlug === sub.slug
-                        ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                        : 'bg-stone-50 text-surface-on/40 hover:bg-stone-100'
-                    }`}
-                  >
-                    {sub.name}
-                  </Link>
-                ))}
-              </div>
-            )}
-
-            <p className="text-sm font-light text-surface-on-variant leading-relaxed max-w-lg">
-              Explore our {currentSub ? currentSub.name.toLowerCase() : currentCategory.label.toLowerCase()} essentials,
-              meticulously crafted to provide ethereal comfort and a perfect silhouette.
-            </p>
-          </div>
-        </div>
 
         {/* ── Toolbar ── */}
         <div className="sticky top-20 z-30 bg-white/80 backdrop-blur-xl border-y border-stone-50 mb-12">

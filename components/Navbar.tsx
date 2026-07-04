@@ -3,16 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useCart } from '@/hooks/use-cart';
 import { useWishlist } from '@/hooks/use-wishlist';
 
 const navLinks = [
-  { 
-    name: 'Shop by Collection', 
-    href: '/products' 
-  },
   { 
     name: 'Bras', 
     href: '/category/bras',
@@ -37,37 +33,12 @@ const navLinks = [
       { name: 'Thongs', href: '/category/panties/thongs' },
     ]
   },
-  { name: 'Bestsellers', href: '/category/bestsellers' },
-  { name: 'Combo Packs', href: '/category/combos' },
-  { 
-    name: 'Sale%', 
-    href: '/category/sale',
-    subsections: [
-      { name: 'Bras on Sale', href: '/category/sale/bras' },
-      { name: 'Panties on Sale', href: '/category/sale/panties' },
-      { name: 'Combo Pack Offers', href: '/category/sale/combos' },
-      { name: 'Clearance', href: '/category/sale/clearance' },
-    ]
-  },
-  {
-    name: 'Our World',
-    href: '/about',
-    subsections: [
-      { name: 'Our Story', href: '/about' },
-      { name: 'Craftsmanship', href: '/craftsmanship' },
-      { name: 'The Bloomina Philosophy', href: '/about#philosophy' },
-      { name: 'Size Guide', href: '/size-guide' },
-      { name: 'Contact Details', href: '/contact' },
-      { name: 'Feedback', href: '/feedback' },
-    ],
-    featured: {
-      title: 'The Bloomina Touch',
-      image: '/our_story.png'
-    }
-  }
+  { name: 'Bestsellers', href: '/category/bestsellers' }
 ];
 
 const Navbar = () => {
+  const router = useRouter();
+  const [searchVal, setSearchVal] = useState('');
   const [isMounted, setIsMounted] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -192,13 +163,25 @@ const Navbar = () => {
 
           {/* RIGHT SIDE: Icons (Universal) */}
           <div className="flex items-center justify-end gap-3 md:gap-8 z-10 flex-1">
-            {/* Search — leftmost icon */}
-            <button 
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className={`hidden lg:block text-surface-on-variant hover:text-primary transition-all duration-300 flex-shrink-0 ${isSearchOpen ? 'text-primary scale-110' : ''}`}
-            >
-              <span className="material-symbols-outlined text-[20px] md:text-2xl font-light">search</span>
-            </button>
+            {/* Inline search bar in navbar (Desktop) */}
+            <div className="hidden lg:flex items-center gap-2 bg-stone-50 hover:bg-stone-100 border border-stone-200/50 rounded-full px-3 py-1.5 transition-all duration-300 group">
+              <span className="material-symbols-outlined text-lg text-surface-on-variant/60 font-light group-hover:text-primary transition-colors">search</span>
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchVal}
+                onChange={(e) => setSearchVal(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchVal.trim()) {
+                    router.push(`/category/search?q=${encodeURIComponent(searchVal.trim())}`);
+                  }
+                }}
+                className="bg-transparent border-none p-0 focus:ring-0 text-[10px] font-semibold uppercase tracking-wider text-surface-on placeholder:text-stone-300 w-28 focus:w-56 transition-all duration-300 outline-none"
+              />
+            </div>
+            <Link href="/contact" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0" title="Contact Us">
+              <span className="material-symbols-outlined text-[20px] md:text-2xl font-light">info</span>
+            </Link>
             <Link href="/account" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0">
               <span className="material-symbols-outlined text-[20px] md:text-2xl font-light">person</span>
             </Link>
@@ -281,7 +264,7 @@ const Navbar = () => {
           
           {/* Content */}
           <div className={`relative min-h-screen w-full transition-all duration-700 delay-100 ${isSearchOpen ? 'translate-y-0 opacity-100' : '-translate-y-12 opacity-0'}`}>
-            <div className="max-w-screen-xl mx-auto px-6 pt-12 md:pt-32 pb-24">
+            <div className="max-w-screen-2xl mx-auto px-6 md:px-12 pt-12 md:pt-32 pb-24">
               {/* Close Button Row (Mobile Optimized) */}
               <div className="flex justify-end mb-8 md:absolute md:top-12 md:right-12">
                 <button 
@@ -292,13 +275,21 @@ const Navbar = () => {
                 </button>
               </div>
 
-              <div className="flex items-center justify-between border-b border-primary/10 pb-4 md:pb-8 mb-12 group">
-                <div className="flex-1 flex items-center gap-4 md:gap-8">
-                  <span className="material-symbols-outlined text-2xl md:text-4xl text-primary font-light">search</span>
+              <div className="flex items-center justify-between border-b border-primary/15 pb-6 md:pb-10 mb-16 group">
+                <div className="flex-1 flex items-center gap-4 md:gap-10">
+                  <span className="material-symbols-outlined text-3xl md:text-5xl text-primary font-light">search</span>
                   <input 
                     type="text" 
-                    placeholder="Search..." 
-                    className="flex-1 bg-transparent border-none focus:ring-0 text-3xl md:text-7xl font-display font-light text-surface-on placeholder:text-stone-100 antialiased outline-none"
+                    placeholder="Search our collection..." 
+                    value={searchVal}
+                    onChange={(e) => setSearchVal(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && searchVal.trim()) {
+                        setIsSearchOpen(false);
+                        router.push(`/category/search?q=${encodeURIComponent(searchVal.trim())}`);
+                      }
+                    }}
+                    className="flex-1 bg-transparent border-none focus:ring-0 text-3xl md:text-8xl font-display font-light text-surface-on placeholder:text-stone-300 antialiased outline-none"
                     autoFocus={isSearchOpen}
                   />
                 </div>

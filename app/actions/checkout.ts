@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
+import { createShiprocketOrder } from '@/lib/shiprocket';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
@@ -316,6 +317,13 @@ export async function createOrder(data: {
       if (rpcError) console.error('Coupon Usage Update Error:', rpcError);
     }
 
+    // Push COD orders to Shiprocket automatically
+    if (data.paymentMethod === 'COD') {
+      createShiprocketOrder(order.id).catch(err => {
+        console.error('Async Shiprocket Creation Error:', err);
+      });
+    }
+
     return {
       success: true,
       orderId: order.id,
@@ -388,6 +396,11 @@ export async function verifyPayment(data: {
       .eq('status', 'Payment Pending');
 
     if (updateError) throw updateError;
+
+    // Push Prepaid orders to Shiprocket once payment is verified
+    createShiprocketOrder(data.orderId).catch(err => {
+      console.error('Async Shiprocket Creation Error:', err);
+    });
 
     return { success: true };
   } catch (error: any) {

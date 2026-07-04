@@ -12,6 +12,37 @@ interface Review {
   created_at: string;
 }
 
+function parseReviewComment(comment: string) {
+  const newMatch = comment.match(/^\[Fabric:\s*(\d)\/5,\s*Comfort:\s*(\d)\/5,\s*Service\s*&\s*Packaging:\s*(\d)\/5\]\s*([\s\S]*)$/);
+  if (newMatch) {
+    return {
+      fabricRating: parseInt(newMatch[1]),
+      comfortRating: parseInt(newMatch[2]),
+      servicePackagingRating: parseInt(newMatch[3]),
+      cleanComment: newMatch[4].trim()
+    };
+  }
+
+  const oldMatch = comment.match(/^\[Fabric:\s*(\d)\/5,\s*Comfort:\s*(\d)\/5,\s*Service:\s*(\d)\/5,\s*Package:\s*(\d)\/5\]\s*([\s\S]*)$/);
+  if (oldMatch) {
+    const serviceVal = parseInt(oldMatch[3]);
+    const packageVal = parseInt(oldMatch[4]);
+    return {
+      fabricRating: parseInt(oldMatch[1]),
+      comfortRating: parseInt(oldMatch[2]),
+      servicePackagingRating: Math.round((serviceVal + packageVal) / 2),
+      cleanComment: oldMatch[5].trim()
+    };
+  }
+
+  return {
+    fabricRating: null,
+    comfortRating: null,
+    servicePackagingRating: null,
+    cleanComment: comment
+  };
+}
+
 export default function ProductReviews({ productId, title = "Customer Feedback" }: { productId?: string, title?: string }) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -27,6 +58,9 @@ export default function ProductReviews({ productId, title = "Customer Feedback" 
     customerName: '',
     customerEmail: ''
   });
+  const [fabricRating, setFabricRating] = useState(5);
+  const [comfortRating, setComfortRating] = useState(5);
+  const [servicePackagingRating, setServicePackagingRating] = useState(5);
 
   useEffect(() => {
     fetchReviews();
@@ -49,21 +83,44 @@ export default function ProductReviews({ productId, title = "Customer Feedback" 
     e.preventDefault();
     setIsSubmitting(true);
     
+    const prefix = `[Fabric: ${fabricRating}/5, Comfort: ${comfortRating}/5, Service & Packaging: ${servicePackagingRating}/5] `;
+    
     const result = await submitReview({
       productId,
-      ...formData
+      ...formData,
+      comment: prefix + formData.comment
     });
 
     if (result.success) {
       setSubmissionSuccess(true);
       setShowForm(false);
       setFormData({ rating: 5, comment: '', customerName: '', customerEmail: '' });
+      setFabricRating(5);
+      setComfortRating(5);
+      setServicePackagingRating(5);
       setTimeout(() => setSubmissionSuccess(false), 5000);
     } else {
       alert('Failed to submit review: ' + result.error);
     }
     setIsSubmitting(false);
   };
+
+  const parsedReviews = reviews.map(r => ({
+    ...r,
+    subRatings: parseReviewComment(r.comment)
+  }));
+
+  const reviewsWithSubs = parsedReviews.filter(r => r.subRatings.fabricRating !== null);
+  
+  const getSubAverage = (key: 'fabricRating' | 'comfortRating' | 'servicePackagingRating') => {
+    if (reviewsWithSubs.length === 0) return '0.0';
+    const sum = reviewsWithSubs.reduce((acc, r) => acc + (r.subRatings[key] || 0), 0);
+    return (sum / reviewsWithSubs.length).toFixed(1);
+  };
+  
+  const fabricAvg = getSubAverage('fabricRating');
+  const comfortAvg = getSubAverage('comfortRating');
+  const servicePackagingAvg = getSubAverage('servicePackagingRating');
 
   const averageRating = reviews.length > 0 
     ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
@@ -96,6 +153,34 @@ export default function ProductReviews({ productId, title = "Customer Feedback" 
             <p className="text-xs font-bold uppercase tracking-widest text-stone-400">
               Based on {reviews.length} approved {reviews.length === 1 ? 'review' : 'reviews'}
             </p>
+
+            {reviewsWithSubs.length > 0 && (
+              <div className="space-y-4 pt-6 border-t border-stone-100 w-full">
+                <h4 className="text-[9px] font-bold uppercase tracking-[0.2em] text-stone-400">Detail Ratings</h4>
+                <div className="space-y-3">
+                  {[
+                    { label: 'Fabric Quality', score: fabricAvg },
+                    { label: 'Comfort & Fit', score: comfortAvg },
+                    { label: 'Service & Packaging', score: servicePackagingAvg }
+                  ].map((sub) => (
+                    <div key={sub.label} className="flex justify-between items-center text-[10px] font-bold">
+                      <span className="uppercase tracking-wider text-stone-500">{sub.label}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-0.5">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star 
+                              key={star} 
+                              className={`w-3 h-3 ${star <= Math.round(Number(sub.score)) ? 'fill-primary text-primary' : 'text-stone-200'}`} 
+                            />
+                          ))}
+                        </div>
+                        <span className="text-primary font-bold">{sub.score}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             
             <button 
               onClick={() => setShowForm(!showForm)}
@@ -131,6 +216,56 @@ export default function ProductReviews({ productId, title = "Customer Feedback" 
                         <Star className={`w-8 h-8 ${formData.rating >= star ? 'fill-primary' : ''}`} />
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-stone-50">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Fabric Quality</label>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setFabricRating(star)}
+                          className={`transition-all hover:scale-110 ${fabricRating >= star ? 'text-primary' : 'text-stone-200'}`}
+                        >
+                          <Star className={`w-5 h-5 ${fabricRating >= star ? 'fill-primary' : ''}`} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Comfort & Fit</label>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setComfortRating(star)}
+                          className={`transition-all hover:scale-110 ${comfortRating >= star ? 'text-primary' : 'text-stone-200'}`}
+                        >
+                          <Star className={`w-5 h-5 ${comfortRating >= star ? 'fill-primary' : ''}`} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Service & Packaging</label>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setServicePackagingRating(star)}
+                          className={`transition-all hover:scale-110 ${servicePackagingRating >= star ? 'text-primary' : 'text-stone-200'}`}
+                        >
+                          <Star className={`w-5 h-5 ${servicePackagingRating >= star ? 'fill-primary' : ''}`} />
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -258,6 +393,8 @@ export default function ProductReviews({ productId, title = "Customer Feedback" 
 }
 
 function ReviewCard({ review }: { review: Review }) {
+  const { fabricRating, comfortRating, serviceRating, packageRating, cleanComment } = parseReviewComment(review.comment);
+
   return (
     <div className="p-10 rounded-[40px] bg-white border border-stone-100 space-y-6 transition-all hover:petal-shadow animate-fade-in group">
       <div className="flex items-center justify-between">
@@ -281,8 +418,26 @@ function ReviewCard({ review }: { review: Review }) {
           ))}
         </div>
       </div>
+
+      {fabricRating !== null && (
+        <div className="grid grid-cols-3 gap-4 py-3 border-y border-stone-50 text-[10px] uppercase tracking-wider text-stone-400 font-bold">
+          <div>
+            <div className="text-stone-500 mb-0.5">Fabric</div>
+            <div className="text-primary font-bold">{fabricRating}/5</div>
+          </div>
+          <div>
+            <div className="text-stone-500 mb-0.5">Comfort & Fit</div>
+            <div className="text-primary font-bold">{comfortRating}/5</div>
+          </div>
+          <div>
+            <div className="text-stone-500 mb-0.5">Service & Packaging</div>
+            <div className="text-primary font-bold">{servicePackagingRating}/5</div>
+          </div>
+        </div>
+      )}
+
       <p className="text-surface-on-variant font-light leading-relaxed italic">
-        "{review.comment}"
+        "{cleanComment}"
       </p>
     </div>
   );

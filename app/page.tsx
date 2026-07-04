@@ -1,7 +1,8 @@
-import Link from "next/link";
 import CategorySection from "@/components/CategorySection";
 import OtherCategoriesSection from "@/components/OtherCategoriesSection";
 import HeroSlideshow from "@/components/HeroSlideshow";
+import CategoryCarousel from "@/components/CategoryCarousel";
+import Testimonials from "@/components/Testimonials";
 
 export default function Home() {
   return (
@@ -9,33 +10,53 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative h-[45vh] md:h-[85vh] flex items-center justify-center overflow-hidden">
         <HeroSlideshow />
-
-        <div className="max-w-5xl mx-auto px-6 text-center space-y-8 animate-slide-up">
-          <div className="space-y-4">
-            <span className="inline-block px-6 py-2 rounded-full bg-white/90 backdrop-blur-sm border border-primary/10 text-[10px] font-bold uppercase tracking-[0.4em] text-primary shadow-sm">
-              Bloomina — Est. 2026
-            </span>
-            <h1 className="text-5xl md:text-[80px] font-display font-light tracking-tight text-surface-on leading-[0.95]">
-              Floral <span className="italic font-normal text-primary">Minimalism.</span>
-            </h1>
-          </div>
-          <p className="max-w-xl mx-auto text-base md:text-lg text-surface-on-variant font-light leading-relaxed">
-            Every piece is thoughtfully designed to embrace your natural beauty.
-          </p>
-          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-6">
-            <Link href="/products" className="px-10 py-5 bg-primary text-white rounded-full text-[10px] font-bold uppercase tracking-[0.3em] hover:brightness-110 transition-all hover:scale-105 shadow-2xl shadow-primary/30">
-              Shop The Collection
-            </Link>
-          </div>
-        </div>
       </section>
 
       {/* Category Section - Now Second */}
       <CategorySection />
 
+      {/* Category Carousel - New */}
+      <CategoryCarousel />
 
       {/* Other Categories Section - New */}
       <OtherCategoriesSection />
+
+      {/* Testimonials Marquee - New */}
+      <Testimonials />
+
+      {/* About Us Section */}
+      <section className="max-w-screen-xl mx-auto px-6 py-12 md:py-20 border-t border-stone-100">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+          <div className="space-y-6 md:space-y-8">
+            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">
+              Our Story
+            </span>
+            <h2 className="text-4xl md:text-5xl font-display font-light text-surface-on tracking-tight leading-tight">
+              About <span className="italic text-primary">Bloomina</span>
+            </h2>
+            <p className="text-base text-surface-on-variant font-light leading-relaxed max-w-xl">
+              At Bloomina, we believe innerwear is the most intimate form of self-expression. Meticulously crafted from the finest, ultra-soft fabrics, our collections blend ethereal comfort with modern, minimal aesthetics. 
+            </p>
+            <p className="text-base text-surface-on-variant font-light leading-relaxed max-w-xl">
+              Designed to elevate your everyday rituals, every piece celebrates your natural silhouette with lightweight support and seamless elegance. We invite you to experience comfort that feels like a second skin.
+            </p>
+          </div>
+          <div className="relative aspect-[4/3] bg-stone-50 rounded-[2.5rem] overflow-hidden p-10 flex flex-col justify-between border border-stone-100 petal-shadow">
+            <div className="space-y-4">
+              <span className="material-symbols-outlined text-4xl text-primary font-light">favorite</span>
+              <p className="text-xl md:text-2xl font-display font-light italic text-surface-on leading-relaxed">
+                "Real comfort starts from within. We design for the modern woman who values both exquisite quality and effortless elegance."
+              </p>
+            </div>
+            <div className="pt-6 border-t border-stone-100 flex items-center justify-between">
+              <div>
+                <h4 className="font-bold text-surface-on text-xs uppercase tracking-widest">The Bloomina Touch</h4>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-primary/60 mt-1">Ethereal Comfort</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
