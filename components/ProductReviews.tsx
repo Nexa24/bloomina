@@ -393,7 +393,7 @@ export default function ProductReviews({ productId, title = "Customer Feedback" 
 }
 
 function ReviewCard({ review }: { review: Review }) {
-  const { fabricRating, comfortRating, serviceRating, packageRating, cleanComment } = parseReviewComment(review.comment);
+  const { fabricRating, comfortRating, servicePackagingRating, cleanComment } = parseReviewComment(review.comment);
 
   return (
     <div className="p-10 rounded-[40px] bg-white border border-stone-100 space-y-6 transition-all hover:petal-shadow animate-fade-in group">
