@@ -25,6 +25,14 @@ const AccountPage = () => {
   const router = useRouter();
   const supabase = createClient();
 
+  // Password change states
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [pwdError, setPwdError] = useState<string | null>(null);
+  const [pwdSuccess, setPwdSuccess] = useState<string | null>(null);
+  const [pwdLoading, setPwdLoading] = useState(false);
+
   const handleLogout = async () => {
     await logout();
     router.push('/');
@@ -144,6 +152,53 @@ const AccountPage = () => {
       alert('Error: ' + error.message);
     } finally {
       setIsDataLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwdError(null);
+    setPwdSuccess(null);
+
+    if (!user?.email) return;
+
+    if (newPassword !== confirmNewPassword) {
+      setPwdError('New passwords do not match.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPwdError('New password must be at least 6 characters.');
+      return;
+    }
+
+    setPwdLoading(true);
+
+    try {
+      // 1. Verify current password
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+
+      if (authError) {
+        throw new Error('Incorrect current password.');
+      }
+
+      // 2. Set new password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (updateError) throw updateError;
+
+      setPwdSuccess('Password updated successfully.');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmNewPassword('');
+    } catch (err: any) {
+      setPwdError(err.message || 'Failed to update password.');
+    } finally {
+      setPwdLoading(false);
     }
   };
 
@@ -464,16 +519,78 @@ const AccountPage = () => {
                     <div className="space-y-12">
                       <section className="space-y-6">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-surface-on">Security</h3>
-                        <p className="text-sm text-surface-on/60 font-light leading-relaxed">
-                          To update your password or enable two-factor authentication, please use the secure portal link below.
-                        </p>
-                        <button 
-                          onClick={handleTriggerReset}
-                          disabled={isDataLoading}
-                          className="text-[10px] font-bold uppercase tracking-widest text-primary hover:underline underline-offset-4 disabled:opacity-50"
-                        >
-                          {isDataLoading ? 'Processing...' : 'Reset Account Password'}
-                        </button>
+                        
+                        {pwdError && (
+                          <div className="p-4 bg-red-50 text-red-500 text-xs rounded-xl flex items-center gap-3">
+                            <span className="material-symbols-outlined text-lg">error</span>
+                            <p className="flex-1 leading-normal">{pwdError}</p>
+                          </div>
+                        )}
+
+                        {pwdSuccess && (
+                          <div className="p-4 bg-green-50 text-green-600 text-xs rounded-xl flex items-center gap-3 font-semibold">
+                            <span className="material-symbols-outlined text-lg">check_circle</span>
+                            <p className="flex-1 leading-normal">{pwdSuccess}</p>
+                          </div>
+                        )}
+
+                        <form onSubmit={handleChangePassword} className="space-y-6 bg-stone-50 p-8 rounded-3xl border border-stone-100">
+                          <div className="space-y-2">
+                            <label className="text-[9px] font-bold uppercase tracking-widest text-surface-on/40 px-1">Current Password</label>
+                            <input 
+                              type="password"
+                              required
+                              value={currentPassword}
+                              onChange={(e) => setCurrentPassword(e.target.value)}
+                              placeholder="••••••••"
+                              className="w-full bg-transparent border-0 border-b border-stone-200 py-3 px-1 focus:ring-0 focus:border-primary transition-all text-sm font-display"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[9px] font-bold uppercase tracking-widest text-surface-on/40 px-1">New Password</label>
+                            <input 
+                              type="password"
+                              required
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                              placeholder="••••••••"
+                              className="w-full bg-transparent border-0 border-b border-stone-200 py-3 px-1 focus:ring-0 focus:border-primary transition-all text-sm font-display"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[9px] font-bold uppercase tracking-widest text-surface-on/40 px-1">Confirm New Password</label>
+                            <input 
+                              type="password"
+                              required
+                              value={confirmNewPassword}
+                              onChange={(e) => setConfirmNewPassword(e.target.value)}
+                              placeholder="••••••••"
+                              className="w-full bg-transparent border-0 border-b border-stone-200 py-3 px-1 focus:ring-0 focus:border-primary transition-all text-sm font-display"
+                            />
+                          </div>
+
+                          <button 
+                            type="submit"
+                            disabled={pwdLoading}
+                            className="px-8 py-4 bg-surface-on text-white rounded-full text-[9px] font-bold uppercase tracking-[0.15em] hover:bg-primary transition-colors disabled:opacity-50"
+                          >
+                            {pwdLoading ? 'Updating...' : 'Change Password'}
+                          </button>
+                        </form>
+
+                        <div className="pt-4">
+                          <p className="text-xs text-stone-400 font-light mb-2">Forgot your password or want to reset via email?</p>
+                          <button 
+                            type="button"
+                            onClick={handleTriggerReset}
+                            disabled={isDataLoading}
+                            className="text-[10px] font-bold uppercase tracking-widest text-primary hover:underline underline-offset-4 disabled:opacity-50"
+                          >
+                            {isDataLoading ? 'Processing...' : 'Send Reset Password Link'}
+                          </button>
+                        </div>
                       </section>
 
                       <section className="space-y-6">
