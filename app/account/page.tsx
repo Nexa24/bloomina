@@ -136,7 +136,7 @@ const AccountPage = () => {
     setIsDataLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: `${window.location.origin}/auth/callback?next=/account/update-password`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
       });
       if (error) throw error;
       alert('A password reset link has been sent to your email.');

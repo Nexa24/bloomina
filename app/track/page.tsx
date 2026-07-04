@@ -183,7 +183,7 @@ const TrackPage = () => {
                           <h4 className="text-xs font-bold uppercase tracking-widest text-primary">Live Tracking</h4>
                           <div>
                             <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Carrier</p>
-                            <p className="text-sm font-semibold">{order.delivery_method}</p>
+                            <p className="text-sm font-semibold">{order.delivery_method || 'Shiprocket Partner'}</p>
                           </div>
                           <div>
                             <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Tracking ID</p>
@@ -192,6 +192,49 @@ const TrackPage = () => {
                         </div>
                       )}
                     </div>
+
+                    {order.live_tracking?.events && order.live_tracking.events.length > 0 && (
+                      <div className="p-10 border border-stone-100 rounded-3xl space-y-8 bg-white">
+                        <div className="flex justify-between items-center pb-4 border-b border-stone-50">
+                          <div>
+                            <h4 className="text-xs font-bold uppercase tracking-widest text-primary mb-1">Shipment Milestones</h4>
+                            <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider">Real-time status updates</p>
+                          </div>
+                          {order.live_tracking.edd && (
+                            <div className="text-right">
+                              <p className="text-[9px] font-bold uppercase tracking-widest text-stone-400 mb-1">Estimated Delivery</p>
+                              <p className="text-xs text-primary font-bold uppercase tracking-wider">
+                                {new Date(order.live_tracking.edd).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-8 max-h-[350px] overflow-y-auto pr-4 scrollbar-thin">
+                          {order.live_tracking.events.map((event: any, idx: number) => (
+                            <div key={idx} className="flex gap-6 relative">
+                              {idx < order.live_tracking.events.length - 1 && (
+                                <div className="absolute left-[9px] top-6 bottom-[-32px] w-[1px] bg-stone-100" />
+                              )}
+                              <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 z-10 ${
+                                idx === 0 ? 'bg-primary text-white scale-110 shadow-lg shadow-primary/20' : 'bg-stone-50 text-stone-300 border border-stone-100'
+                              }`}>
+                                <div className={`w-2 h-2 rounded-full ${idx === 0 ? 'bg-white' : 'bg-stone-300'}`} />
+                              </div>
+                              <div className="space-y-1">
+                                <p className={`text-xs font-semibold ${idx === 0 ? 'text-surface-on' : 'text-stone-500'}`}>
+                                  {event.activity}
+                                </p>
+                                <div className="flex items-center gap-3 text-[10px] text-stone-400 font-medium">
+                                  <span>{event.location || 'Fulfillment Hub'}</span>
+                                  <span>•</span>
+                                  <span>{event.date}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

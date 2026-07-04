@@ -2,7 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
-import { createShiprocketOrder } from '@/lib/shiprocket';
+import { createShiprocketOrder, getLiveTracking } from '@/lib/shiprocket';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
@@ -473,14 +473,65 @@ export async function trackOrder(orderId: string, email: string) {
     const normalizedEmail = cleanText(email, 'Email', 254).toLowerCase();
     const { data, error } = await supabase
       .from('orders')
-      .select('id, status, shipping_address, delivery_method, tracking_number')
+      .select('id, status, shipping_address, delivery_method, tracking_number, shiprocket_order_id, shiprocket_shipment_id, shipping_status')
       .eq('id', normalizedOrderId)
       .ilike('email', normalizedEmail)
       .single();
 
     if (error || !data) return { error: 'No order found for those details.' };
-    return { success: true, data };
-  } catch {
+
+    let liveTracking = null;
+    
+    // If the order has been synchronized with Shiprocket
+    if (data.shiprocket_shipment_id || data.tracking_number) {
+      const trackingRes = await getLiveTracking(
+        data.shiprocket_shipment_id ? String(data.shiprocket_shipment_id) : undefined,
+        data.tracking_number || undefined
+      );
+      
+      if (trackingRes.success) {
+        liveTracking = trackingRes;
+        
+        // Automatically sync order status according to Shiprocket live status
+        let newStatus = data.status;
+        const srStatus = String(trackingRes.status).toLowerCase();
+        
+        if (srStatus === 'delivered' || trackingRes.status_code === 7) {
+          newStatus = 'Delivered';
+        } else if (['shipped', 'in transit', 'out for delivery', 'dispatched'].includes(srStatus) || [6, 17, 18].includes(trackingRes.status_code)) {
+          newStatus = 'Shipped';
+        } else if (srStatus === 'cancelled' || trackingRes.status_code === 8) {
+          newStatus = 'Cancelled';
+        }
+        
+        if (newStatus !== data.status) {
+          await supabase
+            .from('orders')
+            .update({ 
+              status: newStatus,
+              shipping_status: trackingRes.status,
+              tracking_number: trackingRes.awb || data.tracking_number,
+              delivery_method: trackingRes.courier_name || data.delivery_method
+            })
+            .eq('id', data.id);
+          
+          data.status = newStatus;
+          data.shipping_status = trackingRes.status;
+          if (trackingRes.awb) data.tracking_number = trackingRes.awb;
+          if (trackingRes.courier_name) data.delivery_method = trackingRes.courier_name;
+        }
+      }
+    }
+
+    return { 
+      success: true, 
+      data: {
+        ...data,
+        live_tracking: liveTracking
+      } 
+    };
+  } catch (err: any) {
+    console.error('Error tracking order:', err);
     return { error: 'Unable to track this order.' };
   }
 }

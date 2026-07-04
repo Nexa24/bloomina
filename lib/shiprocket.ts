@@ -133,3 +133,62 @@ export async function createShiprocketOrder(orderId: string): Promise<any> {
     };
   }
 }
+
+/**
+ * Fetches live tracking data from Shiprocket using either shipment ID or AWB code
+ */
+export async function getLiveTracking(shipmentId?: string, awbCode?: string): Promise<any> {
+  try {
+    if (!shipmentId && !awbCode) {
+      throw new Error('No tracking identifiers provided');
+    }
+
+    const token = await authenticateShiprocket();
+    
+    // Determine endpoint based on what's available (prefer shipmentId)
+    const url = shipmentId 
+      ? `${SHIPROCKET_API_BASE}/courier/track/shipment/${shipmentId}`
+      : `${SHIPROCKET_API_BASE}/courier/track/awb/${awbCode}`;
+
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || `API error (${res.status})`);
+    }
+
+    // Extract tracking details depending on endpoint used
+    let trackingDetails = null;
+    if (shipmentId) {
+      trackingDetails = data[shipmentId]?.tracking_data;
+    } else if (awbCode) {
+      trackingDetails = data.tracking_data;
+    }
+
+    if (!trackingDetails) {
+      throw new Error('No live tracking records found');
+    }
+
+    return {
+      success: true,
+      status: trackingDetails.shipment_status,
+      status_code: trackingDetails.shipment_status_code,
+      courier_name: trackingDetails.courier_name,
+      awb: trackingDetails.awb_code,
+      events: trackingDetails.shipment_track_activities || [],
+      edd: trackingDetails.edd || null,
+    };
+  } catch (error: any) {
+    console.error('Live Tracking Failure:', error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
