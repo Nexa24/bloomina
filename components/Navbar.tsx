@@ -55,8 +55,23 @@ const Navbar = () => {
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
+
+    // Listen for Supabase email link errors (e.g. expired OTP / invalid link)
+    const searchParams = new URLSearchParams(window.location.search);
+    let errorMsg = searchParams.get('error_description') || searchParams.get('error');
+    if (!errorMsg && window.location.hash) {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      errorMsg = hashParams.get('error_description') || hashParams.get('error');
+    }
+    if (errorMsg) {
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+      const message = errorMsg.replace(/\+/g, ' ');
+      router.push(`/login?error=${encodeURIComponent(message)}`);
+    }
+
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [router]);
 
   // Lock scroll when search or mobile menu is open
   useEffect(() => {

@@ -36,6 +36,18 @@ const LoginContent = () => {
     }
   }, [authUser, router, next]);
 
+  // Load error/message from query parameters on mount
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam));
+    }
+    const messageParam = searchParams.get('message');
+    if (messageParam === 'reset-success') {
+      setError('Success: Your password has been updated. Please log in with your new password.');
+    }
+  }, [searchParams]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
