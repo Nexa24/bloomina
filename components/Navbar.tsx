@@ -13,10 +13,11 @@ const navLinks = [
     name: 'Bras', 
     href: '/category/bras',
     subsections: [
-      { name: 'Wireless Bras', href: '/category/bras/wireless-bras' },
-      { name: 'Padded & Push-Up', href: '/category/bras/full-coverage' },
-      { name: 'Lace Bras', href: '/category/bras/lace-intimates' },
-      { name: 'Bralettes', href: '/category/bras/bralettes' },
+      { name: 'Padded Bras', href: '/category/bras/padded-bras' },
+      { name: 'Non-Padded', href: '/category/bras/non-padded' },
+      { name: 'Full Coverage', href: '/category/bras/full-coverage-bras' },
+      { name: 'Feeding & Maternity', href: '/category/bras/feeding-maternity-bras' },
+      { name: 'Minimizer Bras', href: '/category/bras/minimizer-bra' },
     ],
     featured: {
       title: 'The Petal Bra',
@@ -33,7 +34,8 @@ const navLinks = [
       { name: 'Thongs', href: '/category/panties/thongs' },
     ]
   },
-  { name: 'Bestsellers', href: '/category/bestsellers' }
+  { name: 'Bestsellers', href: '/category/bestsellers' },
+  { name: 'Signature', href: '/category/signature' }
 ];
 
 const Navbar = () => {
@@ -106,7 +108,7 @@ const Navbar = () => {
         </div>
 
         <div className="max-w-screen-xl mx-auto px-4 md:px-6 h-16 md:h-20 flex justify-between items-center antialiased relative">
-          {/* MOBILE ONLY: Left Side (Menu & Home) */}
+          {/* MOBILE ONLY: Left Side (Menu & Search) */}
           <div className="flex lg:hidden items-center justify-start gap-4 z-10 flex-1">
             <button 
               onClick={() => setIsMenuOpen(true)}
@@ -115,10 +117,6 @@ const Navbar = () => {
               <span className="material-symbols-outlined font-light scale-110">menu</span>
             </button>
             
-            <Link href="/" className="text-surface-on-variant hover:text-primary transition-all duration-300 flex-shrink-0">
-              <span className="material-symbols-outlined font-light scale-110">home</span>
-            </Link>
-
             <button 
               onClick={() => setIsSearchOpen(!isSearchOpen)}
               className={`text-surface-on-variant hover:text-primary transition-all duration-300 flex-shrink-0 ${isSearchOpen ? 'text-primary scale-110' : ''}`}
@@ -194,13 +192,13 @@ const Navbar = () => {
                 className="bg-transparent border-none p-0 focus:ring-0 text-[10px] font-semibold uppercase tracking-wider text-surface-on placeholder:text-stone-300 w-28 focus:w-56 transition-all duration-300 outline-none"
               />
             </div>
-            <Link href="/contact" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0" title="Contact Us">
+            <Link href="/contact" className="hidden lg:flex text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0" title="Contact Us">
               <span className="material-symbols-outlined text-[20px] md:text-2xl font-light">info</span>
             </Link>
             <Link href="/account" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0">
               <span className="material-symbols-outlined text-[20px] md:text-2xl font-light">person</span>
             </Link>
-            <Link href="/wishlist" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex items-center gap-0.5 group relative flex-shrink-0">
+            <Link href="/wishlist" className="hidden sm:flex text-surface-on-variant hover:text-primary transition-colors duration-300 items-center gap-0.5 group relative flex-shrink-0">
               <span className="material-symbols-outlined text-[20px] md:text-2xl font-light group-hover:scale-110 transition-transform">favorite</span>
               {isMounted && wishlistItems.length > 0 && (
                 <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 bg-primary text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-in zoom-in duration-300">
@@ -353,7 +351,33 @@ const Navbar = () => {
             <span className="material-symbols-outlined text-3xl font-light">close</span>
           </button>
 
-          <div className="mt-16 space-y-12 overflow-y-auto">
+          {/* Quick Icons Row (Wishlist and Info/Support) */}
+          <div className="flex items-center gap-4 mt-8 py-4 border-b border-stone-100">
+            <Link 
+              href="/wishlist" 
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-stone-50 rounded-2xl text-surface-on-variant hover:text-primary transition-colors duration-300"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span className="material-symbols-outlined font-light text-[20px]">favorite</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider">Wishlist</span>
+              {isMounted && wishlistItems.length > 0 && (
+                <span className="w-4 h-4 bg-primary text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+                  {wishlistItems.length}
+                </span>
+              )}
+            </Link>
+            
+            <Link 
+              href="/contact" 
+              className="flex-1 flex items-center justify-center gap-2 py-3 bg-stone-50 rounded-2xl text-surface-on-variant hover:text-primary transition-colors duration-300"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <span className="material-symbols-outlined font-light text-[20px]">info</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider">Support</span>
+            </Link>
+          </div>
+
+          <div className="mt-8 space-y-12 overflow-y-auto">
             <h2 className="text-[10px] font-bold uppercase tracking-[0.4em] text-surface-on/30">Explore</h2>
             <nav className="flex flex-col gap-6">
               {navLinks.map((link) => (

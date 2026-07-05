@@ -1,8 +1,43 @@
-import React from 'react';
+"use client";
+
+import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { supabase } from '@/lib/supabase';
 
 const Footer = () => {
+  const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [subscribeStatus, setSubscribeStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setIsSubmitting(true);
+    setSubscribeStatus('idle');
+
+    try {
+      const { error } = await supabase
+        .from('leads')
+        .insert([{
+          name: 'Newsletter Subscriber',
+          email: email.trim().toLowerCase(),
+          type: 'Newsletter',
+          message: 'Subscribed to Bloomina Newsletter',
+          status: 'new'
+        }]);
+
+      if (error) throw error;
+      setSubscribeStatus('success');
+      setEmail('');
+    } catch (err) {
+      console.error('Newsletter subscribe error:', err);
+      setSubscribeStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <footer className="bg-surface-container-lowest border-t border-primary/5 pt-24 pb-12">
       <div className="max-w-screen-xl mx-auto px-6">
@@ -23,35 +58,22 @@ const Footer = () => {
             </p>
             <div className="flex items-center gap-4">
               <a href="#" className="w-10 h-10 rounded-full border border-primary/10 flex items-center justify-center text-primary/60 hover:bg-primary hover:text-white transition-all">
+                <span className="material-symbols-outlined text-lg">facebook</span>
+              </a>
+              <a href="#" className="w-10 h-10 rounded-full border border-primary/10 flex items-center justify-center text-primary/60 hover:bg-primary hover:text-white transition-all">
                 <span className="material-symbols-outlined text-lg">public</span>
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full border border-primary/10 flex items-center justify-center text-primary/60 hover:bg-primary hover:text-white transition-all">
-                <span className="material-symbols-outlined text-lg">chat</span>
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full border border-primary/10 flex items-center justify-center text-primary/60 hover:bg-primary hover:text-white transition-all">
-                <span className="material-symbols-outlined text-lg">share</span>
               </a>
             </div>
           </div>
 
-          {/* Navigation */}
+          {/* Ethereal Links */}
           <div className="space-y-8">
             <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-surface-on/40">Collections</h3>
             <ul className="space-y-4">
-              {[
-                { name: 'Bras', href: '/category/bras' },
-                { name: 'Panties', href: '/category/panties' },
-                { name: 'New Arrivals', href: '/category/new-arrivals' },
-                { name: 'Bestsellers', href: '/category/bestsellers' },
-                { name: 'Clearance', href: '/category/clearance' },
-                { name: 'Sale%', href: '/category/sale' }
-              ].map((item) => (
-                <li key={item.name}>
-                  <Link href={item.href} className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">
-                    {item.name}
-                  </Link>
-                </li>
-              ))}
+              <li><Link href="/category/bras" className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">Signature Bras</Link></li>
+              <li><Link href="/category/panties" className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">Seamless Panties</Link></li>
+              <li><Link href="/category/nightwear" className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">Lounge & Nightwear</Link></li>
+              <li><Link href="/category/bestsellers" className="text-sm text-surface-on-variant hover:text-primary transition-colors font-light tracking-wide">Our Bestsellers</Link></li>
             </ul>
           </div>
 
@@ -72,16 +94,29 @@ const Footer = () => {
           <div className="space-y-8">
             <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-surface-on/40">Newsletter</h3>
             <p className="text-sm text-surface-on-variant font-light">Join the Bloomina collective for exclusive releases and design insights.</p>
-            <div className="relative">
+            <form onSubmit={handleSubscribe} className="relative">
               <input 
                 type="email" 
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email address" 
-                className="w-full bg-surface-container-low border-b border-primary/20 py-3 pr-10 text-sm focus:outline-none focus:border-primary transition-colors font-light"
+                className="w-full bg-transparent border-b border-primary/20 py-3 pr-10 text-sm focus:outline-none focus:border-primary transition-colors font-light text-surface-on placeholder:text-stone-300"
               />
-              <button className="absolute right-0 top-1/2 -translate-y-1/2 text-primary hover:scale-110 transition-transform">
+              <button 
+                type="submit"
+                disabled={isSubmitting}
+                className="absolute right-0 top-1/2 -translate-y-1/2 text-primary hover:scale-110 transition-transform disabled:opacity-50"
+              >
                 <span className="material-symbols-outlined">east</span>
               </button>
-            </div>
+            </form>
+            {subscribeStatus === 'success' && (
+              <p className="text-xs text-green-600 font-medium animate-pulse">Thank you for subscribing to our collective!</p>
+            )}
+            {subscribeStatus === 'error' && (
+              <p className="text-xs text-red-500 font-light">Something went wrong. Please try again.</p>
+            )}
           </div>
         </div>
 

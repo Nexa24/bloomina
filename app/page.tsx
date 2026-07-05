@@ -1,4 +1,5 @@
 import CategorySection from "@/components/CategorySection";
+import SignatureSection from "@/components/SignatureSection";
 import OtherCategoriesSection from "@/components/OtherCategoriesSection";
 import HeroSlideshow from "@/components/HeroSlideshow";
 import CategoryCarousel from "@/components/CategoryCarousel";
@@ -14,6 +15,9 @@ export default function Home() {
 
       {/* Category Section - Now Second */}
       <CategorySection />
+
+      {/* Signature Collection Section - New */}
+      <SignatureSection />
 
       {/* Category Carousel - New */}
       <CategoryCarousel />

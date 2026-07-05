@@ -16,24 +16,24 @@ const categoryMap: { [key: string]: CategoryEntry } = {
     dbName: 'Bras',
     subs: [
       {
-        name: 'Wireless Bras', slug: 'wireless-bras',
-        dbNames: ['Wireless Bras', 'Wireless Comfort', 'Wireless', 'wireless-bras', 'Everyday Comfort'],
+        name: 'Padded Bras', slug: 'padded-bras',
+        dbNames: ['Padded Bras', 'Padded', 'PADDED BRAS', 'padded-bras'],
       },
       {
-        name: 'Padded & Push-Up', slug: 'full-coverage',
-        dbNames: ['Full Coverage', 'Padded & Push-Up', 'Push-up Bras', 'Supportive Contour', 'Padded', 'Push Up', 'full-coverage'],
+        name: 'Non-Padded', slug: 'non-padded',
+        dbNames: ['Non-Padded', 'NON-PADDED', 'non-padded', 'Non Padded'],
       },
       {
-        name: 'Lace Bras', slug: 'lace-intimates',
-        dbNames: ['Lace Bras', 'Lace Intimates', 'Signature Lace', 'lace-intimates', 'Premium Lace'],
+        name: 'Full Coverage', slug: 'full-coverage-bras',
+        dbNames: ['Full Coverage', 'FULL COVERAGE BRAS', 'full-coverage-bras', 'Full Coverage Bras'],
       },
       {
-        name: 'Bralettes', slug: 'bralettes',
-        dbNames: ['Bralettes', 'Silk Bralettes', 'Bralette', 'bralettes'],
+        name: 'Feeding & Maternity', slug: 'feeding-maternity-bras',
+        dbNames: ['Feeding & Maternity', 'FEEDING / MATERNITY BRAS', 'feeding-maternity-bras', 'Maternity Bras', 'Nursing Bras'],
       },
       {
-        name: 'Nursing Bras', slug: 'nursing-bras',
-        dbNames: ['Nursing Bras', 'Maternity', 'nursing-bras'],
+        name: 'Minimizer Bras', slug: 'minimizer-bra',
+        dbNames: ['Minimizer Bras', 'MINIMIZER BRA', 'minimizer-bra', 'Minimizer Bra'],
       }
     ],
   },
@@ -119,6 +119,7 @@ const categoryMap: { [key: string]: CategoryEntry } = {
   },
   'bestsellers': { label: 'Bestsellers', dbName: 'Bestsellers' },
   'combos':      { label: 'Combo Packs', dbName: 'Combo Packs' },
+  'signature':   { label: 'Signature Collection', dbName: 'Signature' },
 };
 
 const CategoryPage = () => {
@@ -143,6 +144,69 @@ const CategoryPage = () => {
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
+        // 1. Resolve names from database or hardcoded categoryMap
+        let dbCategoryName = '';
+        let dbSubCategoryName = '';
+        let dbParentCategoryName = '';
+
+        const hardcoded = categoryMap[mainSlug.toLowerCase()];
+        if (hardcoded) {
+          dbCategoryName = hardcoded.dbName;
+          if (subSlug) {
+            const sub = hardcoded.subs?.find(s => s.slug === subSlug.toLowerCase());
+            if (sub) {
+              dbSubCategoryName = sub.name;
+            }
+          }
+        }
+
+        // Fetch category by mainSlug from DB if not resolved
+        if (!dbCategoryName) {
+          const { data: catData } = await supabase
+            .from('categories')
+            .select('*')
+            .eq('slug', mainSlug.toLowerCase())
+            .maybeSingle();
+
+          if (catData) {
+            if (catData.parent_id) {
+              // It's a direct subcategory URL (e.g. /category/feeding-maternity-bras)
+              dbSubCategoryName = catData.name;
+              // Fetch parent category name
+              const { data: parentData } = await supabase
+                .from('categories')
+                .select('name')
+                .eq('id', catData.parent_id)
+                .maybeSingle();
+              if (parentData) {
+                dbCategoryName = parentData.name;
+                dbParentCategoryName = parentData.name;
+              } else {
+                dbCategoryName = catData.name;
+              }
+            } else {
+              // It's a main category URL (e.g. /category/bras)
+              dbCategoryName = catData.name;
+            }
+          } else {
+            // Fallback
+            dbCategoryName = mainSlug;
+          }
+        }
+
+        // If there is a subSlug in URL, try to resolve it from the DB
+        if (subSlug && !dbSubCategoryName) {
+          const { data: subData } = await supabase
+            .from('categories')
+            .select('name')
+            .eq('slug', subSlug.toLowerCase())
+            .maybeSingle();
+          if (subData) {
+            dbSubCategoryName = subData.name;
+          }
+        }
+
+        // 2. Fetch all products
         const { data, error } = await supabase
           .from('products')
           .select('*')
@@ -170,62 +234,65 @@ const CategoryPage = () => {
               ? p.categories
               : p.category ? [p.category] : [];
 
-            // ── Main category match (case-insensitive) ──
-            const isSaleSection = mainSlug.toLowerCase() === 'sale' || currentCategory.dbName.toLowerCase() === 'sale%';
+            // ── Main category match ──
+            const isSaleSection = mainSlug.toLowerCase() === 'sale' || dbCategoryName.toLowerCase() === 'sale%';
             const matchesMain = isSaleSection 
               ? (p.is_sale === true || productCats.some(c => typeof c === 'string' && c.trim().toLowerCase() === 'sale%'))
               : productCats.some(c => {
                   if (typeof c !== 'string') return false;
                   const low = c.trim().toLowerCase();
-                  return low === currentCategory.dbName.toLowerCase() ||
-                         low === mainSlug.toLowerCase();
+                  return (
+                    low === dbCategoryName.toLowerCase() ||
+                    low === mainSlug.toLowerCase() ||
+                    (dbParentCategoryName && low === dbParentCategoryName.toLowerCase()) ||
+                    (mainSlug.toLowerCase() === 'signature' && low === 'signature collection')
+                  );
                 });
 
             if (!matchesMain) return false;
-            if (!subSlug)     return true;   // no sub-filter → show everything in main cat
 
-            // If we are in the sale section and there is a subSlug:
-            if (isSaleSection) {
-              const aliasesLow = currentSub?.dbNames ? currentSub.dbNames.map(n => n.toLowerCase()) : [];
-              const hasSaleSubcat = productCats.some(c => typeof c === 'string' && aliasesLow.includes(c.trim().toLowerCase()));
-              if (hasSaleSubcat) return true;
+            // If we are showing a specific subcategory (resolved or by subSlug in URL)
+            const targetSubName = dbSubCategoryName || subSlug;
+            if (targetSubName) {
+              if (isSaleSection) {
+                const aliasesLow = currentSub?.dbNames ? currentSub.dbNames.map(n => n.toLowerCase()) : [];
+                const hasSaleSubcat = productCats.some(c => typeof c === 'string' && aliasesLow.includes(c.trim().toLowerCase()));
+                if (hasSaleSubcat) return true;
 
-              // Otherwise, check if the product is on sale AND matches the corresponding main category
-              const isSaleProduct = p.is_sale === true || productCats.some(c => typeof c === 'string' && c.trim().toLowerCase() === 'sale%');
-              if (isSaleProduct) {
-                if (subSlug === 'bras') {
-                  return /bra/i.test(p.name || '') || productCats.some(c => /bra/i.test(c));
+                const isSaleProduct = p.is_sale === true || productCats.some(c => typeof c === 'string' && c.trim().toLowerCase() === 'sale%');
+                if (isSaleProduct) {
+                  const targetSubLow = targetSubName.toLowerCase();
+                  if (targetSubLow === 'bras') {
+                    return /bra/i.test(p.name || '') || productCats.some(c => /bra/i.test(c));
+                  }
+                  if (targetSubLow === 'panties') {
+                    return /pantie|panties|panty|brief/i.test(p.name || '') || productCats.some(c => /pantie|panties|panty|brief/i.test(c));
+                  }
+                  if (targetSubLow === 'combos') {
+                    return /combo|set|pack/i.test(p.name || '') || productCats.some(c => /combo|pack/i.test(c));
+                  }
+                  if (targetSubLow === 'clearance') {
+                    return productCats.some(c => /clearance/i.test(c));
+                  }
                 }
-                if (subSlug === 'panties') {
-                  return /pantie|panties|panty|brief/i.test(p.name || '') || productCats.some(c => /pantie|panties|panty|brief/i.test(c));
-                }
-                if (subSlug === 'combos') {
-                  return /combo|set|pack/i.test(p.name || '') || productCats.some(c => /combo|pack/i.test(c));
-                }
-                if (subSlug === 'clearance') {
-                  return productCats.some(c => /clearance/i.test(c));
-                }
+                return false;
               }
-              return false;
-            }
 
-            // ── Sub-category match using all known DB aliases ──
-            if (currentSub?.dbNames) {
-              const aliasesLow = currentSub.dbNames.map(n => n.toLowerCase());
+              // ── Sub-category match using all known DB aliases or direct matching ──
+              const aliases = currentSub?.dbNames || [targetSubName];
+              const aliasesLow = aliases.map(n => n.toLowerCase());
               return productCats.some(c => {
                 if (typeof c !== 'string') return false;
                 const low = c.trim().toLowerCase();
-                return aliasesLow.some(alias => low === alias);
+                return (
+                  aliasesLow.includes(low) ||
+                  low === targetSubName.toLowerCase() ||
+                  (subSlug && low === subSlug.toLowerCase())
+                );
               });
             }
 
-            // Fallback: match slug or display name directly
-            const fallback = (currentSub?.name || subSlug).toLowerCase();
-            return productCats.some(c => {
-              if (typeof c !== 'string') return false;
-              const low = c.trim().toLowerCase();
-              return low === fallback || low === subSlug.toLowerCase();
-            });
+            return true;
           });
 
           setProducts(filtered);
