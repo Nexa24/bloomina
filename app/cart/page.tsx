@@ -25,7 +25,7 @@ const CartPage = () => {
   }
 
   const subtotal = getTotalPrice();
-  const shipping = 0; // Free shipping
+  const shipping = subtotal >= 599 ? 0 : 80;
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const total = Math.max(0, subtotal - discount + shipping);
 
@@ -160,7 +160,9 @@ const CartPage = () => {
                 )}
                 <div className="flex justify-between text-sm">
                   <span className="text-surface-on-variant">Shipping</span>
-                  <span className="text-green-600 font-medium uppercase text-[10px] tracking-widest">Free</span>
+                  <span className={`${shipping === 0 ? 'text-green-600' : 'text-surface-on'} font-medium uppercase text-[10px] tracking-widest`}>
+                    {shipping === 0 ? 'Free' : `₹${shipping}`}
+                  </span>
                 </div>
                 <div className="h-px bg-stone-100 my-4" />
                 <div className="flex justify-between items-baseline">

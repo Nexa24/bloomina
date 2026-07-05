@@ -103,7 +103,7 @@ const Navbar = () => {
             className="brightness-0 invert opacity-80"
           />
           <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.05em] md:tracking-[0.3em] text-white animate-pulse whitespace-nowrap overflow-hidden text-ellipsis">
-            Ethereal Comfort: Free shipping on all signature collections
+            Ethereal Comfort: Free shipping on all orders above ₹599
           </p>
         </div>
 
