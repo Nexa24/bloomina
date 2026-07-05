@@ -65,8 +65,9 @@ export default function Testimonials() {
 
   if (isLoading || testimonials.length === 0) return null;
 
-  // Duplicate items to ensure seamless wrapping inside the marquee trail
-  const marqueeItems = [...testimonials, ...testimonials, ...testimonials];
+  // Duplicate items to ensure seamless wrapping inside the marquee trails
+  const marqueeItemsRow1 = [...testimonials, ...testimonials, ...testimonials];
+  const marqueeItemsRow2 = [...testimonials].reverse().concat([...testimonials].reverse(), [...testimonials].reverse());
 
   return (
     <section className="py-20 bg-stone-50/50 dark:bg-stone-900/10 border-t border-b border-stone-100 overflow-hidden relative">
@@ -75,13 +76,19 @@ export default function Testimonials() {
           0% { transform: translateX(0); }
           100% { transform: translateX(-33.33%); }
         }
+        @keyframes marquee-reverse {
+          0% { transform: translateX(-33.33%); }
+          100% { transform: translateX(0); }
+        }
         .animate-marquee-trail {
           display: flex;
           width: max-content;
           animation: marquee 45s linear infinite;
         }
-        .animate-marquee-trail:hover {
-          animation-play-state: paused;
+        .animate-marquee-trail-reverse {
+          display: flex;
+          width: max-content;
+          animation: marquee-reverse 45s linear infinite;
         }
       `}</style>
 
@@ -94,17 +101,53 @@ export default function Testimonials() {
         </ScrollReveal>
       </div>
 
-      {/* Testimonials Continuous Trail */}
-      <div className="relative w-full flex items-center select-none py-4">
-        {/* Left/Right Gradients for soft fading edges */}
+      {/* Row 1: Leftward Scrolling */}
+      <div className="relative w-full flex items-center select-none py-3">
         <div className="absolute left-0 top-0 bottom-0 w-20 md:w-48 bg-gradient-to-r from-stone-50/50 dark:from-[#0f0f12] to-transparent z-10 pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-0 w-20 md:w-48 bg-gradient-to-l from-stone-50/50 dark:from-[#0f0f12] to-transparent z-10 pointer-events-none" />
 
         <div className="animate-marquee-trail gap-6 px-6">
-          {marqueeItems.map((item, idx) => (
+          {marqueeItemsRow1.map((item, idx) => (
             <div 
-              key={`${item.id}-${idx}`}
-              className="w-[280px] md:w-[360px] bg-white dark:bg-[#15171e] p-6 md:p-8 rounded-3xl border border-stone-100 dark:border-stone-800 shadow-sm flex flex-col justify-between shrink-0 transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg"
+              key={`row1-${item.id}-${idx}`}
+              className="w-[280px] md:w-[360px] bg-white dark:bg-[#15171e] p-6 md:p-8 rounded-3xl border border-stone-100 dark:border-stone-800 shadow-sm flex flex-col justify-between shrink-0"
+            >
+              <div className="space-y-4">
+                <div className="flex gap-0.5">
+                  {[...Array(5)].map((_, i) => (
+                    <Star 
+                      key={i} 
+                      className={`w-4 h-4 ${i < item.rating ? 'fill-yellow-400 text-yellow-500' : 'text-stone-200 dark:text-stone-700'}`} 
+                    />
+                  ))}
+                </div>
+                <p className="text-stone-600 dark:text-stone-300 text-sm md:text-base font-light italic leading-relaxed">
+                  "{item.comment}"
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-stone-100/80 dark:border-stone-800/80 flex items-center justify-between">
+                <h4 className="font-bold text-xs md:text-sm text-stone-800 dark:text-stone-200 uppercase tracking-widest">
+                  {item.customer_name}
+                </h4>
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#944555] bg-[#944555]/5 px-2.5 py-1 rounded-full">
+                  Verified Purchase
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Row 2: Rightward Scrolling (Reverse Direction) */}
+      <div className="relative w-full flex items-center select-none py-3 mt-4">
+        <div className="absolute left-0 top-0 bottom-0 w-20 md:w-48 bg-gradient-to-r from-stone-50/50 dark:from-[#0f0f12] to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-20 md:w-48 bg-gradient-to-l from-stone-50/50 dark:from-[#0f0f12] to-transparent z-10 pointer-events-none" />
+
+        <div className="animate-marquee-trail-reverse gap-6 px-6">
+          {marqueeItemsRow2.map((item, idx) => (
+            <div 
+              key={`row2-${item.id}-${idx}`}
+              className="w-[280px] md:w-[360px] bg-white dark:bg-[#15171e] p-6 md:p-8 rounded-3xl border border-stone-100 dark:border-stone-800 shadow-sm flex flex-col justify-between shrink-0"
             >
               <div className="space-y-4">
                 <div className="flex gap-0.5">
