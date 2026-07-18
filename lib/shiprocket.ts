@@ -101,6 +101,7 @@ export async function createShiprocketOrder(orderId: string): Promise<any> {
     });
 
     const data = await res.json();
+    console.log('Shiprocket raw response payload:', JSON.stringify(data, null, 2));
     if (!res.ok) {
       let errMsg = data.message || `API error (${res.status})`;
       if (data.errors) {
@@ -130,6 +131,7 @@ export async function createShiprocketOrder(orderId: string): Promise<any> {
       success: true,
       shiprocket_order_id: data.order_id,
       shiprocket_shipment_id: data.shipment_id,
+      raw_response: data
     };
   } catch (error: any) {
     console.error('Failed to create Shiprocket order:', error);
