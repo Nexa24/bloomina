@@ -56,6 +56,30 @@ export default function CategoryCarousel() {
   const [items, setItems] = useState<any[]>([]);
   const [activeIndex, setActiveIndex] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    if (isLeftSwipe) {
+      nextSlide();
+    } else if (isRightSwipe) {
+      prevSlide();
+    }
+  };
 
   useEffect(() => {
     const fetchCarouselCategories = async () => {
@@ -131,15 +155,19 @@ export default function CategoryCarousel() {
   if (isLoading || items.length === 0) return null;
 
   return (
-    <section className="max-w-screen-xl mx-auto px-6 py-12">
+    <section className="max-w-screen-xl mx-auto px-6 py-8 md:py-12">
       <ScrollReveal variant="slide-up" duration={800}>
-        <div className="space-y-2 mb-10 text-center md:text-left">
-          <h2 className="text-sm font-bold uppercase tracking-[0.4em] text-primary/60">Featured Categories</h2>
-          <h3 className="text-3xl md:text-4xl font-display font-light text-surface-on">Selected Silhouettes</h3>
+        <div className="mb-10 text-center md:text-left">
+          <h2 className="text-2xl md:text-3xl font-display font-light uppercase tracking-[0.25em] text-primary">Featured Categories</h2>
         </div>
       </ScrollReveal>
 
-      <div className="relative flex items-center justify-center h-[260px] md:h-[380px] select-none overflow-hidden py-10">
+      <div 
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        className="relative flex items-center justify-center h-[260px] md:h-[380px] select-none overflow-hidden py-10"
+      >
         {/* Navigation Left */}
         {items.length > 1 && (
           <button 

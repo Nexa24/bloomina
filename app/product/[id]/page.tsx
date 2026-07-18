@@ -22,6 +22,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [sizeError, setSizeError] = useState(false);
   
   const { addItem } = useCart();
   const router = useRouter();
@@ -64,14 +65,6 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         }
 
         setProduct(productData);
-        
-        // Initialize selectors
-        if (productData.variants) {
-          const sizeVar = productData.variants.find((v: any) => v.name === 'Size');
-          if (sizeVar && sizeVar.values?.length > 0) {
-            setSelectedSize(sizeVar.values[0]);
-          }
-        }
       } catch (err) {
         console.error('Failed to fetch product:', err);
       } finally {
@@ -91,6 +84,32 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     }
     return product.images || [];
   }, [product, selectedColorIndex]);
+
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd || currentImages.length <= 1) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      setActiveImageIndex((prev) => (prev + 1) % currentImages.length);
+    } else if (isRightSwipe) {
+      setActiveImageIndex((prev) => (prev - 1 + currentImages.length) % currentImages.length);
+    }
+  };
 
   const availableSizes = useMemo(() => {
     return product?.variants?.find((v: any) => v.name === 'Size')?.values || [];
@@ -116,6 +135,15 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const handleAddToCart = () => {
     if (!product) return;
+    if (!selectedSize) {
+      setSizeError(true);
+      const sizeSelectorEl = document.getElementById('size-selector');
+      if (sizeSelectorEl) {
+        sizeSelectorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+    setSizeError(false);
     
     const colorName = product.colorConfigs?.[selectedColorIndex]?.name || 'Default';
     const cartItemId = `${id}-${selectedSize}-${colorName}`;
@@ -136,6 +164,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const handleBuyNow = () => {
     if (!product) return;
+    if (!selectedSize) {
+      setSizeError(true);
+      const sizeSelectorEl = document.getElementById('size-selector');
+      if (sizeSelectorEl) {
+        sizeSelectorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+    setSizeError(false);
+
     const colorName = product.colorConfigs?.[selectedColorIndex]?.name || 'Default';
     const cartItemId = `${id}-${selectedSize}-${colorName}`;
     const buyNowItem = {
@@ -210,11 +248,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   return (
     <div className="bg-white min-h-screen antialiased overflow-x-hidden">
       <main className="pb-32 w-full">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-28 md:pt-40 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-20">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-20 md:pt-28 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-20">
           
           {/* Left: Sticky Image Gallery */}
           <div className="w-full space-y-4 lg:sticky lg:top-32 self-start">
-            <div className="relative w-full aspect-[4/5] rounded-3xl overflow-hidden bg-surface-container-low petal-shadow group">
+            <div 
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
+              className="relative w-full aspect-[4/5] rounded-3xl overflow-hidden bg-surface-container-low petal-shadow group"
+            >
               <Image 
                 key={`${selectedColorIndex}-${activeImageIndex}`}
                 src={currentImages[activeImageIndex] || currentImages[0] || 'https://placehold.co/600x800?text=No+Image'} 
@@ -290,9 +333,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <div className="space-y-10 pt-4">
 
               {/* Size Selector */}
-              <div className="space-y-4">
+              <div id="size-selector" className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-surface-on/40">Select Size</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-surface-on/40">Select Size</h3>
+                    {sizeError && (
+                      <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest animate-pulse">
+                        (Select size first)
+                      </span>
+                    )}
+                  </div>
                   {(product.sizeGuide || sizes.length > 0) && (
                     <button 
                       onClick={() => setShowSizeGuide(true)}
@@ -310,13 +360,18 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                       <button 
                         key={size}
                         disabled={!isAvailable}
-                        onClick={() => setSelectedSize(size)}
+                        onClick={() => {
+                          setSelectedSize(size);
+                          setSizeError(false);
+                        }}
                         className={`py-4 rounded-xl text-sm transition-all border ${
                           !isAvailable 
                             ? 'border-stone-200/40 text-surface-on-variant/30 opacity-30 cursor-not-allowed line-through bg-stone-50/20' 
                             : selectedSize === size 
                               ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' 
-                              : 'border-primary/10 text-surface-on-variant hover:border-primary/40'
+                              : sizeError 
+                                ? 'border-red-400 text-red-500 bg-red-50/5 hover:border-red-500 animate-pulse' 
+                                : 'border-primary/10 text-surface-on-variant hover:border-primary/40'
                         }`}
                       >
                         {size}
@@ -490,6 +545,30 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
         {/* Feedback Section */}
         <ProductReviews productId={product.id} title={`${product.name} Feedback`} />
+
+        {/* Floating Mobile Action Bar */}
+        <div className="fixed bottom-0 left-0 right-0 z-45 bg-white/90 backdrop-blur-md border-t border-stone-100 p-4 md:hidden flex gap-3 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] animate-fade-in-up">
+          <button 
+            onClick={handleAddToCart}
+            className={`flex-1 py-4 rounded-full font-bold uppercase tracking-[0.2em] text-[10px] border transition-all duration-300 relative overflow-hidden ${isAdded ? 'bg-green-500 border-green-500 text-white' : 'border-primary text-primary active:bg-primary/5'}`}
+          >
+            <span className={`flex items-center justify-center gap-1.5 transition-transform duration-500 ${isAdded ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'}`}>
+              <span className="material-symbols-outlined text-sm font-light">shopping_bag</span>
+              Add to Cart
+            </span>
+            <span className={`absolute inset-0 flex items-center justify-center gap-1.5 transition-transform duration-500 ${isAdded ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+              <span className="material-symbols-outlined text-sm">check</span>
+              Added!
+            </span>
+          </button>
+          <button
+            onClick={handleBuyNow}
+            className="flex-1 py-4 rounded-full bg-primary text-white font-bold uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-primary/20 active:scale-95 transition-all duration-300 flex items-center justify-center gap-1.5"
+          >
+            <span className="material-symbols-outlined text-sm font-light">bolt</span>
+            Buy Now
+          </button>
+        </div>
       </main>
     </div>
   );

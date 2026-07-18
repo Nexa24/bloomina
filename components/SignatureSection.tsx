@@ -73,7 +73,7 @@ const SignatureSection = () => {
   if (products.length === 0) return null;
 
   return (
-    <section className="max-w-screen-xl mx-auto px-6 py-12 md:py-24 border-t border-stone-100">
+    <section className="max-w-screen-xl mx-auto px-6 py-8 md:py-12 border-t border-stone-100">
       <div className="text-center mb-16 md:mb-20 space-y-4">
         <ScrollReveal variant="fade" duration={600}>
           <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">

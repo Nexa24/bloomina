@@ -52,7 +52,7 @@ const CategorySection = () => {
   if (isLoading || categories.length === 0) return null;
 
   return (
-    <section className="max-w-screen-xl mx-auto px-6 py-6 md:py-10">
+    <section className="max-w-screen-xl mx-auto px-6 pt-8 pb-4 md:pt-12 md:pb-6">
       {/* Titles removed per user request */}
 
       <div className="grid grid-cols-3 gap-3 md:gap-8">

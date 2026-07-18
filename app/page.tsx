@@ -7,7 +7,7 @@ import Testimonials from "@/components/Testimonials";
 
 export default function Home() {
   return (
-    <div className="space-y-12 md:space-y-24 pb-24 md:pb-32 overflow-x-hidden">
+    <div className="pb-16 md:pb-24 overflow-x-hidden">
       {/* Hero Section */}
       <section className="relative h-[45vh] md:h-[85vh] flex items-center justify-center overflow-hidden">
         <HeroSlideshow />
@@ -29,7 +29,7 @@ export default function Home() {
       <Testimonials />
 
       {/* About Us Section */}
-      <section className="max-w-screen-xl mx-auto px-6 py-12 md:py-20 border-t border-stone-100">
+      <section className="max-w-screen-xl mx-auto px-6 py-8 md:py-12 border-t border-stone-100">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
           <div className="space-y-6 md:space-y-8">
             <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">
