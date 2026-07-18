@@ -1,4 +1,6 @@
-import { supabase } from './supabase';
+import { createAdminClient } from '@/utils/supabase/admin';
+
+const supabase = createAdminClient();
 
 const SHIPROCKET_API_BASE = 'https://apiv2.shiprocket.in/v1/external';
 
@@ -71,10 +73,10 @@ export async function createShiprocketOrder(orderId: string): Promise<any> {
       pickup_location: process.env.SHIPROCKET_PICKUP_LOCATION_NAME || 'Primary Warehouse',
       billing_customer_name: order.customer_name.split(' ')[0] || 'Customer',
       billing_last_name: order.customer_name.split(' ').slice(1).join(' ') || 'Name',
-      billing_address: order.shipping_address.street || '',
-      billing_city: order.shipping_address.city || '',
-      billing_pincode: order.shipping_address.zip || '',
-      billing_state: order.shipping_address.state || '',
+      billing_address: order.shipping_address?.address || order.shipping_address?.street || '',
+      billing_city: order.shipping_address?.city || '',
+      billing_pincode: order.shipping_address?.postalCode || order.shipping_address?.zip || '',
+      billing_state: order.shipping_address?.state || '',
       billing_country: 'India',
       billing_email: order.email || 'support@bloomina.in',
       billing_phone: order.phone || '',
@@ -111,7 +113,7 @@ export async function createShiprocketOrder(orderId: string): Promise<any> {
     }
 
     // 6. Update local order in Supabase with Shiprocket details
-    await supabase
+    const { error: updateError } = await supabase
       .from('orders')
       .update({
         shiprocket_order_id: data.order_id,
@@ -119,6 +121,10 @@ export async function createShiprocketOrder(orderId: string): Promise<any> {
         shipping_status: 'Ready to Ship'
       })
       .eq('id', orderId);
+
+    if (updateError) {
+      throw new Error(`Failed to update order database record: ${updateError.message}`);
+    }
 
     return {
       success: true,
