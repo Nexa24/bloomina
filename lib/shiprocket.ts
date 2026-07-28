@@ -101,6 +101,7 @@ export async function createShiprocketOrder(orderId: string): Promise<any> {
     });
 
     const data = await res.json();
+    console.log('Shiprocket raw response payload:', JSON.stringify(data, null, 2));
     if (!res.ok) {
       let errMsg = data.message || `API error (${res.status})`;
       if (data.errors) {
@@ -116,8 +117,8 @@ export async function createShiprocketOrder(orderId: string): Promise<any> {
     const { error: updateError } = await supabase
       .from('orders')
       .update({
-        shiprocket_order_id: data.order_id,
-        shiprocket_shipment_id: data.shipment_id,
+        shiprocket_order_id: data.order_id ? String(data.order_id) : null,
+        shiprocket_shipment_id: data.shipment_id ? String(data.shipment_id) : null,
         shipping_status: 'Ready to Ship'
       })
       .eq('id', orderId);
@@ -128,8 +129,9 @@ export async function createShiprocketOrder(orderId: string): Promise<any> {
 
     return {
       success: true,
-      shiprocket_order_id: data.order_id,
-      shiprocket_shipment_id: data.shipment_id,
+      shiprocket_order_id: data.order_id ? String(data.order_id) : null,
+      shiprocket_shipment_id: data.shipment_id ? String(data.shipment_id) : null,
+      raw_response: data
     };
   } catch (error: any) {
     console.error('Failed to create Shiprocket order:', error);
