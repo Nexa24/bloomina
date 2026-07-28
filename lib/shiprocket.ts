@@ -70,7 +70,7 @@ export async function createShiprocketOrder(orderId: string): Promise<any> {
     const payload = {
       order_id: order.id,
       order_date: new Date(order.created_at).toISOString().split('T')[0],
-      pickup_location: process.env.SHIPROCKET_PICKUP_LOCATION_NAME || 'Primary Warehouse',
+      pickup_location: process.env.SHIPROCKET_PICKUP_LOCATION_NAME || 'Primary',
       billing_customer_name: order.customer_name.split(' ')[0] || 'Customer',
       billing_last_name: order.customer_name.split(' ').slice(1).join(' ') || 'Name',
       billing_address: order.shipping_address?.address || order.shipping_address?.street || '',
