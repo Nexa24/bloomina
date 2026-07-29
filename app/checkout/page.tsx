@@ -134,7 +134,7 @@ const CheckoutPage = () => {
   const shipping = subtotal >= 599 ? 0 : 80;
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const total = Math.max(0, subtotal - discount + shipping);
-  const isCodEligible = checkoutConfig.cod_enabled && total >= checkoutConfig.cod_min_order;
+  const isCodEligible = false;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -420,30 +420,6 @@ const CheckoutPage = () => {
                     {paymentMethod === 'Razorpay' && <div className="w-2.5 h-2.5 rounded-full bg-primary animate-scale-in" />}
                   </div>
                 </div>
-
-                {isCodEligible && (
-                  <div 
-                    onClick={() => setPaymentMethod('COD')}
-                    className={`p-6 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${paymentMethod === 'COD' ? 'bg-primary/5 border-primary/20' : 'bg-stone-50 border-transparent hover:border-stone-100'}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <span className={`material-symbols-outlined ${paymentMethod === 'COD' ? 'text-primary' : 'text-stone-400'}`}>local_shipping</span>
-                      <div>
-                        <p className={`text-sm font-semibold ${paymentMethod === 'COD' ? 'text-surface-on' : 'text-stone-500'}`}>Cash on Delivery</p>
-                        <p className="text-[10px] text-stone-400 uppercase tracking-widest">Pay when you receive</p>
-                      </div>
-                    </div>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${paymentMethod === 'COD' ? 'border-primary' : 'border-stone-200'}`}>
-                      {paymentMethod === 'COD' && <div className="w-2.5 h-2.5 rounded-full bg-primary animate-scale-in" />}
-                    </div>
-                  </div>
-                )}
-
-                {!isCodEligible && checkoutConfig.cod_enabled && (
-                  <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest px-6 italic">
-                    COD available for orders above ₹{checkoutConfig.cod_min_order}
-                  </p>
-                )}
               </div>
             </section>
           </div>

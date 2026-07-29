@@ -56,15 +56,33 @@ export async function createShiprocketOrder(orderId: string): Promise<any> {
     // 2. Authenticate
     const token = await authenticateShiprocket();
 
-    // 3. Map order items to Shiprocket parameters
-    const orderItems = (order.items || []).map((item: any) => ({
-      name: item.title || item.name || 'Product Item',
-      sku: item.sku || `SKU-${item.product_id || 'PROD'}`,
-      units: item.quantity || 1,
-      selling_price: item.price || 0,
-      discount: 0,
-      tax: 0,
-    }));
+    // 3. Map order items to Shiprocket parameters and merge duplicate SKUs
+    const itemsMap = new Map<string, any>();
+    for (const item of (order.items || [])) {
+      const baseId = item.product_id || item.productId || 'PROD';
+      const sizeStr = item.size ? `-${item.size.toString().replace(/\s+/g, '')}` : '';
+      const colorStr = item.color ? `-${item.color.toString().replace(/\s+/g, '')}` : '';
+      const sku = item.sku || `SKU-${baseId}${sizeStr}${colorStr}`;
+
+      const name = item.title || item.name || 'Product Item';
+      const quantity = item.quantity || 1;
+      const price = item.price || 0;
+
+      if (itemsMap.has(sku)) {
+        const existing = itemsMap.get(sku);
+        existing.units += quantity;
+      } else {
+        itemsMap.set(sku, {
+          name: `${name}${item.size ? ` (${item.size})` : ''}${item.color ? ` - ${item.color}` : ''}`,
+          sku,
+          units: quantity,
+          selling_price: price,
+          discount: 0,
+          tax: 0,
+        });
+      }
+    }
+    const orderItems = Array.from(itemsMap.values());
 
     // 4. Construct Shiprocket adhoc order payload
     const payload = {
