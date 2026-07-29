@@ -248,7 +248,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   return (
     <div className="bg-white min-h-screen antialiased overflow-x-hidden">
       <main className="pb-32 w-full">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-20 md:pt-28 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-20">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-4 md:pt-6 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-20">
           
           {/* Left: Sticky Image Gallery */}
           <div className="w-full space-y-4 lg:sticky lg:top-32 self-start">
