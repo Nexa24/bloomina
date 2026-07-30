@@ -7,11 +7,12 @@ interface ProductCardProps {
   id: string;
   title: string;
   price: number;
+  comparePrice?: number | string;
   image: string;
   category: string;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ id, title, price, image, category }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ id, title, price, comparePrice, image, category }) => {
   const { addItem, removeItem, isInWishlist } = useWishlist();
   const isFavorite = isInWishlist(id);
 
@@ -53,9 +54,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, price, image, cate
         <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-surface-on-variant/70 group-hover:text-primary transition-colors">
           {title}
         </h3>
-        <p className="text-lg font-price font-bold text-surface-on">
-          ₹{price.toLocaleString()}
-        </p>
+        <div className="flex items-baseline justify-center gap-2">
+          <p className="text-lg font-price font-bold text-surface-on">
+            ₹{Number(price).toLocaleString()}
+          </p>
+          {comparePrice && Number(comparePrice) > Number(price) && (
+            <span className="text-sm font-price text-stone-400 line-through">
+              ₹{Number(comparePrice).toLocaleString()}
+            </span>
+          )}
+        </div>
       </div>
     </Link>
   );

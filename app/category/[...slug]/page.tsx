@@ -387,9 +387,17 @@ const CategoryPage = () => {
                       {Array.isArray(product.categories) ? product.categories[0] : (product.category || currentCategory.label)}
                     </p>
                     <h3 className="text-lg font-display text-surface-on group-hover:text-primary transition-colors tracking-tight">{product.name}</h3>
-                    <p className="text-sm font-price font-bold text-surface-on-variant">
-                      ₹{product.price ? parseFloat(product.price).toLocaleString() : '0'}
-                    </p>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-sm font-price font-bold text-surface-on-variant">
+                        ₹{product.price ? parseFloat(product.price).toLocaleString() : '0'}
+                      </p>
+                      {(product.comparePrice || product.original_price || product.mrp) &&
+                        parseFloat(product.comparePrice || product.original_price || product.mrp) > parseFloat(product.price) && (
+                        <span className="text-xs font-price text-stone-400 line-through">
+                          ₹{parseFloat(product.comparePrice || product.original_price || product.mrp).toLocaleString()}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </Link>
               ))}

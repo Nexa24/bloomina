@@ -123,9 +123,17 @@ const SignatureSection = () => {
                   Signature
                 </p>
                 <h3 className="text-sm md:text-base font-display text-surface-on group-hover:text-primary transition-colors tracking-tight line-clamp-1">{product.name}</h3>
-                <p className="text-xs md:text-sm font-price font-bold text-surface-on-variant">
-                  ₹{product.price ? parseFloat(product.price).toLocaleString('en-IN') : '0'}
-                </p>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-xs md:text-sm font-price font-bold text-surface-on-variant">
+                    ₹{product.price ? parseFloat(product.price).toLocaleString('en-IN') : '0'}
+                  </p>
+                  {(product.comparePrice || product.original_price || product.mrp) &&
+                    parseFloat(product.comparePrice || product.original_price || product.mrp) > parseFloat(product.price) && (
+                    <span className="text-[10px] md:text-xs font-price text-stone-400 line-through">
+                      ₹{parseFloat(product.comparePrice || product.original_price || product.mrp).toLocaleString('en-IN')}
+                    </span>
+                  )}
+                </div>
               </div>
             </Link>
           </ScrollReveal>
