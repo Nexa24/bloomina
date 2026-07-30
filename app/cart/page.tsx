@@ -167,7 +167,7 @@ const CartPage = () => {
                 <div className="h-px bg-stone-100 my-4" />
                 <div className="flex justify-between items-baseline">
                   <span className="text-lg font-display text-surface-on">Total</span>
-                  <span className="text-3xl font-display text-primary font-medium">₹{total.toLocaleString()}</span>
+                  <span className="text-3xl font-price text-primary font-bold">₹{total.toLocaleString()}</span>
                 </div>
               </div>
 

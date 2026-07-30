@@ -123,7 +123,7 @@ const SignatureSection = () => {
                   Signature
                 </p>
                 <h3 className="text-sm md:text-base font-display text-surface-on group-hover:text-primary transition-colors tracking-tight line-clamp-1">{product.name}</h3>
-                <p className="text-xs md:text-sm font-light text-surface-on-variant">
+                <p className="text-xs md:text-sm font-price font-bold text-surface-on-variant">
                   ₹{product.price ? parseFloat(product.price).toLocaleString('en-IN') : '0'}
                 </p>
               </div>

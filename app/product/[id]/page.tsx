@@ -298,7 +298,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               <h1 className="text-3xl md:text-5xl font-display font-light text-surface-on tracking-tight leading-tight">
                 {product.name}
               </h1>
-              <p className="text-2xl font-display text-primary/80">₹{product.price.toLocaleString('en-IN')}.00</p>
+              <p className="text-2xl font-price font-bold text-primary">₹{product.price.toLocaleString('en-IN')}.00</p>
             </div>
 
             {/* Color Selector moved to top */}

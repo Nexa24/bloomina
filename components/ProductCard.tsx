@@ -53,7 +53,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, price, image, cate
         <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-surface-on-variant/70 group-hover:text-primary transition-colors">
           {title}
         </h3>
-        <p className="text-lg font-display font-medium text-surface-on">
+        <p className="text-lg font-price font-bold text-surface-on">
           ₹{price.toLocaleString()}
         </p>
       </div>

@@ -387,7 +387,7 @@ const CategoryPage = () => {
                       {Array.isArray(product.categories) ? product.categories[0] : (product.category || currentCategory.label)}
                     </p>
                     <h3 className="text-lg font-display text-surface-on group-hover:text-primary transition-colors tracking-tight">{product.name}</h3>
-                    <p className="text-sm font-light text-surface-on-variant">
+                    <p className="text-sm font-price font-bold text-surface-on-variant">
                       ₹{product.price ? parseFloat(product.price).toLocaleString() : '0'}
                     </p>
                   </div>

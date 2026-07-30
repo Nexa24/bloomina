@@ -64,6 +64,8 @@ const config: Config = {
         serif: ["Cormorant Garamond", "ui-serif", "Georgia"],
         display: ["Cormorant Garamond", "Georgia", "serif"],
         body: ["Manrope", "sans-serif"],
+        price: ["DM Sans", "sans-serif"],
+        dmsans: ["DM Sans", "sans-serif"],
       },
       spacing: {
         unit: "8px",

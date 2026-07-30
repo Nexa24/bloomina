@@ -476,7 +476,7 @@ const CheckoutPage = () => {
                  </div>
                 <div className="pt-4 flex justify-between items-baseline">
                   <span className="text-lg font-display text-surface-on">Total</span>
-                  <span className="text-3xl font-display text-primary font-medium">₹{total.toLocaleString()}</span>
+                  <span className="text-3xl font-price text-primary font-bold">₹{total.toLocaleString()}</span>
                 </div>
               </div>
 
