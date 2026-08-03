@@ -523,7 +523,7 @@ const CheckoutPage = () => {
                    <span className={`${shipping === 0 ? 'text-primary font-bold' : 'text-surface-on font-medium'} uppercase text-[10px] tracking-widest`}>
                      {shipping === 0 ? 'Free' : `₹${shipping}.00`}
                    </span>
-                 </div>  </div>
+                 </div>
                 <div className="pt-4 flex justify-between items-baseline">
                   <span className="text-lg font-display text-surface-on">Total</span>
                   <span className="text-3xl font-price text-primary font-bold">₹{total.toLocaleString()}</span>
