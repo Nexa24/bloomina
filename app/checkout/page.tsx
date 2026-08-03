@@ -131,7 +131,7 @@ const CheckoutPage = () => {
   }
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const shipping = subtotal >= 599 ? 0 : 80;
+  const shipping = 0;
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const total = Math.max(0, subtotal - discount + shipping);
   const isCodEligible = false;

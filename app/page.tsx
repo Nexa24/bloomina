@@ -16,20 +16,8 @@ export default function Home() {
       {/* Category Section - Now Second */}
       <CategorySection />
 
-      {/* Signature Collection Section - New */}
-      <SignatureSection />
-
-      {/* Category Carousel - New */}
-      <CategoryCarousel />
-
-      {/* Other Categories Section - New */}
-      <OtherCategoriesSection />
-
-      {/* Testimonials Marquee - New */}
-      <Testimonials />
-
       {/* About Us Section */}
-      <section className="max-w-screen-xl mx-auto px-6 py-8 md:py-12 border-t border-stone-100">
+      <section className="max-w-screen-xl mx-auto px-6 py-12 md:py-16 border-y border-stone-100">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
           <div className="space-y-6 md:space-y-8">
             <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">
@@ -61,6 +49,18 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Signature Collection Section - New */}
+      <SignatureSection />
+
+      {/* Category Carousel - New */}
+      <CategoryCarousel />
+
+      {/* Other Categories Section - New */}
+      <OtherCategoriesSection />
+
+      {/* Testimonials Marquee - New */}
+      <Testimonials />
     </div>
   );
 }

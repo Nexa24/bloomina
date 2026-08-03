@@ -15,7 +15,7 @@ const ShippingPolicyPage = () => {
     {
       title: "Shipping Cost",
       content: [
-        { text: "To provide an effortless and premium shopping experience from start to finish, standard shipping is complimentary on all prepaid orders across India, with no hidden additional costs at checkout." }
+        { text: "To provide an effortless and premium shopping experience from start to finish, standard shipping is complimentary on all orders all over Kerala, with no hidden additional costs at checkout." }
       ]
     },
     {

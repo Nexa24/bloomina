@@ -119,7 +119,7 @@ export default function SizeGuidePage() {
                       }`}
                     >
                       <span className="font-display text-sm font-medium tracking-wide">
-                        {guide.name}
+                        {guide.name.toUpperCase().startsWith("SIZE GUIDE FOR") ? guide.name : (guide.name.toLowerCase().includes("bra") ? "SIZE GUIDE FOR BRAS" : guide.name.toLowerCase().includes("panty") ? "SIZE GUIDE FOR PANTIES" : `SIZE GUIDE FOR ${guide.name.toUpperCase()}`)}
                       </span>
                       <span className={`material-symbols-outlined text-lg transition-transform duration-300 ${
                         activeTabIdx === idx ? 'translate-x-1 text-white' : 'text-stone-300 group-hover:translate-x-1 group-hover:text-primary'
@@ -161,7 +161,9 @@ export default function SizeGuidePage() {
               {activeGuide && (
                 <div className="bg-white p-8 rounded-[2.5rem] border border-stone-100/80 petal-shadow space-y-4">
                   <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Garment Overview</h4>
-                  <h3 className="text-2xl font-display font-light text-surface-on">{activeGuide.name}</h3>
+                  <h3 className="text-2xl font-display font-light text-surface-on">
+                    {activeGuide.name.toUpperCase().startsWith("SIZE GUIDE FOR") ? activeGuide.name : (activeGuide.name.toLowerCase().includes("bra") ? "SIZE GUIDE FOR BRAS" : activeGuide.name.toLowerCase().includes("panty") ? "SIZE GUIDE FOR PANTIES" : `SIZE GUIDE FOR ${activeGuide.name.toUpperCase()}`)}
+                  </h3>
                   <p className="text-sm text-surface-on-variant font-light leading-relaxed">
                     {activeGuide.description || 'Precision size mapping curated by our atelier to deliver structured, weightless luxury.'}
                   </p>

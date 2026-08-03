@@ -485,7 +485,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
               {/* Header */}
               <div className="px-8 pt-8 pb-6 flex justify-between items-start border-b border-stone-50">
                 <div className="space-y-1">
-                  <h3 className="text-2xl font-display text-surface-on">{product.sizeGuide?.name || "Sizing Guide"}</h3>
+                  <h3 className="text-2xl font-display text-surface-on">
+                    {isBra ? "SIZE GUIDE FOR BRAS" : isPantie ? "SIZE GUIDE FOR PANTIES" : (product.sizeGuide?.name ? (product.sizeGuide.name.toUpperCase().startsWith("SIZE GUIDE FOR") ? product.sizeGuide.name : `SIZE GUIDE FOR ${product.sizeGuide.name.toUpperCase()}`) : "SIZE GUIDE")}
+                  </h3>
                   <p className="text-xs text-surface-on-variant font-light">{product.sizeGuide?.description || "Find your perfect fit with our comprehensive sizing guide."}</p>
                 </div>
                 <button 

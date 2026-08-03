@@ -26,13 +26,7 @@ const navLinks = [
   },
   { 
     name: 'Panties', 
-    href: '/category/panties',
-    subsections: [
-      { name: 'Seamless Panties', href: '/category/panties/seamless' },
-      { name: 'High-Waist Panties', href: '/category/panties/high-waisted' },
-      { name: 'Bikini Panties', href: '/category/panties/bikini-panties' },
-      { name: 'Thongs', href: '/category/panties/thongs' },
-    ]
+    href: '/category/panties'
   },
   { name: 'Bestsellers', href: '/category/bestsellers' },
   { name: 'Signature', href: '/category/signature' }
@@ -43,49 +37,41 @@ const Navbar = () => {
   const [searchVal, setSearchVal] = useState('');
   const [isMounted, setIsMounted] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+
+  const { user, logout } = useAuth();
+  const { cartCount } = useCart();
+  const { wishlistCount } = useWishlist();
+
   const pathname = usePathname();
-  const { getTotalItems } = useCart();
-  const { items: wishlistItems } = useWishlist();
 
   useEffect(() => {
     setIsMounted(true);
+  }, []);
+
+  // Sticky header background shift on scroll
+  const [isScrolled, setIsScrolled] = useState(false);
+  useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      if (window.scrollY > 30) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
     };
     window.addEventListener('scroll', handleScroll);
-
-    // Listen for Supabase email link errors (e.g. expired OTP / invalid link)
-    const searchParams = new URLSearchParams(window.location.search);
-    let errorMsg = searchParams.get('error_description') || searchParams.get('error');
-    if (!errorMsg && window.location.hash) {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      errorMsg = hashParams.get('error_description') || hashParams.get('error');
-    }
-    if (errorMsg) {
-      const cleanUrl = window.location.origin + window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
-      const message = errorMsg.replace(/\+/g, ' ');
-      router.push(`/login?error=${encodeURIComponent(message)}`);
-    }
-
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [router]);
+  }, []);
 
-  // Lock scroll when search or mobile menu is open
-  useEffect(() => {
-    if (isSearchOpen || isMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchVal.trim()) {
+      router.push(`/category/all?search=${encodeURIComponent(searchVal.trim())}`);
+      setIsSearchOpen(false);
     }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isSearchOpen, isMenuOpen]);
+  };
 
   return (
     <>
@@ -103,7 +89,7 @@ const Navbar = () => {
             className="brightness-0 invert opacity-80"
           />
           <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.05em] md:tracking-[0.3em] text-white animate-pulse whitespace-nowrap overflow-hidden text-ellipsis">
-            Ethereal Comfort: Free shipping on all orders above ₹599
+            Ethereal Comfort: Free Shipping all over Kerala
           </p>
         </div>
 

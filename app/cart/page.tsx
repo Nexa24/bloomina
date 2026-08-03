@@ -24,8 +24,8 @@ const CartPage = () => {
     );
   }
 
-  const subtotal = getTotalPrice();
-  const shipping = subtotal >= 599 ? 0 : 80;
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const shipping = 0;
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const total = Math.max(0, subtotal - discount + shipping);
 
