@@ -41,9 +41,10 @@ const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
 
-  const { user, logout } = useAuth();
-  const { cartCount } = useCart();
-  const { wishlistCount } = useWishlist();
+  const { getTotalItems } = useCart();
+  const { items: wishlistItems } = useWishlist();
+  const cartCount = getTotalItems();
+  const wishlistCount = wishlistItems.length;
 
   const pathname = usePathname();
 
