@@ -11,6 +11,45 @@ import { createClient } from '@/utils/supabase/client';
 import { useSearchParams } from 'next/navigation';
 import CouponSection from '@/components/CouponSection';
 
+const INDIAN_STATES = [
+  "Kerala",
+  "Andaman and Nicobar Islands",
+  "Andhra Pradesh",
+  "Arunachal Pradesh",
+  "Assam",
+  "Bihar",
+  "Chandigarh",
+  "Chhattisgarh",
+  "Dadra and Nagar Haveli and Daman and Diu",
+  "Delhi",
+  "Goa",
+  "Gujarat",
+  "Haryana",
+  "Himachal Pradesh",
+  "Jammu and Kashmir",
+  "Jharkhand",
+  "Karnataka",
+  "Ladakh",
+  "Lakshadweep",
+  "Madhya Pradesh",
+  "Maharashtra",
+  "Manipur",
+  "Meghalaya",
+  "Mizoram",
+  "Nagaland",
+  "Odisha",
+  "Puducherry",
+  "Punjab",
+  "Rajasthan",
+  "Sikkim",
+  "Tamil Nadu",
+  "Telangana",
+  "Tripura",
+  "Uttar Pradesh",
+  "Uttarakhand",
+  "West Bengal"
+];
+
 const CheckoutPage = () => {
   const { items: cartItems, getTotalPrice: getCartTotal, clearCart } = useCart();
   const { user } = useAuth();
@@ -45,7 +84,7 @@ const CheckoutPage = () => {
     address: '',
     city: '',
     postalCode: '',
-    state: ''
+    state: 'Kerala'
   });
 
   useEffect(() => {
@@ -115,7 +154,7 @@ const CheckoutPage = () => {
             address: profile.address || '',
             city: profile.city || '',
             postalCode: profile.postal_code || '',
-            state: profile.state || ''
+            state: profile.state || 'Kerala'
           });
         } else if (user.email) {
             setFormData(prev => ({ ...prev, email: user.email || '' }));
@@ -131,12 +170,13 @@ const CheckoutPage = () => {
   }
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const shipping = 0;
+  const isKerala = formData.state?.trim().toLowerCase() === 'kerala';
+  const shipping = isKerala ? 0 : 80;
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const total = Math.max(0, subtotal - discount + shipping);
   const isCodEligible = false;
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -356,14 +396,19 @@ const CheckoutPage = () => {
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">State</label>
-                    <input 
+                    <select 
                       required
                       name="state"
                       value={formData.state}
                       onChange={handleInputChange}
-                      placeholder="Maharashtra"
-                      className="w-full bg-stone-50 border-none rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-stone-300"
-                    />
+                      className="w-full bg-stone-50 border-none rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all text-surface-on cursor-pointer font-medium"
+                    >
+                      {INDIAN_STATES.map((st) => (
+                        <option key={st} value={st}>
+                          {st}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="space-y-2 col-span-2 md:col-span-1">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Postal Code</label>
@@ -448,7 +493,7 @@ const CheckoutPage = () => {
               </div>
 
               <div className="mb-10">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-3 ml-1">Promotional Code</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-3 ml-1">Have a coupon?</p>
                 <CouponSection 
                   cartTotal={subtotal}
                   appliedCoupon={appliedCoupon}
@@ -468,12 +513,17 @@ const CheckoutPage = () => {
                     <span className="font-medium text-primary">-₹{appliedCoupon.discountAmount.toLocaleString()}</span>
                   </div>
                 )}
-                 <div className="flex justify-between text-sm">
-                   <span className="text-surface-on-variant">Shipping</span>
-                   <span className={`${shipping === 0 ? 'text-green-600' : 'text-surface-on'} font-medium uppercase text-[10px] tracking-widest`}>
-                     {shipping === 0 ? 'Complimentary' : `₹${shipping}`}
+                 <div className="flex justify-between text-sm items-center">
+                   <div>
+                     <span className="text-surface-on-variant">Shipping</span>
+                     <p className="text-[9px] text-stone-400 font-light">
+                       {isKerala ? 'Free shipping across Kerala' : `Standard shipping for ${formData.state || 'other states'}`}
+                     </p>
+                   </div>
+                   <span className={`${shipping === 0 ? 'text-primary font-bold' : 'text-surface-on font-medium'} uppercase text-[10px] tracking-widest`}>
+                     {shipping === 0 ? 'Free' : `₹${shipping}.00`}
                    </span>
-                 </div>
+                 </div>  </div>
                 <div className="pt-4 flex justify-between items-baseline">
                   <span className="text-lg font-display text-surface-on">Total</span>
                   <span className="text-3xl font-price text-primary font-bold">₹{total.toLocaleString()}</span>
