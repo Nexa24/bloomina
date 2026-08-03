@@ -51,7 +51,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, price, comparePric
       </div>
       
       <div className="mt-6 text-center space-y-1">
-        <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-surface-on-variant/70 group-hover:text-primary transition-colors">
+        <h3 className="text-xs font-dmsans font-bold uppercase tracking-[0.1em] text-surface-on-variant/70 group-hover:text-primary transition-colors">
           {title}
         </h3>
         <div className="flex items-baseline justify-center gap-2">
