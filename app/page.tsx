@@ -1,3 +1,5 @@
+import Image from "next/image";
+import Link from "next/link";
 import CategorySection from "@/components/CategorySection";
 import SignatureSection from "@/components/SignatureSection";
 import OtherCategoriesSection from "@/components/OtherCategoriesSection";
@@ -16,36 +18,82 @@ export default function Home() {
       {/* Category Section - Now Second */}
       <CategorySection />
 
-      {/* About Us Section */}
-      <section className="max-w-screen-xl mx-auto px-6 py-12 md:py-16 border-y border-stone-100">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
-          <div className="space-y-6 md:space-y-8">
-            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">
-              Our Story
-            </span>
-            <h2 className="text-4xl md:text-5xl font-display font-light text-surface-on tracking-tight leading-tight">
-              About <span className="italic text-primary">Bloomina</span>
-            </h2>
-            <p className="text-base text-surface-on-variant font-light leading-relaxed max-w-xl">
-              At Bloomina, we believe innerwear is the most intimate form of self-expression. Meticulously crafted from the finest, ultra-soft fabrics, our collections blend ethereal comfort with modern, minimal aesthetics. 
-            </p>
-            <p className="text-base text-surface-on-variant font-light leading-relaxed max-w-xl">
-              Designed to elevate your everyday rituals, every piece celebrates your natural silhouette with lightweight support and seamless elegance. We invite you to experience comfort that feels like a second skin.
-            </p>
-          </div>
-          <div className="relative aspect-[4/3] bg-stone-50 rounded-[2.5rem] overflow-hidden p-10 flex flex-col justify-between border border-stone-100 petal-shadow">
-            <div className="space-y-4">
-              <span className="material-symbols-outlined text-4xl text-primary font-light">favorite</span>
-              <p className="text-xl md:text-2xl font-display font-light italic text-surface-on leading-relaxed">
-                "Real comfort starts from within. We design for the modern woman who values both exquisite quality and effortless elegance."
-              </p>
-            </div>
-            <div className="pt-6 border-t border-stone-100 flex items-center justify-between">
-              <div>
-                <h4 className="font-bold text-surface-on text-xs uppercase tracking-widest">The Bloomina Touch</h4>
-                <p className="text-[9px] font-bold uppercase tracking-widest text-primary/60 mt-1">Ethereal Comfort</p>
+      {/* About Us Section - Elevated Editorial Redesign */}
+      <section className="py-20 md:py-28 bg-gradient-to-b from-stone-50/60 via-white to-white overflow-hidden relative border-y border-stone-100/60">
+        <div className="max-w-screen-xl mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+            
+            {/* Left Column: Image with Floating Card */}
+            <div className="lg:col-span-5 relative">
+              <div className="relative aspect-[4/5] rounded-[3.5rem] overflow-hidden petal-shadow group border border-stone-100">
+                <Image
+                  src="/our_story.png"
+                  alt="The Bloomina Story"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 45vw"
+                  className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-60" />
+              </div>
+              
+              {/* Floating Badge */}
+              <div className="absolute -bottom-6 -right-4 md:bottom-8 md:-right-8 bg-white/95 backdrop-blur-xl p-6 rounded-3xl border border-stone-100/80 shadow-2xl max-w-[230px] space-y-2 hidden sm:block">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-xl">auto_awesome</span>
+                  <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-primary">Atelier Fit</span>
+                </div>
+                <p className="text-xs font-display italic text-surface-on leading-snug">
+                  "Weightless luxury tailored for daily empowerment."
+                </p>
               </div>
             </div>
+
+            {/* Right Column: Narrative & Pillars */}
+            <div className="lg:col-span-7 space-y-8 lg:pl-6">
+              <div className="space-y-4">
+                <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary bg-primary/5 px-4 py-1.5 rounded-full inline-block">
+                  Our Story & Legacy
+                </span>
+                <h2 className="text-4xl md:text-6xl font-display font-light text-surface-on tracking-tight leading-[1.15]">
+                  Ethereal Comfort, <br />
+                  <span className="italic text-primary">Timeless Elegance</span>
+                </h2>
+              </div>
+
+              <p className="text-base md:text-lg text-surface-on-variant/80 font-light leading-relaxed max-w-2xl">
+                At Bloomina, we believe innerwear is the most intimate form of self-expression. Meticulously crafted from the finest, ultra-soft fabrics, our collections blend second-skin comfort with minimalist, modern aesthetics.
+              </p>
+
+              {/* Three Craft Pillars */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-4 border-t border-stone-100">
+                <div className="space-y-2">
+                  <span className="material-symbols-outlined text-2xl text-primary font-light">feather</span>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-surface-on">Ultra-Soft Fabrics</h4>
+                  <p className="text-xs text-stone-400 font-light leading-relaxed">Breathable bio-modal weaves engineered for non-stop ease.</p>
+                </div>
+                <div className="space-y-2">
+                  <span className="material-symbols-outlined text-2xl text-primary font-light">favorite</span>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-surface-on">Natural Silhouette</h4>
+                  <p className="text-xs text-stone-400 font-light leading-relaxed">Seamless design that gently shapes without pinching.</p>
+                </div>
+                <div className="space-y-2">
+                  <span className="material-symbols-outlined text-2xl text-primary font-light">verified</span>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-surface-on">Ethical Craft</h4>
+                  <p className="text-xs text-stone-400 font-light leading-relaxed">Sustainably sourced and lovingly finished for high durability.</p>
+                </div>
+              </div>
+
+              <div className="pt-2 flex items-center gap-6">
+                <Link
+                  href="/about"
+                  className="inline-flex items-center gap-3 bg-primary text-white px-8 py-4 rounded-full text-[10px] font-bold uppercase tracking-[0.25em] shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all duration-300"
+                >
+                  Discover Our Story
+                  <span className="material-symbols-outlined text-sm">east</span>
+                </Link>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
