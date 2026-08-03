@@ -295,7 +295,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   </>
                 )}
               </div>
-              <h1 className="text-3xl md:text-5xl font-dmsans font-bold text-surface-on tracking-tight leading-tight">
+              <h1 className="text-3xl md:text-4xl font-sans font-medium text-surface-on tracking-tight leading-tight capitalize">
                 {product.name}
               </h1>
               <div className="flex items-baseline gap-3">

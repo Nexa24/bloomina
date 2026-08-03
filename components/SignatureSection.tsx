@@ -122,7 +122,7 @@ const SignatureSection = () => {
                 <p className="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.25em] text-primary/50">
                   Signature
                 </p>
-                <h3 className="text-sm md:text-base font-dmsans font-bold text-surface-on group-hover:text-primary transition-colors tracking-tight line-clamp-1">{product.name}</h3>
+                <h3 className="text-sm md:text-base font-sans font-medium text-surface-on group-hover:text-primary transition-colors tracking-tight line-clamp-1 capitalize">{product.name}</h3>
                 <div className="flex items-baseline gap-2">
                   <p className="text-xs md:text-sm font-price font-bold text-surface-on-variant">
                     ₹{product.price ? parseFloat(product.price).toLocaleString('en-IN') : '0'}
