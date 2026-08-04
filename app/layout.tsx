@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { AuthProvider } from "@/hooks/use-auth";
 import { supabase } from "@/lib/supabase";
+import MetaPixel from "@/components/MetaPixel";
 import Maintenance from "@/components/Maintenance";
 
 export const metadata: Metadata = {
@@ -47,6 +48,7 @@ export default async function RootLayout({
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=straighten,close,check,favorite" />
       </head>
       <body className="antialiased min-h-screen overflow-x-hidden">
+        <MetaPixel />
         {isMaintenance ? (
           <Maintenance message={maintenanceMessage} />
         ) : (

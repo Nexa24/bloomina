@@ -52,16 +52,16 @@ export default function Home() {
             <div className="lg:col-span-7 space-y-8 lg:pl-6">
               <div className="space-y-4">
                 <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary bg-primary/5 px-4 py-1.5 rounded-full inline-block">
-                  Our Story & Legacy
+                  About Bloomina
                 </span>
-                <h2 className="text-4xl md:text-6xl font-display font-light text-surface-on tracking-tight leading-[1.15]">
-                  Ethereal Comfort, <br />
-                  <span className="italic text-primary">Timeless Elegance</span>
+                <h2 className="text-4xl md:text-5xl font-display font-light text-surface-on tracking-tight leading-[1.15]">
+                  More Than Innerwear. <br />
+                  <span className="italic text-primary">A Thoughtfully Crafted Everyday Essential.</span>
                 </h2>
               </div>
 
               <p className="text-base md:text-lg text-surface-on-variant/80 font-light leading-relaxed max-w-2xl">
-                At Bloomina, we believe innerwear is the most intimate form of self-expression. Meticulously crafted from the finest, ultra-soft fabrics, our collections blend second-skin comfort with minimalist, modern aesthetics.
+                At Bloomina, we believe that comfort is the foundation of confidence. Every woman deserves innerwear that feels effortless, supports her throughout the day, and complements her lifestyle without compromise.
               </p>
 
               {/* Three Craft Pillars */}

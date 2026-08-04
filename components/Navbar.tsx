@@ -26,7 +26,13 @@ const navLinks = [
   },
   { 
     name: 'Panties', 
-    href: '/category/panties'
+    href: '/category/panties',
+    subsections: [
+      { name: 'Seamless Panties', href: '/category/panties/seamless' },
+      { name: 'High-Waist Panties', href: '/category/panties/high-waisted' },
+      { name: 'Bikini Panties', href: '/category/panties/bikini-panties' },
+      { name: 'Thongs', href: '/category/panties/thongs' },
+    ]
   },
   { name: 'Bestsellers', href: '/category/bestsellers' },
   { name: 'Signature', href: '/category/signature' }
@@ -367,6 +373,19 @@ const Navbar = () => {
           <div className="mt-8 space-y-12 overflow-y-auto">
             <h2 className="text-[10px] font-bold uppercase tracking-[0.4em] text-surface-on/30">Explore</h2>
             <nav className="flex flex-col gap-6">
+              {/* Home Link */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between group">
+                  <Link 
+                    href="/" 
+                    className={`text-3xl font-display font-light transition-colors tracking-tight ${pathname === '/' ? 'text-primary' : 'text-surface-on'}`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Home
+                  </Link>
+                </div>
+              </div>
+
               {navLinks.map((link) => (
                 <div key={link.name} className="space-y-4">
                   <div className="flex items-center justify-between group">
