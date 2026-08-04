@@ -10,8 +10,15 @@ interface HeroSlide {
     order_index: number;
 }
 
+const DEFAULT_SLIDES: HeroSlide[] = [
+    { id: 'default-1', image_url: '/our_story.png', order_index: 0 },
+    { id: 'default-2', image_url: '/european_lace.png', order_index: 1 },
+    { id: 'default-3', image_url: '/micro_modal.png', order_index: 2 },
+];
+
 const HeroSlideshow = () => {
-    const [slides, setSlides] = useState<HeroSlide[]>([]);
+    const [slides, setSlides] = useState<HeroSlide[]>(DEFAULT_SLIDES);
+    const [failedSlideIds, setFailedSlideIds] = useState<Record<string, boolean>>({});
     const [current, setCurrent] = useState(0);
     const [loading, setLoading] = useState(true);
 
@@ -49,7 +56,7 @@ const HeroSlideshow = () => {
         return () => clearInterval(timer);
     }, [next, slides.length]);
 
-    if (loading || slides.length === 0) {
+    if (loading && slides.length === 0) {
         return (
             <div className="absolute inset-0 -z-20 bg-slate-100 animate-pulse" />
         );
@@ -65,11 +72,12 @@ const HeroSlideshow = () => {
                     }`}
                 >
                     <Image
-                        src={slide.image_url}
+                        src={failedSlideIds[slide.id] ? DEFAULT_SLIDES[idx % DEFAULT_SLIDES.length].image_url : slide.image_url}
                         alt={`Bloomina Hero ${idx + 1}`}
                         fill
                         className="object-cover brightness-[0.85]"
                         priority={idx === 0}
+                        onError={() => setFailedSlideIds(prev => ({ ...prev, [slide.id]: true }))}
                     />
                 </div>
             ))}
