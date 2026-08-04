@@ -26,13 +26,7 @@ const navLinks = [
   },
   { 
     name: 'Panties', 
-    href: '/category/panties',
-    subsections: [
-      { name: 'Seamless Panties', href: '/category/panties/seamless' },
-      { name: 'High-Waist Panties', href: '/category/panties/high-waisted' },
-      { name: 'Bikini Panties', href: '/category/panties/bikini-panties' },
-      { name: 'Thongs', href: '/category/panties/thongs' },
-    ]
+    href: '/category/panties'
   },
   { name: 'Bestsellers', href: '/category/bestsellers' },
   { name: 'Signature', href: '/category/signature' }
