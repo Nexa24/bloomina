@@ -12,6 +12,7 @@ export default function Home() {
     <div className="pb-16 md:pb-24 overflow-x-hidden">
       {/* Hero Section */}
       <section className="relative h-[45vh] md:h-[85vh] flex items-center justify-center overflow-hidden">
+        <h1 className="sr-only">Bloomina | Ethereal Comfort & Everyday Essentials</h1>
         <HeroSlideshow />
       </section>
 
@@ -39,7 +40,7 @@ export default function Home() {
               {/* Floating Badge */}
               <div className="absolute -bottom-6 -right-4 md:bottom-8 md:-right-8 bg-white/95 backdrop-blur-xl p-6 rounded-3xl border border-stone-100/80 shadow-2xl max-w-[230px] space-y-2 hidden sm:block">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-xl">auto_awesome</span>
+                  <span className="material-symbols-outlined text-primary text-xl" aria-hidden="true">auto_awesome</span>
                   <span className="text-[9px] font-bold uppercase tracking-[0.25em] text-primary">Atelier Fit</span>
                 </div>
                 <p className="text-xs font-display italic text-surface-on leading-snug">
@@ -67,18 +68,18 @@ export default function Home() {
               {/* Three Craft Pillars */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-4 border-t border-stone-100">
                 <div className="space-y-2">
-                  <span className="material-symbols-outlined text-2xl text-primary font-light">feather</span>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-surface-on">Ultra-Soft Fabrics</h4>
+                  <span className="material-symbols-outlined text-2xl text-primary font-light" aria-hidden="true">feather</span>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-surface-on">Ultra-Soft Fabrics</h3>
                   <p className="text-xs text-stone-400 font-light leading-relaxed">Breathable bio-modal weaves engineered for non-stop ease.</p>
                 </div>
                 <div className="space-y-2">
-                  <span className="material-symbols-outlined text-2xl text-primary font-light">favorite</span>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-surface-on">Natural Silhouette</h4>
+                  <span className="material-symbols-outlined text-2xl text-primary font-light" aria-hidden="true">favorite</span>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-surface-on">Natural Silhouette</h3>
                   <p className="text-xs text-stone-400 font-light leading-relaxed">Seamless design that gently shapes without pinching.</p>
                 </div>
                 <div className="space-y-2">
-                  <span className="material-symbols-outlined text-2xl text-primary font-light">verified</span>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-surface-on">Ethical Craft</h4>
+                  <span className="material-symbols-outlined text-2xl text-primary font-light" aria-hidden="true">verified</span>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-surface-on">Ethical Craft</h3>
                   <p className="text-xs text-stone-400 font-light leading-relaxed">Sustainably sourced and lovingly finished for high durability.</p>
                 </div>
               </div>

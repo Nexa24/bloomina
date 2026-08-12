@@ -57,11 +57,11 @@ const Footer = () => {
               Crafting weightless support and effortless elegance through the science of <span className="italic font-normal">Floral Minimalism</span>. Designed to make you feel every moment.
             </p>
             <div className="flex items-center gap-4">
-              <a href="#" className="w-10 h-10 rounded-full border border-primary/10 flex items-center justify-center text-primary/60 hover:bg-primary hover:text-white transition-all">
-                <span className="material-symbols-outlined text-lg">facebook</span>
+              <a href="https://facebook.com" aria-label="Bloomina Facebook" className="w-10 h-10 rounded-full border border-stone-300 flex items-center justify-center text-primary/60 hover:bg-primary hover:text-white transition-all">
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">facebook</span>
               </a>
-              <a href="#" className="w-10 h-10 rounded-full border border-primary/10 flex items-center justify-center text-primary/60 hover:bg-primary hover:text-white transition-all">
-                <span className="material-symbols-outlined text-lg">public</span>
+              <a href="#" aria-label="Bloomina Website" className="w-10 h-10 rounded-full border border-stone-300 flex items-center justify-center text-primary/60 hover:bg-primary hover:text-white transition-all">
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">public</span>
               </a>
             </div>
           </div>
@@ -95,20 +95,24 @@ const Footer = () => {
             <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-surface-on/40">Newsletter</h3>
             <p className="text-sm text-surface-on-variant font-light">Join the Bloomina collective for exclusive releases and design insights.</p>
             <form onSubmit={handleSubscribe} className="relative">
+              <label htmlFor="footer-newsletter-email" className="sr-only">Email address for newsletter</label>
               <input 
                 type="email" 
+                id="footer-newsletter-email"
+                aria-label="Email address for newsletter"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email address" 
-                className="w-full bg-transparent border-b border-primary/20 py-3 pr-10 text-sm focus:outline-none focus:border-primary transition-colors font-light text-surface-on placeholder:text-stone-300"
+                className="w-full bg-transparent border-b border-stone-400 py-3 pr-10 text-sm focus:outline-none focus:border-primary transition-colors font-light text-surface-on placeholder:text-stone-400"
               />
               <button 
                 type="submit"
+                aria-label="Subscribe to newsletter"
                 disabled={isSubmitting}
                 className="absolute right-0 top-1/2 -translate-y-1/2 text-primary hover:scale-110 transition-transform disabled:opacity-50"
               >
-                <span className="material-symbols-outlined">east</span>
+                <span className="material-symbols-outlined" aria-hidden="true">east</span>
               </button>
             </form>
             {subscribeStatus === 'success' && (
@@ -124,7 +128,7 @@ const Footer = () => {
         <div className="mt-24 pt-12 border-t border-primary/5 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex flex-wrap justify-center md:justify-start gap-8 grayscale opacity-30">
             {['payments', 'wallet', 'contactless', 'credit_card'].map((icon) => (
-              <span key={icon} className="material-symbols-outlined text-3xl">{icon}</span>
+              <span key={icon} className="material-symbols-outlined text-3xl" aria-hidden="true">{icon}</span>
             ))}
           </div>
           

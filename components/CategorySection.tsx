@@ -76,10 +76,10 @@ const CategorySection = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-stone-900/40 via-transparent to-transparent" />
               
               <div className="absolute inset-0 p-3 md:p-8 flex flex-col justify-end">
-                <h4 className="text-white font-display text-sm md:text-3xl tracking-tight mb-1 md:mb-2 leading-tight">{cat.name}</h4>
+                <h2 className="text-white font-display text-sm md:text-3xl tracking-tight mb-1 md:mb-2 leading-tight">{cat.name}</h2>
                 <div className="flex items-center gap-2 text-white/80 text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
                   <span>View Collection</span>
-                  <span className="material-symbols-outlined text-xs">north_east</span>
+                  <span className="material-symbols-outlined text-xs" aria-hidden="true">north_east</span>
                 </div>
               </div>
             </Link>

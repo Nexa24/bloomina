@@ -99,22 +99,24 @@ const Navbar = () => {
           <div className="flex lg:hidden items-center justify-start gap-4 z-10 flex-1">
             <button 
               onClick={() => setIsMenuOpen(true)}
+              aria-label="Open mobile menu"
               className="text-surface-on-variant hover:text-primary transition-all duration-300 flex-shrink-0"
             >
-              <span className="material-symbols-outlined font-light scale-110">menu</span>
+              <span className="material-symbols-outlined font-light scale-110" aria-hidden="true">menu</span>
             </button>
             
             <button 
               onClick={() => setIsSearchOpen(!isSearchOpen)}
+              aria-label="Open search overlay"
               className={`text-surface-on-variant hover:text-primary transition-all duration-300 flex-shrink-0 ${isSearchOpen ? 'text-primary scale-110' : ''}`}
             >
-              <span className="material-symbols-outlined text-[20px] font-light">search</span>
+              <span className="material-symbols-outlined text-[20px] font-light" aria-hidden="true">search</span>
             </button>
           </div>
 
           {/* DESKTOP ONLY: Left Side (Logo) */}
           <div className="hidden lg:flex items-center justify-start flex-1 z-10">
-            <Link href="/" className="flex items-center">
+            <Link href="/" className="flex items-center" aria-label="Bloomina Home">
               <Image 
                 src="/logo/BLO_TRNSP_PINK_LRG.png" 
                 alt="Bloomina Logo" 
@@ -128,7 +130,7 @@ const Navbar = () => {
 
           {/* MOBILE ONLY: Center (Logo) */}
           <div className="absolute left-1/2 -translate-x-1/2 flex lg:hidden items-center justify-center">
-            <Link href="/" className="flex items-center">
+            <Link href="/" className="flex items-center" aria-label="Bloomina Home">
               <Image 
                 src="/logo/BLO_TRNSP_PINK_LRG.png" 
                 alt="Bloomina Logo" 
@@ -142,7 +144,7 @@ const Navbar = () => {
 
           {/* DESKTOP ONLY: Center (Nav Links) */}
           <div className="hidden lg:flex items-center justify-center flex-[2]">
-            <nav className="flex items-center gap-10 px-4 h-full">
+            <nav className="flex items-center gap-10 px-4 h-full" aria-label="Main Navigation">
               {navLinks.map((link) => (
                 <div 
                   key={link.name} 
@@ -164,10 +166,13 @@ const Navbar = () => {
           {/* RIGHT SIDE: Icons (Universal) */}
           <div className="flex items-center justify-end gap-3 md:gap-8 z-10 flex-1">
             {/* Inline search bar in navbar (Desktop) */}
-            <div className="hidden lg:flex items-center gap-2 bg-stone-50 hover:bg-stone-100 border border-stone-200/50 rounded-full px-3 py-1.5 transition-all duration-300 group">
-              <span className="material-symbols-outlined text-lg text-surface-on-variant/60 font-light group-hover:text-primary transition-colors">search</span>
+            <div className="hidden lg:flex items-center gap-2 bg-stone-50 hover:bg-stone-100 border border-stone-300 rounded-full px-3 py-1.5 transition-all duration-300 group">
+              <span className="material-symbols-outlined text-lg text-surface-on-variant/60 font-light group-hover:text-primary transition-colors" aria-hidden="true">search</span>
+              <label htmlFor="navbar-desktop-search" className="sr-only">Search products</label>
               <input
                 type="text"
+                id="navbar-desktop-search"
+                aria-label="Search products"
                 placeholder="Search..."
                 value={searchVal}
                 onChange={(e) => setSearchVal(e.target.value)}
@@ -179,22 +184,22 @@ const Navbar = () => {
                 className="bg-transparent border-none p-0 focus:ring-0 text-[10px] font-semibold uppercase tracking-wider text-surface-on placeholder:text-stone-300 w-28 focus:w-56 transition-all duration-300 outline-none"
               />
             </div>
-            <Link href="/contact" className="hidden lg:flex text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0" title="Contact Us">
-              <span className="material-symbols-outlined text-[20px] md:text-2xl font-light">info</span>
+            <Link href="/contact" className="hidden lg:flex text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0" title="Contact Us" aria-label="Contact Us">
+              <span className="material-symbols-outlined text-[20px] md:text-2xl font-light" aria-hidden="true">info</span>
             </Link>
-            <Link href="/account" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0">
-              <span className="material-symbols-outlined text-[20px] md:text-2xl font-light">person</span>
+            <Link href="/account" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0" aria-label="My Account">
+              <span className="material-symbols-outlined text-[20px] md:text-2xl font-light" aria-hidden="true">person</span>
             </Link>
-            <Link href="/wishlist" className="hidden sm:flex text-surface-on-variant hover:text-primary transition-colors duration-300 items-center gap-0.5 group relative flex-shrink-0">
-              <span className="material-symbols-outlined text-[20px] md:text-2xl font-light group-hover:scale-110 transition-transform">favorite</span>
+            <Link href="/wishlist" className="hidden sm:flex text-surface-on-variant hover:text-primary transition-colors duration-300 items-center gap-0.5 group relative flex-shrink-0" aria-label="Wishlist">
+              <span className="material-symbols-outlined text-[20px] md:text-2xl font-light group-hover:scale-110 transition-transform" aria-hidden="true">favorite</span>
               {isMounted && wishlistItems.length > 0 && (
                 <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 bg-primary text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-in zoom-in duration-300">
                   {wishlistItems.length}
                 </span>
               )}
             </Link>
-            <Link href="/cart" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex items-center gap-0.5 group relative flex-shrink-0">
-              <span className="material-symbols-outlined text-[20px] md:text-2xl font-light group-hover:scale-110 transition-transform">shopping_cart</span>
+            <Link href="/cart" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex items-center gap-0.5 group relative flex-shrink-0" aria-label="Shopping Cart">
+              <span className="material-symbols-outlined text-[20px] md:text-2xl font-light group-hover:scale-110 transition-transform" aria-hidden="true">shopping_cart</span>
               {isMounted && getTotalItems() > 0 && (
                 <span className="absolute -top-2 -right-2 min-w-4 h-4 px-1 bg-primary text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-in zoom-in duration-300">
                   {getTotalItems()}
@@ -269,17 +274,21 @@ const Navbar = () => {
               <div className="flex justify-end mb-8 md:absolute md:top-12 md:right-12">
                 <button 
                   onClick={() => setIsSearchOpen(false)}
+                  aria-label="Close search overlay"
                   className="p-3 rounded-full hover:bg-stone-50 text-surface-on/20 hover:text-primary transition-all duration-500"
                 >
-                  <span className="material-symbols-outlined text-3xl md:text-4xl font-light">close</span>
+                  <span className="material-symbols-outlined text-3xl md:text-4xl font-light" aria-hidden="true">close</span>
                 </button>
               </div>
 
               <div className="flex items-center justify-between border-b border-primary/15 pb-6 md:pb-10 mb-16 group">
                 <div className="flex-1 flex items-center gap-4 md:gap-10">
-                  <span className="material-symbols-outlined text-3xl md:text-5xl text-primary font-light">search</span>
+                  <span className="material-symbols-outlined text-3xl md:text-5xl text-primary font-light" aria-hidden="true">search</span>
+                  <label htmlFor="navbar-overlay-search" className="sr-only">Search our collection</label>
                   <input 
                     type="text" 
+                    id="navbar-overlay-search"
+                    aria-label="Search our collection"
                     placeholder="Search our collection..." 
                     value={searchVal}
                     onChange={(e) => setSearchVal(e.target.value)}
@@ -301,7 +310,7 @@ const Navbar = () => {
                   <h3 className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">Trending Now</h3>
                   <div className="flex flex-wrap gap-4">
                     {['Lace Bralettes', 'Silk Robes', 'Bridal Set', 'Wireless Comfort', 'Midnight Black'].map((term) => (
-                      <button key={term} className="px-8 py-3 rounded-full border border-stone-100 text-xs font-semibold text-surface-on/40 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all duration-300">
+                      <button key={term} aria-label={`Search ${term}`} className="px-8 py-3 rounded-full border border-stone-300 text-xs font-semibold text-surface-on/60 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all duration-300">
                         {term}
                       </button>
                     ))}
@@ -333,9 +342,10 @@ const Navbar = () => {
         <div className={`absolute top-0 left-0 w-[80%] max-w-[320px] h-full bg-white transition-transform duration-700 ease-out p-12 flex flex-col rounded-r-[3rem] shadow-2xl ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <button 
             onClick={() => setIsMenuOpen(false)}
+            aria-label="Close menu drawer"
             className="self-end text-surface-on-variant hover:text-primary transition-colors"
           >
-            <span className="material-symbols-outlined text-3xl font-light">close</span>
+            <span className="material-symbols-outlined text-3xl font-light" aria-hidden="true">close</span>
           </button>
 
           {/* Quick Icons Row (Wishlist and Info/Support) */}
