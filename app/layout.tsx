@@ -48,13 +48,19 @@ export default async function RootLayout({
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
       </head>
       <body className="antialiased min-h-screen overflow-x-hidden">
+        <a 
+          href="#main-content" 
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[999] focus:px-6 focus:py-3 focus:bg-primary focus:text-white focus:rounded-full focus:shadow-2xl focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 text-xs font-bold uppercase tracking-widest"
+        >
+          Skip to main content
+        </a>
         <MetaPixel />
         {isMaintenance ? (
           <Maintenance message={maintenanceMessage} />
         ) : (
           <AuthProvider>
             <Navbar />
-            <main className="pt-20">
+            <main id="main-content" className="pt-20" tabIndex={-1}>
               {children}
             </main>
             <Footer />

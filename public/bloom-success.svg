@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="100%" height="100%">
+  <title>Bloom Success Icon</title>
   <defs>
     <linearGradient id="bloomGrad" x1="0%" y1="100%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#F191A1" stop-opacity="0.1"/>
