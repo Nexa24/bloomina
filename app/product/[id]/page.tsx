@@ -28,6 +28,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const router = useRouter();
 
   const [bundledProducts, setBundledProducts] = useState<any[]>([]);
+  const [selectedBraSize, setSelectedBraSize] = useState('');
+  const [selectedPantySize, setSelectedPantySize] = useState('');
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -67,11 +69,18 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         }
 
         // Fetch bundled combo products if this is a combo product
-        if (productData.is_combo && Array.isArray(productData.bundled_product_ids) && productData.bundled_product_ids.length > 0) {
+        const isCombo = productData.is_combo || productData.specifications?.some((s: any) => s.name === 'is_combo' && s.value === 'true');
+        let bundledIds: string[] = Array.isArray(productData.bundled_product_ids) ? productData.bundled_product_ids : [];
+        const bundleSpec = productData.specifications?.find((s: any) => s.name === 'bundled_product_ids');
+        if (bundleSpec?.value) {
+          try { bundledIds = JSON.parse(bundleSpec.value); } catch (e) {}
+        }
+
+        if (isCombo && bundledIds.length > 0) {
           const { data: bundledData } = await supabase
             .from('products')
             .select('*')
-            .in('id', productData.bundled_product_ids);
+            .in('id', bundledIds);
           if (bundledData) {
             setBundledProducts(bundledData);
           }
@@ -164,6 +173,41 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     return product?.variants?.find((v: any) => v.name === 'Size')?.values || [];
   }, [product]);
 
+  const isBraPantyCombo = useMemo(() => {
+    if (!product) return false;
+    const isComboSpec = product.is_combo || product.specifications?.some((s: any) => s.name === 'is_combo' && s.value === 'true');
+    if (!isComboSpec && bundledProducts.length === 0) return false;
+
+    const catStr = (product.category || (Array.isArray(product.categories) ? product.categories.join(' ') : '')).toLowerCase();
+    const nameStr = (product.name || '').toLowerCase();
+    
+    const mentionsBoth = (nameStr.includes('bra') && (nameStr.includes('panty') || nameStr.includes('panties') || nameStr.includes('set'))) ||
+      catStr.includes('combo') || catStr.includes('set');
+
+    const hasBraItem = bundledProducts.some(p => (p.name || '').toLowerCase().includes('bra'));
+    const hasPantyItem = bundledProducts.some(p => (p.name || '').toLowerCase().includes('panty') || (p.name || '').toLowerCase().includes('panties') || (p.name || '').toLowerCase().includes('brief'));
+
+    return isComboSpec || mentionsBoth || (hasBraItem && hasPantyItem);
+  }, [product, bundledProducts]);
+
+  const braSizeOptions = useMemo(() => {
+    const braItem = bundledProducts.find(p => (p.name || '').toLowerCase().includes('bra'));
+    if (braItem) {
+      const v = braItem.variants?.find((varItem: any) => varItem.name === 'Size');
+      if (v?.values?.length > 0) return v.values;
+    }
+    return ['32A', '32B', '34A', '34B', '34C', '36A', '36B', '36C', '38B', '38C', '40B'];
+  }, [bundledProducts]);
+
+  const pantySizeOptions = useMemo(() => {
+    const pantyItem = bundledProducts.find(p => (p.name || '').toLowerCase().includes('panty') || (p.name || '').toLowerCase().includes('panties') || (p.name || '').toLowerCase().includes('brief'));
+    if (pantyItem) {
+      const v = pantyItem.variants?.find((varItem: any) => varItem.name === 'Size');
+      if (v?.values?.length > 0) return v.values;
+    }
+    return ['S', 'M', 'L', 'XL', '2XL'];
+  }, [bundledProducts]);
+
   const guideSizes = useMemo(() => {
     if (!product?.sizeGuide?.chart_data) return [];
     const chartRows = product.sizeGuide.chart_data;
@@ -184,18 +228,33 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const handleAddToCart = () => {
     if (!product) return;
-    if (!selectedSize) {
-      setSizeError(true);
-      const sizeSelectorEl = document.getElementById('size-selector');
-      if (sizeSelectorEl) {
-        sizeSelectorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    let finalSize = selectedSize;
+
+    if (isBraPantyCombo) {
+      if (!selectedBraSize || !selectedPantySize) {
+        setSizeError(true);
+        const sizeSelectorEl = document.getElementById('size-selector');
+        if (sizeSelectorEl) {
+          sizeSelectorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
       }
-      return;
+      finalSize = `Bra: ${selectedBraSize} | Panty: ${selectedPantySize}`;
+    } else {
+      if (sizes.length > 0 && !selectedSize) {
+        setSizeError(true);
+        const sizeSelectorEl = document.getElementById('size-selector');
+        if (sizeSelectorEl) {
+          sizeSelectorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+      finalSize = selectedSize || 'Free Size';
     }
     setSizeError(false);
     
     const colorName = product.colorConfigs?.[selectedColorIndex]?.name || 'Default';
-    const cartItemId = `${id}-${selectedSize}-${colorName}`;
+    const cartItemId = `${id}-${finalSize}-${colorName}`;
     addItem({
       id: cartItemId,
       productId: id,
@@ -203,7 +262,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       price: product.price,
       quantity,
       image: currentImages[0],
-      size: selectedSize,
+      size: finalSize,
       color: colorName
     });
     
@@ -213,18 +272,33 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const handleBuyNow = () => {
     if (!product) return;
-    if (!selectedSize) {
-      setSizeError(true);
-      const sizeSelectorEl = document.getElementById('size-selector');
-      if (sizeSelectorEl) {
-        sizeSelectorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    let finalSize = selectedSize;
+
+    if (isBraPantyCombo) {
+      if (!selectedBraSize || !selectedPantySize) {
+        setSizeError(true);
+        const sizeSelectorEl = document.getElementById('size-selector');
+        if (sizeSelectorEl) {
+          sizeSelectorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
       }
-      return;
+      finalSize = `Bra: ${selectedBraSize} | Panty: ${selectedPantySize}`;
+    } else {
+      if (sizes.length > 0 && !selectedSize) {
+        setSizeError(true);
+        const sizeSelectorEl = document.getElementById('size-selector');
+        if (sizeSelectorEl) {
+          sizeSelectorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
+      finalSize = selectedSize || 'Free Size';
     }
     setSizeError(false);
 
     const colorName = product.colorConfigs?.[selectedColorIndex]?.name || 'Default';
-    const cartItemId = `${id}-${selectedSize}-${colorName}`;
+    const cartItemId = `${id}-${finalSize}-${colorName}`;
     const buyNowItem = {
       id: cartItemId,
       productId: id,
@@ -232,7 +306,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       price: product.price,
       quantity,
       image: currentImages[0],
-      size: selectedSize,
+      size: finalSize,
       color: colorName
     };
     sessionStorage.setItem('buyNowItem', JSON.stringify(buyNowItem));
@@ -417,53 +491,113 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <div className="space-y-10 pt-4">
 
               {/* Size Selector */}
-              <div id="size-selector" className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-surface-on/40">Select Size</h3>
-                    {sizeError && (
-                      <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest animate-pulse">
-                        (Select size first)
-                      </span>
+              {isBraPantyCombo ? (
+                <div id="size-selector" className="space-y-6 p-5 rounded-2xl bg-[#fff5f7] border border-[#944555]/20 shadow-xs">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xs font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
+                        <span>👙</span> Select Both Bra & Panty Sizes
+                      </h3>
+                      {sizeError && (
+                        <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest animate-pulse">
+                          (Select both sizes to continue)
+                        </span>
+                      )}
+                    </div>
+                    {product.sizeGuide && (
+                      <button 
+                        onClick={() => setShowSizeGuide(true)}
+                        className="text-[10px] font-bold uppercase tracking-widest text-primary underline flex items-center gap-1 hover:text-primary/70"
+                      >
+                        <span className="material-symbols-outlined text-sm">straighten</span>
+                        Size Guide
+                      </button>
                     )}
                   </div>
-                  {(product.sizeGuide || sizes.length > 0) && (
-                    <button 
-                      onClick={() => setShowSizeGuide(true)}
-                      className="text-[10px] font-bold uppercase tracking-widest text-primary underline underline-offset-4 flex items-center gap-1 hover:text-primary/70 transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-sm">straighten</span>
-                      Size Guide
-                    </button>
-                  )}
+
+                  {/* 1. Bra Size Selector */}
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-stone-500 block">1. Select Bra Size:</span>
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                      {braSizeOptions.map((bSize: string) => (
+                        <button
+                          key={bSize}
+                          type="button"
+                          onClick={() => { setSelectedBraSize(bSize); setSizeError(false); }}
+                          className={`py-2.5 rounded-xl text-xs font-bold transition-all border ${selectedBraSize === bSize ? 'bg-primary text-white border-primary shadow-md scale-[1.03]' : 'bg-white text-stone-700 border-stone-200 hover:border-primary/40'}`}
+                        >
+                          {bSize}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 2. Panty Size Selector */}
+                  <div className="space-y-2 pt-3 border-t border-[#944555]/10">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-stone-500 block">2. Select Panty Size:</span>
+                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                      {pantySizeOptions.map((pSize: string) => (
+                        <button
+                          key={pSize}
+                          type="button"
+                          onClick={() => { setSelectedPantySize(pSize); setSizeError(false); }}
+                          className={`py-2.5 rounded-xl text-xs font-bold transition-all border ${selectedPantySize === pSize ? 'bg-primary text-white border-primary shadow-md scale-[1.03]' : 'bg-white text-stone-700 border-stone-200 hover:border-primary/40'}`}
+                        >
+                          {pSize}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="grid grid-cols-4 gap-3">
-                  {sizes.map((size: string) => {
-                    const isAvailable = availableSizes.includes(size);
-                    return (
+              ) : (
+                <div id="size-selector" className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-surface-on/40">Select Size</h3>
+                      {sizeError && (
+                        <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest animate-pulse">
+                          (Select size first)
+                        </span>
+                      )}
+                    </div>
+                    {(product.sizeGuide || sizes.length > 0) && (
                       <button 
-                        key={size}
-                        disabled={!isAvailable}
-                        onClick={() => {
-                          setSelectedSize(size);
-                          setSizeError(false);
-                        }}
-                        className={`py-4 rounded-xl text-sm transition-all border ${
-                          !isAvailable 
-                            ? 'border-stone-200/40 text-surface-on-variant/30 opacity-30 cursor-not-allowed line-through bg-stone-50/20' 
-                            : selectedSize === size 
-                              ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' 
-                              : sizeError 
-                                ? 'border-red-400 text-red-500 bg-red-50/5 hover:border-red-500 animate-pulse' 
-                                : 'border-primary/10 text-surface-on-variant hover:border-primary/40'
-                        }`}
+                        onClick={() => setShowSizeGuide(true)}
+                        className="text-[10px] font-bold uppercase tracking-widest text-primary underline underline-offset-4 flex items-center gap-1 hover:text-primary/70 transition-colors"
                       >
-                        {size}
+                        <span className="material-symbols-outlined text-sm">straighten</span>
+                        Size Guide
                       </button>
-                    );
-                  })}
+                    )}
+                  </div>
+                  <div className="grid grid-cols-4 gap-3">
+                    {sizes.map((size: string) => {
+                      const isAvailable = availableSizes.includes(size);
+                      return (
+                        <button 
+                          key={size}
+                          disabled={!isAvailable}
+                          onClick={() => {
+                            setSelectedSize(size);
+                            setSizeError(false);
+                          }}
+                          className={`py-4 rounded-xl text-sm transition-all border ${
+                            !isAvailable 
+                              ? 'border-stone-200/40 text-surface-on-variant/30 opacity-30 cursor-not-allowed line-through bg-stone-50/20' 
+                              : selectedSize === size 
+                                ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20' 
+                                : sizeError 
+                                  ? 'border-red-400 text-red-500 bg-red-50/5 hover:border-red-500 animate-pulse' 
+                                  : 'border-primary/10 text-surface-on-variant hover:border-primary/40'
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Quantity + Action Buttons */}
               <div className="flex flex-col gap-5 pt-4">
