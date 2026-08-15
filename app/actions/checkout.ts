@@ -203,6 +203,34 @@ export async function validateCoupon(code: string, cartTotal: number, items?: an
       for (let i = 2; i < expandedCart.length; i += 3) {
         discountAmount += expandedCart[i];
       }
+    } else if (coupon.discount_type === 'combo') {
+      const minCount = rawCoupon.min_items_count || 2;
+      const comboPrice = Number(rawCoupon.value) || 0;
+      const expandedCart: number[] = [];
+      if (Array.isArray(items)) {
+        items.forEach(item => {
+          const qty = Number(item.quantity) || 1;
+          const price = Number(item.price) || 0;
+          for (let i = 0; i < qty; i++) expandedCart.push(price);
+        });
+      }
+      if (expandedCart.length < minCount) {
+        return { error: `Combo offer requires at least ${minCount} items in your cart.` };
+      }
+      expandedCart.sort((a, b) => b - a);
+      const topItemsSum = expandedCart.slice(0, minCount).reduce((a, b) => a + b, 0);
+      if (topItemsSum > comboPrice) {
+        discountAmount = topItemsSum - comboPrice;
+      }
+    } else if (coupon.discount_type === 'quantity_discount') {
+      const minCount = rawCoupon.min_items_count || 2;
+      const totalItemsCount = Array.isArray(items) 
+        ? items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0) 
+        : 0;
+      if (totalItemsCount < minCount) {
+        return { error: `Quantity offer requires at least ${minCount} items in your cart.` };
+      }
+      discountAmount = Number(coupon.discount_value);
     } else if (coupon.discount_type === 'freeship') {
       discountAmount = 0;
     }
