@@ -89,8 +89,10 @@ const Navbar = () => {
             height={12} 
             className="brightness-0 invert opacity-80"
           />
-          <p className="text-[8px] md:text-[10px] font-bold uppercase tracking-[0.05em] md:tracking-[0.3em] text-white animate-pulse whitespace-nowrap overflow-hidden text-ellipsis">
-            Ethereal Comfort: Free Shipping all over Kerala
+          <p className="text-[10px] md:text-xs font-display font-medium text-white tracking-[0.2em] uppercase flex items-center gap-2">
+            <span>Free Shipping All Over Kerala</span>
+            <span>•</span>
+            <span className="font-black bg-white/20 px-2.5 py-0.5 rounded-full text-amber-200 animate-pulse border border-white/30">🎁 BUY 1 GET 1 FREE (CODE: BOGO)</span>
           </p>
         </div>
 

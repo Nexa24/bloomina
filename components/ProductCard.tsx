@@ -35,9 +35,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ id, title, price, comparePric
           fill
           className="object-cover transition-transform duration-700 group-hover:scale-105"
         />
-        <div className="absolute top-4 left-4">
+        <div className="absolute top-4 left-4 flex flex-col items-start gap-1">
           <span className="bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] text-primary border border-white/50">
             {category}
+          </span>
+          <span className="bg-[#944555] text-white px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-md animate-pulse">
+            BOGO 1+1 FREE
           </span>
         </div>
         <button 

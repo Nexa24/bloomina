@@ -64,13 +64,49 @@ const CouponSection: React.FC<CouponSectionProps> = ({ cartTotal, onApply, onRem
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      {/* Active Offer Banner */}
+      <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/40 p-3.5 rounded-2xl space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-base">🎁</span>
+            <div>
+              <p className="text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-tight">Active Offer: BUY 1 GET 1 FREE</p>
+              <p className="text-[10px] font-bold text-amber-700/80 dark:text-amber-400/80 uppercase">Code: BOGO (Get 2nd item 100% FREE)</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={async () => {
+              setCouponCode('BOGO');
+              setIsLoading(true);
+              setError(null);
+              try {
+                const res = await validateCoupon('BOGO', cartTotal);
+                if (res.success && res.coupon) {
+                  onApply({ code: res.coupon.code, discountAmount: res.coupon.discountAmount });
+                } else {
+                  setError(res.error || 'Failed to apply BOGO.');
+                }
+              } catch (e) {
+                setError('Error applying BOGO offer.');
+              } finally {
+                setIsLoading(false);
+              }
+            }}
+            className="bg-[#944555] hover:bg-[#7d3a47] text-white px-3.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm shrink-0"
+          >
+            Apply Code
+          </button>
+        </div>
+      </div>
+
       <div className="relative">
         <input 
           type="text"
           value={couponCode}
           onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-          placeholder="ENTER COUPON CODE"
+          placeholder="ENTER COUPON CODE (E.G. BOGO)"
           className="w-full bg-stone-50 border-none rounded-2xl px-6 py-4 text-[11px] font-bold tracking-widest focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-stone-300 uppercase"
         />
         <button 
