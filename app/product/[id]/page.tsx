@@ -88,11 +88,12 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     fetchProduct();
   }, [id]);
 
-  // Dynamically get all product images across all color variants
+  // Dynamically get all product images across all color variants and bundled combo items
   const currentImages = useMemo(() => {
     if (!product) return [];
     const mainImgs: string[] = Array.isArray(product.images) ? product.images : [];
     const configImgs: string[] = [];
+    const bundledImgs: string[] = [];
     
     // Add selected color images first
     const selectedConfig = product.colorConfigs?.[selectedColorIndex];
@@ -109,9 +110,29 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       });
     }
 
-    const combined = [...configImgs, ...mainImgs].filter(Boolean);
+    // Collect all images from bundled combo items
+    if (Array.isArray(bundledProducts)) {
+      bundledProducts.forEach((bItem: any) => {
+        if (Array.isArray(bItem.images)) {
+          bundledImgs.push(...bItem.images);
+        }
+        if (bItem.image) {
+          bundledImgs.push(bItem.image);
+        }
+        const bConfigs = bItem.color_configs || bItem.colorConfigs || [];
+        if (Array.isArray(bConfigs)) {
+          bConfigs.forEach((bColor: any) => {
+            if (Array.isArray(bColor?.images)) {
+              bundledImgs.push(...bColor.images);
+            }
+          });
+        }
+      });
+    }
+
+    const combined = [...configImgs, ...mainImgs, ...bundledImgs].filter(Boolean);
     return Array.from(new Set(combined));
-  }, [product, selectedColorIndex]);
+  }, [product, selectedColorIndex, bundledProducts]);
 
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
