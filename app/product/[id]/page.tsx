@@ -75,14 +75,29 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     fetchProduct();
   }, [id]);
 
-  // Dynamically get images based on selected color
+  // Dynamically get all product images across all color variants
   const currentImages = useMemo(() => {
     if (!product) return [];
-    const config = product.colorConfigs?.[selectedColorIndex];
-    if (config && config.images && config.images.length > 0) {
-      return config.images;
+    const mainImgs: string[] = Array.isArray(product.images) ? product.images : [];
+    const configImgs: string[] = [];
+    
+    // Add selected color images first
+    const selectedConfig = product.colorConfigs?.[selectedColorIndex];
+    if (selectedConfig && Array.isArray(selectedConfig.images)) {
+      configImgs.push(...selectedConfig.images);
     }
-    return product.images || [];
+    
+    // Collect all other color images
+    if (Array.isArray(product.colorConfigs)) {
+      product.colorConfigs.forEach((c: any, idx: number) => {
+        if (idx !== selectedColorIndex && Array.isArray(c?.images)) {
+          configImgs.push(...c.images);
+        }
+      });
+    }
+
+    const combined = [...configImgs, ...mainImgs].filter(Boolean);
+    return Array.from(new Set(combined));
   }, [product, selectedColorIndex]);
 
   const [touchStart, setTouchStart] = useState<number | null>(null);
