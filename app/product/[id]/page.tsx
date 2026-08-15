@@ -27,6 +27,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const { addItem } = useCart();
   const router = useRouter();
 
+  const [bundledProducts, setBundledProducts] = useState<any[]>([]);
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -61,6 +63,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           
           if (guideData) {
             productData.sizeGuide = guideData;
+          }
+        }
+
+        // Fetch bundled combo products if this is a combo product
+        if (productData.is_combo && Array.isArray(productData.bundled_product_ids) && productData.bundled_product_ids.length > 0) {
+          const { data: bundledData } = await supabase
+            .from('products')
+            .select('*')
+            .in('id', productData.bundled_product_ids);
+          if (bundledData) {
+            setBundledProducts(bundledData);
           }
         }
 
@@ -342,6 +355,42 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <p className="text-surface-on-variant font-light leading-relaxed text-base max-w-lg">
               {product.description}
             </p>
+
+            {/* Auto-Loaded Combo Products Showcase */}
+            {bundledProducts.length > 0 && (
+              <div className="p-5 rounded-2xl bg-stone-50 border border-stone-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-primary flex items-center gap-2">
+                    <span className="material-symbols-outlined text-base">package_2</span>
+                    Included Items in this Combo Bundle ({bundledProducts.length} Products)
+                  </h3>
+                  <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 uppercase">
+                    Special Combo Price
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {bundledProducts.map((item: any) => (
+                    <div key={item.id} className="p-3 bg-white rounded-xl border border-stone-200 flex items-center gap-3 shadow-xs">
+                      <div className="relative w-12 h-14 rounded-lg overflow-hidden shrink-0 bg-stone-100 border border-stone-200">
+                        {item.images?.[0] && (
+                          <Image src={item.images[0]} alt={item.name} fill className="object-cover" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-surface-on truncate">{item.name}</p>
+                        <p className="text-[10px] text-stone-500 font-medium">Original Individual Price: ₹{item.price}</p>
+                        {item.colorConfigs?.[0] && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <span className="w-2.5 h-2.5 rounded-full border border-black/10" style={{ backgroundColor: item.colorConfigs[0].hex }} />
+                            <span className="text-[9px] text-stone-400 font-bold uppercase">{item.colorConfigs[0].name}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Selection Controls */}
             <div className="space-y-10 pt-4">
