@@ -190,23 +190,35 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
     return isComboSpec || mentionsBoth || (hasBraItem && hasPantyItem);
   }, [product, bundledProducts]);
 
+  const braItem = useMemo(() => {
+    return bundledProducts.find(p => (p.name || '').toLowerCase().includes('bra'));
+  }, [bundledProducts]);
+
+  const pantyItem = useMemo(() => {
+    return bundledProducts.find(p => (p.name || '').toLowerCase().includes('panty') || (p.name || '').toLowerCase().includes('panties') || (p.name || '').toLowerCase().includes('brief') || (p.name || '').toLowerCase().includes('hipster'));
+  }, [bundledProducts]);
+
   const braSizeOptions = useMemo(() => {
-    const braItem = bundledProducts.find(p => (p.name || '').toLowerCase().includes('bra'));
     if (braItem) {
       const v = braItem.variants?.find((varItem: any) => varItem.name === 'Size');
       if (v?.values?.length > 0) return v.values;
     }
+    const mainSizes = product?.variants?.find((v: any) => v.name === 'Size')?.values || [];
+    const braMatches = mainSizes.filter((s: string) => /\d/.test(s));
+    if (braMatches.length > 0) return braMatches;
     return ['32A', '32B', '34A', '34B', '34C', '36A', '36B', '36C', '38B', '38C', '40B'];
-  }, [bundledProducts]);
+  }, [braItem, product]);
 
   const pantySizeOptions = useMemo(() => {
-    const pantyItem = bundledProducts.find(p => (p.name || '').toLowerCase().includes('panty') || (p.name || '').toLowerCase().includes('panties') || (p.name || '').toLowerCase().includes('brief'));
     if (pantyItem) {
       const v = pantyItem.variants?.find((varItem: any) => varItem.name === 'Size');
       if (v?.values?.length > 0) return v.values;
     }
+    const mainSizes = product?.variants?.find((v: any) => v.name === 'Size')?.values || [];
+    const pantyMatches = mainSizes.filter((s: string) => !/\d/.test(s));
+    if (pantyMatches.length > 0) return pantyMatches;
     return ['S', 'M', 'L', 'XL', '2XL'];
-  }, [bundledProducts]);
+  }, [pantyItem, product]);
 
   const guideSizes = useMemo(() => {
     if (!product?.sizeGuide?.chart_data) return [];
@@ -515,16 +527,28 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     )}
                   </div>
 
-                  {/* 1. Bra Size Selector */}
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-stone-500 block">1. Select Bra Size:</span>
+                  {/* 1. Bra Size Selector Card */}
+                  <div className={`p-4 rounded-xl border transition-all ${sizeError && !selectedBraSize ? 'bg-red-50/70 border-red-300 animate-pulse' : 'bg-white border-stone-200/80'}`}>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <div className="flex items-center gap-2 min-w-0 pr-2">
+                        {braItem?.images?.[0] && (
+                          <img src={braItem.images[0]} alt="" className="w-7 h-7 rounded object-cover border border-stone-200 shrink-0" />
+                        )}
+                        <span className="text-xs font-black uppercase tracking-wider text-stone-800 truncate">
+                          1. Bra Size {braItem?.name ? `(${braItem.name})` : ''}
+                        </span>
+                      </div>
+                      <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full shrink-0 ${selectedBraSize ? 'bg-primary/10 text-primary' : 'bg-red-100 text-red-600'}`}>
+                        {selectedBraSize ? `Size: ${selectedBraSize}` : 'Select Size'}
+                      </span>
+                    </div>
                     <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                       {braSizeOptions.map((bSize: string) => (
                         <button
                           key={bSize}
                           type="button"
                           onClick={() => { setSelectedBraSize(bSize); setSizeError(false); }}
-                          className={`py-2.5 rounded-xl text-xs font-bold transition-all border ${selectedBraSize === bSize ? 'bg-primary text-white border-primary shadow-md scale-[1.03]' : 'bg-white text-stone-700 border-stone-200 hover:border-primary/40'}`}
+                          className={`py-2.5 rounded-xl text-xs font-bold transition-all border ${selectedBraSize === bSize ? 'bg-primary text-white border-primary shadow-md scale-[1.03]' : 'bg-stone-50 text-stone-700 border-stone-200 hover:border-primary/40'}`}
                         >
                           {bSize}
                         </button>
@@ -532,16 +556,28 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     </div>
                   </div>
 
-                  {/* 2. Panty Size Selector */}
-                  <div className="space-y-2 pt-3 border-t border-[#944555]/10">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-stone-500 block">2. Select Panty Size:</span>
+                  {/* 2. Panty Size Selector Card */}
+                  <div className={`p-4 rounded-xl border transition-all ${sizeError && !selectedPantySize ? 'bg-red-50/70 border-red-300 animate-pulse' : 'bg-white border-stone-200/80'}`}>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <div className="flex items-center gap-2 min-w-0 pr-2">
+                        {pantyItem?.images?.[0] && (
+                          <img src={pantyItem.images[0]} alt="" className="w-7 h-7 rounded object-cover border border-stone-200 shrink-0" />
+                        )}
+                        <span className="text-xs font-black uppercase tracking-wider text-stone-800 truncate">
+                          2. Panty Size {pantyItem?.name ? `(${pantyItem.name})` : ''}
+                        </span>
+                      </div>
+                      <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full shrink-0 ${selectedPantySize ? 'bg-primary/10 text-primary' : 'bg-red-100 text-red-600'}`}>
+                        {selectedPantySize ? `Size: ${selectedPantySize}` : 'Select Size'}
+                      </span>
+                    </div>
                     <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
                       {pantySizeOptions.map((pSize: string) => (
                         <button
                           key={pSize}
                           type="button"
                           onClick={() => { setSelectedPantySize(pSize); setSizeError(false); }}
-                          className={`py-2.5 rounded-xl text-xs font-bold transition-all border ${selectedPantySize === pSize ? 'bg-primary text-white border-primary shadow-md scale-[1.03]' : 'bg-white text-stone-700 border-stone-200 hover:border-primary/40'}`}
+                          className={`py-2.5 rounded-xl text-xs font-bold transition-all border ${selectedPantySize === pSize ? 'bg-primary text-white border-primary shadow-md scale-[1.03]' : 'bg-stone-50 text-stone-700 border-stone-200 hover:border-primary/40'}`}
                         >
                           {pSize}
                         </button>
