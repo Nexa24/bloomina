@@ -437,10 +437,12 @@ const Navbar = () => {
 
           <div className="mt-auto space-y-8 pt-12 border-t border-primary/5">
             <div className="flex flex-col gap-4">
-              <Link href="/account" className="text-xs font-bold uppercase tracking-widest text-surface-on/40 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>My Account</Link>
-              <Link href="/size-guide" className="text-xs font-bold uppercase tracking-widest text-surface-on/40 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Size Guide</Link>
-              <Link href="/contact" className="text-xs font-bold uppercase tracking-widest text-surface-on/40 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Contact Us</Link>
-              <Link href="/feedback" className="text-xs font-bold uppercase tracking-widest text-surface-on/40 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Feedback</Link>
+              <Link href="/" className="text-xs font-bold uppercase tracking-widest text-surface-on/60 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Home</Link>
+              <Link href="/about" className="text-xs font-bold uppercase tracking-widest text-surface-on/60 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>About Us</Link>
+              <Link href="/account" className="text-xs font-bold uppercase tracking-widest text-surface-on/60 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>My Account</Link>
+              <Link href="/size-guide" className="text-xs font-bold uppercase tracking-widest text-surface-on/60 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Size Guide</Link>
+              <Link href="/contact" className="text-xs font-bold uppercase tracking-widest text-surface-on/60 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Contact Us</Link>
+              <Link href="/feedback" className="text-xs font-bold uppercase tracking-widest text-surface-on/60 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Feedback</Link>
             </div>
             <p className="text-[10px] text-surface-on-variant font-light">
               Crafting elegance since 2026. <br />
@@ -448,6 +450,40 @@ const Navbar = () => {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-stone-200/80 px-4 py-2 flex items-center justify-around shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+        <Link href="/" className={`flex flex-col items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider ${pathname === '/' ? 'text-primary' : 'text-stone-500'}`}>
+          <span className="material-symbols-outlined text-xl" aria-hidden="true">home</span>
+          <span>Home</span>
+        </Link>
+        <Link href="/products" className={`flex flex-col items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider ${pathname?.startsWith('/category') || pathname === '/products' ? 'text-primary' : 'text-stone-500'}`}>
+          <span className="material-symbols-outlined text-xl" aria-hidden="true">grid_view</span>
+          <span>Shop</span>
+        </Link>
+        <Link href="/wishlist" className={`flex flex-col items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider relative ${pathname === '/wishlist' ? 'text-primary' : 'text-stone-500'}`}>
+          <span className="material-symbols-outlined text-xl" aria-hidden="true">favorite</span>
+          <span>Wishlist</span>
+          {isMounted && wishlistCount > 0 && (
+            <span className="absolute -top-1 right-1 min-w-3.5 h-3.5 px-1 bg-primary text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+              {wishlistCount}
+            </span>
+          )}
+        </Link>
+        <Link href="/account" className={`flex flex-col items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider ${pathname === '/account' ? 'text-primary' : 'text-stone-500'}`}>
+          <span className="material-symbols-outlined text-xl" aria-hidden="true">person</span>
+          <span>Account</span>
+        </Link>
+        <Link href="/cart" className={`flex flex-col items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider relative ${pathname === '/cart' ? 'text-primary' : 'text-stone-500'}`}>
+          <span className="material-symbols-outlined text-xl" aria-hidden="true">shopping_cart</span>
+          <span>Cart</span>
+          {isMounted && cartCount > 0 && (
+            <span className="absolute -top-1 right-1 min-w-3.5 h-3.5 px-1 bg-primary text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+              {cartCount}
+            </span>
+          )}
+        </Link>
       </div>
     </>
   );

@@ -151,7 +151,7 @@ export default function ProductReviews({ productId, title = "Customer Feedback" 
               ))}
             </div>
             <p className="text-xs font-bold uppercase tracking-widest text-stone-400">
-              Based on {reviews.length} approved {reviews.length === 1 ? 'review' : 'reviews'}
+              {reviews.length} approved {reviews.length === 1 ? 'review' : 'reviews'}
             </p>
 
             {reviewsWithSubs.length > 0 && (

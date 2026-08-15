@@ -73,20 +73,20 @@ const SignatureSection = () => {
   if (products.length === 0) return null;
 
   return (
-    <section className="max-w-screen-xl mx-auto px-6 py-8 md:py-12 border-t border-stone-100">
-      <div className="text-center mb-16 md:mb-20 space-y-4">
+    <section className="max-w-screen-xl mx-auto px-6 py-6 md:py-10 border-t border-stone-100">
+      <div className="text-center mb-8 md:mb-12 space-y-3">
         <ScrollReveal variant="fade" duration={600}>
           <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">
-            Intimate Masterpieces
+            Customer Favorites
           </span>
         </ScrollReveal>
         <ScrollReveal variant="slide-up" delay={150} duration={800}>
-          <h2 className="text-4xl md:text-5xl font-display font-light text-surface-on tracking-tight leading-tight">
-            The <span className="italic text-primary">Signature</span> Collection
+          <h2 className="text-3xl md:text-5xl font-display font-light text-surface-on tracking-tight leading-tight">
+            Our <span className="italic text-primary">Bestsellers</span>
           </h2>
         </ScrollReveal>
         <ScrollReveal variant="slide-up" delay={250} duration={800}>
-          <p className="text-stone-400 font-light max-w-md mx-auto text-xs md:text-sm leading-relaxed mt-2">
+          <p className="text-stone-400 font-light max-w-md mx-auto text-xs md:text-sm leading-relaxed mt-1">
             Experience our most celebrated selections. Hand-crafted from ultra-soft fabrics to embrace your natural shape with seamless grace.
           </p>
         </ScrollReveal>

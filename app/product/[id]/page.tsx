@@ -286,16 +286,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           {/* Right: Product Details */}
           <div className="flex flex-col space-y-8 py-4 w-full min-w-0">
             <div className="space-y-3">
-              <div className="flex items-center gap-2 overflow-hidden">
-                <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary whitespace-nowrap">{mainCat}</span>
-                {subCat && (
-                  <>
-                    <span className="text-[10px] font-bold text-primary/20">/</span>
-                    <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary/60 whitespace-nowrap">{subCat}</span>
-                  </>
-                )}
-              </div>
-              <h1 className="text-3xl md:text-4xl font-sans font-medium text-surface-on tracking-tight leading-tight capitalize">
+              <h1 className="text-3xl md:text-4xl font-sans font-bold text-surface-on tracking-tight leading-tight capitalize">
                 {product.name}
               </h1>
               <div className="flex items-baseline gap-3">

@@ -71,7 +71,7 @@ export async function getCheckoutConfig() {
   };
 }
 
-export async function validateCoupon(code: string, cartTotal: number) {
+export async function validateCoupon(code: string, cartTotal: number, items?: any[]) {
   try {
     const supabase = createAdminClient();
     const normalizedCode = cleanText(code, 'Coupon code', 64).toUpperCase();
@@ -84,6 +84,35 @@ export async function validateCoupon(code: string, cartTotal: number) {
       .single();
 
     if (error || !rawCoupon) {
+      // Check hardcoded promo code aliases if not found in database
+      if (normalizedCode === 'BOGO' || normalizedCode === 'BUY1GET1') {
+        const expandedCart: number[] = [];
+        if (Array.isArray(items)) {
+          items.forEach(item => {
+            const qty = Number(item.quantity) || 1;
+            const price = Number(item.price) || 0;
+            for (let i = 0; i < qty; i++) expandedCart.push(price);
+          });
+        }
+        if (expandedCart.length < 2) {
+          return { error: 'BOGO offer requires at least 2 items in your cart.' };
+        }
+        expandedCart.sort((a, b) => b - a);
+        let bogoDiscount = 0;
+        for (let i = 1; i < expandedCart.length; i += 2) {
+          bogoDiscount += expandedCart[i];
+        }
+        return {
+          success: true,
+          coupon: {
+            id: 'bogo-promo',
+            code: normalizedCode,
+            type: 'bogo',
+            value: 100,
+            discountAmount: Math.min(bogoDiscount, cartTotal)
+          }
+        };
+      }
       return { error: 'Invalid coupon code.' };
     }
 
@@ -111,7 +140,7 @@ export async function validateCoupon(code: string, cartTotal: number) {
         ? 'fixed'
         : (rawCoupon.discount_type === 'percent' || rawCoupon.type === 'percent' || rawCoupon.discount_type === 'percentage' || rawCoupon.type === 'percentage')
           ? 'percentage'
-          : rawCoupon.discount_type || rawCoupon.type,
+          : (rawCoupon.discount_type || rawCoupon.type || '').toLowerCase(),
       discount_value: (rawCoupon.discount_value !== null && rawCoupon.discount_value !== undefined)
         ? Number(rawCoupon.discount_value)
         : Number(rawCoupon.value || 0),
@@ -141,6 +170,38 @@ export async function validateCoupon(code: string, cartTotal: number) {
       discountAmount = (cartTotal * Number(coupon.discount_value)) / 100;
       if (coupon.max_discount) {
         discountAmount = Math.min(discountAmount, Number(coupon.max_discount));
+      }
+    } else if (coupon.discount_type === 'bogo' || coupon.code === 'BOGO' || coupon.code === 'BUY1GET1') {
+      const expandedCart: number[] = [];
+      if (Array.isArray(items)) {
+        items.forEach(item => {
+          const qty = Number(item.quantity) || 1;
+          const price = Number(item.price) || 0;
+          for (let i = 0; i < qty; i++) expandedCart.push(price);
+        });
+      }
+      if (expandedCart.length < 2) {
+        return { error: 'BOGO offer requires at least 2 items in your cart.' };
+      }
+      expandedCart.sort((a, b) => b - a);
+      for (let i = 1; i < expandedCart.length; i += 2) {
+        discountAmount += expandedCart[i];
+      }
+    } else if (coupon.discount_type === 'buy2get1' || coupon.code === 'BUY2GET1') {
+      const expandedCart: number[] = [];
+      if (Array.isArray(items)) {
+        items.forEach(item => {
+          const qty = Number(item.quantity) || 1;
+          const price = Number(item.price) || 0;
+          for (let i = 0; i < qty; i++) expandedCart.push(price);
+        });
+      }
+      if (expandedCart.length < 3) {
+        return { error: 'Buy 2 Get 1 Free offer requires at least 3 items in your cart.' };
+      }
+      expandedCart.sort((a, b) => b - a);
+      for (let i = 2; i < expandedCart.length; i += 3) {
+        discountAmount += expandedCart[i];
       }
     } else if (coupon.discount_type === 'freeship') {
       discountAmount = 0;
@@ -202,7 +263,7 @@ export async function createOrder(data: {
       if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY_PER_ITEM) {
         throw new Error('Invalid item quantity.');
       }
-      const productId = cleanText(item.productId, 'Product ID', 100);
+      const productId = cleanText(item.productId || item.id, 'Product ID', 100);
       const { data: product, error: productError } = await supabase
         .from('products')
         .select('id, name, price')
@@ -210,21 +271,28 @@ export async function createOrder(data: {
         .single();
 
       if (productError || !product) {
-        throw new Error(`Product "${item.name}" not found.`);
+        throw new Error(`Product "${item.name || item.title}" not found.`);
       }
 
       const price = Number(product.price);
       if (!Number.isFinite(price) || price < 0) throw new Error('Product price is invalid.');
       subtotal += price * quantity;
 
+      const itemSize = typeof item.size === 'string' && item.size.trim() ? item.size.trim() : (typeof item.selectedSize === 'string' ? item.selectedSize.trim() : '');
+      const itemColor = typeof item.color === 'string' && item.color.trim() ? item.color.trim() : (typeof item.selectedColor === 'string' ? item.selectedColor.trim() : '');
+
       validatedItems.push({
         id: productId,
+        productId: productId,
         title: product.name,
+        name: product.name,
         price,
         quantity,
         image: typeof item.image === 'string' ? item.image.slice(0, 500) : '',
-        size: typeof item.size === 'string' ? item.size.slice(0, 100) : '',
-        color: typeof item.color === 'string' ? item.color.slice(0, 100) : '',
+        size: itemSize,
+        color: itemColor,
+        selectedSize: itemSize,
+        selectedColor: itemColor,
       });
     }
 
