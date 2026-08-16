@@ -44,9 +44,9 @@ const OtherCategoriesSection = () => {
   if (isLoading || categories.length === 0) return null;
 
   return (
-    <section className="max-w-screen-xl mx-auto px-6 py-8 md:py-12 border-t border-stone-100">
+    <section className="max-w-screen-xl mx-auto px-6 py-4 md:py-6 border-t border-stone-100">
       <ScrollReveal variant="slide-up" duration={800}>
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 gap-4">
           <div>
             <h2 className="text-2xl md:text-3xl font-display font-light uppercase tracking-[0.25em] text-primary">More To Explore</h2>
           </div>

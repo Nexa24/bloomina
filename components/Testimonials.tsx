@@ -70,7 +70,7 @@ export default function Testimonials() {
   const marqueeItemsRow2 = [...testimonials].reverse().concat([...testimonials].reverse(), [...testimonials].reverse());
 
   return (
-    <section className="py-10 md:py-14 bg-stone-50/50 dark:bg-stone-900/10 border-t border-b border-stone-100 overflow-hidden relative">
+    <section className="py-4 md:py-6 bg-stone-50/50 dark:bg-stone-900/10 border-t border-b border-stone-100 overflow-hidden relative">
       <style>{`
         @keyframes marquee {
           0% { transform: translateX(0); }
@@ -92,7 +92,7 @@ export default function Testimonials() {
         }
       `}</style>
 
-      <div className="max-w-screen-xl mx-auto px-6 mb-12">
+      <div className="max-w-screen-xl mx-auto px-6 mb-4">
         <ScrollReveal variant="slide-up" duration={800}>
           <div className="text-center">
             <h2 className="text-2xl md:text-3xl font-display font-light uppercase tracking-[0.25em] text-primary">Voices of Comfort</h2>

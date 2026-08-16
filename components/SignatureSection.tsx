@@ -73,8 +73,8 @@ const SignatureSection = () => {
   if (products.length === 0) return null;
 
   return (
-    <section className="max-w-screen-xl mx-auto px-6 py-6 md:py-10 border-t border-stone-100">
-      <div className="text-center mb-8 md:mb-12 space-y-3">
+    <section className="max-w-screen-xl mx-auto px-6 py-4 md:py-6 border-t border-stone-100">
+      <div className="text-center mb-4 md:mb-6 space-y-2">
         <ScrollReveal variant="fade" duration={600}>
           <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">
             Customer Favorites
@@ -92,7 +92,7 @@ const SignatureSection = () => {
         </ScrollReveal>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12 md:gap-x-8 md:gap-y-16">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6 md:gap-x-6 md:gap-y-8">
         {products.map((product, idx) => (
           <ScrollReveal 
             key={product.id} 
@@ -104,7 +104,7 @@ const SignatureSection = () => {
               href={`/product/${product.slug || product.id}`}
               className="group block"
             >
-              <div className="relative aspect-[3/4] overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-stone-50 mb-4 md:mb-6 petal-shadow transition-all duration-700 group-hover:shadow-[0_40px_80px_-20px_rgba(241,145,161,0.22)]">
+              <div className="relative aspect-[3/4] overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-stone-50 mb-3 md:mb-4 petal-shadow transition-all duration-700 group-hover:shadow-[0_40px_80px_-20px_rgba(241,145,161,0.22)]">
                 <img
                   src={(Array.isArray(product.images) ? product.images[0] : product.images?.[0]?.url) || 'https://via.placeholder.com/600x800'}
                   alt={product.name}
@@ -140,7 +140,7 @@ const SignatureSection = () => {
         ))}
       </div>
 
-      <div className="text-center mt-16 md:mt-20">
+      <div className="text-center mt-6 md:mt-8">
         <ScrollReveal variant="fade" delay={300} duration={800}>
           <Link 
             href="/category/signature"

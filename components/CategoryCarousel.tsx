@@ -155,9 +155,9 @@ export default function CategoryCarousel() {
   if (isLoading || items.length === 0) return null;
 
   return (
-    <section className="max-w-screen-xl mx-auto px-6 py-8 md:py-12">
+    <section className="max-w-screen-xl mx-auto px-6 py-4 md:py-6">
       <ScrollReveal variant="slide-up" duration={800}>
-        <div className="mb-10 text-center md:text-left">
+        <div className="mb-4 text-center md:text-left">
           <h2 className="text-2xl md:text-3xl font-display font-light uppercase tracking-[0.25em] text-primary">Featured Categories</h2>
         </div>
       </ScrollReveal>
@@ -166,7 +166,7 @@ export default function CategoryCarousel() {
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        className="relative flex items-center justify-center h-[260px] md:h-[380px] select-none overflow-hidden py-10"
+        className="relative flex items-center justify-center h-[260px] md:h-[380px] select-none overflow-hidden py-2"
       >
         {/* Navigation Left */}
         {items.length > 1 && (

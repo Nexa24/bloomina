@@ -9,7 +9,7 @@ import Testimonials from "@/components/Testimonials";
 
 export default function Home() {
   return (
-    <div className="pb-16 md:pb-24 overflow-x-hidden">
+    <div className="pb-6 md:pb-8 overflow-x-hidden">
       {/* Hero Section - 16:9 Aspect Ratio on Laptop */}
       <section className="relative w-full aspect-[16/9] max-h-[85vh] flex items-center justify-center overflow-hidden">
         <h1 className="sr-only">Bloomina | Ethereal Comfort & Everyday Essentials</h1>
@@ -20,7 +20,7 @@ export default function Home() {
       <CategorySection />
 
       {/* About Us Section - Clean Editorial Centered Layout */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-stone-50/60 via-white to-white overflow-hidden relative border-y border-stone-100/60">
+      <section className="py-5 md:py-8 bg-gradient-to-b from-stone-50/60 via-white to-white overflow-hidden relative border-y border-stone-100/60">
         <div className="max-w-screen-md mx-auto px-6 text-center space-y-6">
           <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary bg-primary/5 px-4 py-1.5 rounded-full inline-block">
             About Bloomina
