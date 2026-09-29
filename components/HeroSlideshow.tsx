@@ -90,7 +90,12 @@ const HeroSlideshow = () => {
                     {slides.map((_, idx) => (
                         <button
                             key={idx}
-                            onClick={() => setCurrent(idx)}
+                            type="button"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setCurrent(idx);
+                            }}
                             className={`h-1 rounded-full transition-all duration-500 ${
                                 idx === current ? 'w-8 bg-primary' : 'w-2 bg-white/40'
                             }`}

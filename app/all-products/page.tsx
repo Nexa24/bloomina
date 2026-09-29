@@ -1,2 +1,5 @@
-import CategoriesPage from '../products/page';
-export default CategoriesPage;
+import { redirect } from 'next/navigation';
+
+export default function AllProductsPage() {
+  redirect('/category/all');
+}

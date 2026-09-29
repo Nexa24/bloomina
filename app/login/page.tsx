@@ -292,7 +292,17 @@ const LoginContent = () => {
               </form>
             )}
 
-            <div className="mt-12 text-center">
+            <div className="mt-12 text-center space-y-4">
+              {next.startsWith('/checkout') && (
+                <div className="pb-4 border-b border-stone-100">
+                  <Link 
+                    href={next} 
+                    className="w-full inline-block py-4 px-6 rounded-full border border-stone-200 text-stone-700 font-bold uppercase tracking-[0.2em] text-[10px] hover:bg-stone-50 transition-all"
+                  >
+                    Continue as Guest &rarr;
+                  </Link>
+                </div>
+              )}
               <p className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40">
                 New to the Collective? <br />
                 <Link href="/signup" className="text-primary hover:underline underline-offset-4 mt-2 inline-block decoration-1">Join the Sanctuary</Link>

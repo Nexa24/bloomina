@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { createClient } from '@/utils/supabase/client';
 import { useSearchParams } from 'next/navigation';
 import CouponSection from '@/components/CouponSection';
+import TrustBanner from '@/components/TrustBanner';
 
 const INDIAN_STATES = [
   "Kerala",
@@ -109,7 +110,7 @@ const CheckoutPage = () => {
     const applyInitialCoupon = async () => {
       if (initialCouponCode && items.length > 0) {
         const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-        const result = await validateCoupon(initialCouponCode, subtotal);
+        const result = await validateCoupon(initialCouponCode, subtotal, items);
         if (result.success && result.coupon) {
           setAppliedCoupon({
             code: result.coupon.code,
@@ -119,7 +120,7 @@ const CheckoutPage = () => {
       }
     };
     applyInitialCoupon();
-  }, [initialCouponCode, items.length]);
+  }, [initialCouponCode, items]);
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -173,8 +174,22 @@ const CheckoutPage = () => {
   const isKerala = formData.state?.trim().toLowerCase() === 'kerala';
   const shipping = isKerala ? 0 : 80;
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
-  const total = Math.max(0, subtotal - discount + shipping);
-  const isCodEligible = false;
+
+  // Sale% fee: ₹50 per product in sale% category or marked on sale
+  const saleFee = items.reduce((sum, item) => {
+    const isSale = 
+      item.is_sale === true ||
+      (item.comparePrice && Number(item.comparePrice) > Number(item.price)) ||
+      (item.categories && Array.isArray(item.categories) && item.categories.some((c: string) => /sale/i.test(c))) ||
+      (typeof item.category === 'string' && /sale/i.test(item.category));
+    return isSale ? sum + 50 * (Number(item.quantity) || 1) : sum;
+  }, 0);
+
+  // COD fee: ₹50 compulsory fee when paymentMethod is COD
+  const codFee = paymentMethod === 'COD' ? 50 : 0;
+
+  const total = Math.max(0, subtotal - discount + shipping + saleFee + codFee);
+  const payableOnline = paymentMethod === 'COD' ? 50 : total;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -211,13 +226,7 @@ const CheckoutPage = () => {
         return;
       }
 
-      // 2. Handle Success for COD
-      if (result.isCOD) {
-        await finalizeOrder(result.orderId);
-        return;
-      }
-
-      // 3. Handle Razorpay Payment
+      // 2. Both Prepaid and COD (compulsory ₹50 advance payment to confirm COD) go through Razorpay
       const isLoaded = await loadRazorpay();
       if (!isLoaded) {
         throw new Error("Razorpay SDK failed to load. Check your internet connection.");
@@ -228,7 +237,7 @@ const CheckoutPage = () => {
         amount: result.amount,
         currency: result.currency,
         name: "Bloomina",
-        description: "Order Checkout",
+        description: paymentMethod === 'COD' ? "COD Order Confirmation Deposit (₹50)" : "Order Checkout",
         order_id: result.razorpayOrderId,
         handler: async function (response: any) {
           setIsLoading(true);
@@ -242,7 +251,7 @@ const CheckoutPage = () => {
           if (verification.success) {
             await finalizeOrder(result.orderId);
           } else {
-            setError(verification.error || "Payment verification failed");
+            setError(verification.error || "Payment verification failed. Please try again.");
             setIsLoading(false);
           }
         },
@@ -355,7 +364,17 @@ const CheckoutPage = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Email Address</label>
+                  <div className="flex justify-between items-baseline">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-stone-400 ml-1">Email Address</label>
+                    {!user && (
+                      <span className="text-[10px] text-stone-400">
+                        Checking out as <strong className="text-surface-on font-semibold">Guest</strong> &middot;{' '}
+                        <Link href="/login" className="text-primary hover:underline font-semibold">
+                          Sign in
+                        </Link>
+                      </span>
+                    )}
+                  </div>
                   <input 
                     required
                     type="email"
@@ -366,7 +385,11 @@ const CheckoutPage = () => {
                     placeholder="elena@mystic.com"
                     className={`w-full bg-stone-50 border-none rounded-2xl px-6 py-4 text-sm focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-stone-300 ${user ? 'opacity-60 cursor-not-allowed' : ''}`}
                   />
-                  {user && <p className="text-[8px] font-bold text-primary/40 uppercase tracking-widest ml-1">Linked to your sanctuary account</p>}
+                  {user ? (
+                    <p className="text-[8px] font-bold text-primary/40 uppercase tracking-widest ml-1">Linked to your sanctuary account</p>
+                  ) : (
+                    <p className="text-[9px] text-stone-400 font-light ml-1">No account required. We will send your order confirmation and tracking link here.</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -457,14 +480,42 @@ const CheckoutPage = () => {
                   <div className="flex items-center gap-4">
                     <span className={`material-symbols-outlined ${paymentMethod === 'Razorpay' ? 'text-primary' : 'text-stone-400'}`}>payments</span>
                     <div>
-                      <p className={`text-sm font-semibold ${paymentMethod === 'Razorpay' ? 'text-surface-on' : 'text-stone-500'}`}>Pay with Razorpay</p>
-                      <p className="text-[10px] text-stone-400 uppercase tracking-widest">Cards, UPI, Netbanking</p>
+                      <p className={`text-sm font-semibold ${paymentMethod === 'Razorpay' ? 'text-surface-on' : 'text-stone-500'}`}>Pay Online (Prepaid)</p>
+                      <p className="text-[10px] text-stone-400 uppercase tracking-widest">Cards, UPI, Netbanking, Wallets</p>
                     </div>
                   </div>
                   <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${paymentMethod === 'Razorpay' ? 'border-primary' : 'border-stone-200'}`}>
                     {paymentMethod === 'Razorpay' && <div className="w-2.5 h-2.5 rounded-full bg-primary animate-scale-in" />}
                   </div>
                 </div>
+
+                <div 
+                  onClick={() => setPaymentMethod('COD')}
+                  className={`p-6 rounded-2xl border transition-all cursor-pointer flex items-center justify-between ${paymentMethod === 'COD' ? 'bg-primary/5 border-primary/20' : 'bg-stone-50 border-transparent hover:border-stone-100'}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <span className={`material-symbols-outlined ${paymentMethod === 'COD' ? 'text-primary' : 'text-stone-400'}`}>local_shipping</span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className={`text-sm font-semibold ${paymentMethod === 'COD' ? 'text-surface-on' : 'text-stone-500'}`}>Cash on Delivery (COD)</p>
+                        <span className="text-[9px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-full">+₹50 COD Fee</span>
+                      </div>
+                      <p className="text-[10px] text-stone-400 uppercase tracking-widest mt-0.5">₹50 advance payment required to confirm order</p>
+                    </div>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${paymentMethod === 'COD' ? 'border-primary' : 'border-stone-200'}`}>
+                    {paymentMethod === 'COD' && <div className="w-2.5 h-2.5 rounded-full bg-primary animate-scale-in" />}
+                  </div>
+                </div>
+
+                {paymentMethod === 'COD' && (
+                  <div className="p-4 bg-amber-50/80 border border-amber-200/80 rounded-2xl flex items-start gap-3 animate-fade-in">
+                    <span className="material-symbols-outlined text-amber-600 text-lg shrink-0 mt-0.5">info</span>
+                    <p className="text-xs text-amber-900 leading-relaxed font-light">
+                      <strong>Compulsory COD Confirmation:</strong> A non-refundable advance fee of <strong>₹50</strong> will be charged online to confirm your COD order. The balance of <strong>₹{Math.max(0, total - 50).toLocaleString()}</strong> will be payable in cash upon delivery.
+                    </p>
+                  </div>
+                )}
               </div>
             </section>
           </div>
@@ -496,6 +547,7 @@ const CheckoutPage = () => {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-3 ml-1">Have a coupon?</p>
                 <CouponSection 
                   cartTotal={subtotal}
+                  items={items}
                   appliedCoupon={appliedCoupon}
                   onApply={(coupon) => setAppliedCoupon(coupon)}
                   onRemove={() => setAppliedCoupon(null)}
@@ -524,10 +576,44 @@ const CheckoutPage = () => {
                      {shipping === 0 ? 'Free' : `₹${shipping}.00`}
                    </span>
                  </div>
+
+                {saleFee > 0 && (
+                  <div className="flex justify-between text-sm items-center animate-fade-in">
+                    <div>
+                      <span className="text-surface-on-variant">Sale% Category Fee</span>
+                      <p className="text-[9px] text-stone-400 font-light">₹50 per sale product</p>
+                    </div>
+                    <span className="text-surface-on font-medium">₹{saleFee.toLocaleString()}.00</span>
+                  </div>
+                )}
+
+                {paymentMethod === 'COD' && (
+                  <div className="flex justify-between text-sm items-center animate-fade-in">
+                    <div>
+                      <span className="text-surface-on-variant">COD Convenience Fee</span>
+                      <p className="text-[9px] text-stone-400 font-light">Compulsory fee for cash orders</p>
+                    </div>
+                    <span className="text-surface-on font-medium">₹50.00</span>
+                  </div>
+                )}
+
                 <div className="pt-4 flex justify-between items-baseline">
-                  <span className="text-lg font-display text-surface-on">Total</span>
+                  <span className="text-lg font-display text-surface-on">Order Total</span>
                   <span className="text-3xl font-price text-primary font-bold">₹{total.toLocaleString()}</span>
                 </div>
+
+                {paymentMethod === 'COD' && (
+                  <div className="pt-3 border-t border-dashed border-stone-100 space-y-1.5 animate-fade-in">
+                    <div className="flex justify-between text-xs font-semibold text-primary">
+                      <span>Pay Online Now to Confirm (Deposit)</span>
+                      <span>₹50.00</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-stone-500">
+                      <span>Pay in Cash on Delivery</span>
+                      <span>₹{Math.max(0, total - 50).toLocaleString()}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {error && (
@@ -546,7 +632,7 @@ const CheckoutPage = () => {
                   <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
-                    {paymentMethod === 'COD' ? 'Confirm COD Order' : 'Complete Purchase'}
+                    {paymentMethod === 'COD' ? 'Pay ₹50 to Confirm COD' : 'Complete Purchase'}
                     <span className="material-symbols-outlined text-sm">arrow_forward</span>
                   </>
                 )}
@@ -558,19 +644,8 @@ const CheckoutPage = () => {
               </p>
             </div>
 
-            <div className="mt-12 grid grid-cols-3 gap-4 px-4">
-              <div className="flex flex-col items-center gap-2 text-center opacity-40">
-                <span className="material-symbols-outlined text-xl">encrypted</span>
-                <span className="text-[8px] font-bold uppercase tracking-widest">Secure</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 text-center opacity-40">
-                <span className="material-symbols-outlined text-xl">local_shipping</span>
-                <span className="text-[8px] font-bold uppercase tracking-widest">Express</span>
-              </div>
-              <div className="flex flex-col items-center gap-2 text-center opacity-40">
-                <span className="material-symbols-outlined text-xl">workspace_premium</span>
-                <span className="text-[8px] font-bold uppercase tracking-widest">Premium</span>
-              </div>
+            <div className="mt-8 pt-6 border-t border-stone-100">
+              <TrustBanner variant="compact" />
             </div>
           </aside>
         </form>

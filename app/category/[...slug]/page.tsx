@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import ProductCard from '@/components/ProductCard';
 
 // Each sub-category has a dbNames array: all possible values stored in the DB
 // that should be treated as this sub-category (covers renamed/legacy tags)
@@ -17,23 +18,31 @@ const categoryMap: { [key: string]: CategoryEntry } = {
     subs: [
       {
         name: 'Padded Bras', slug: 'padded-bras',
-        dbNames: ['Padded Bras', 'Padded', 'PADDED BRAS', 'padded-bras'],
+        dbNames: ['Padded Bras', 'Padded', 'PADDED BRAS', 'padded-bras', 'PADDED', 'PADDED T-SHIRT BRAS'],
       },
       {
-        name: 'Non-Padded', slug: 'non-padded',
-        dbNames: ['Non-Padded', 'NON-PADDED', 'non-padded', 'Non Padded'],
+        name: 'Non-Padded Bras', slug: 'non-padded',
+        dbNames: ['Non-Padded', 'NON-PADDED', 'non-padded', 'Non Padded', 'Non-Padded Bras'],
       },
       {
-        name: 'Full Coverage', slug: 'full-coverage-bras',
+        name: 'T-Shirt Bras', slug: 't-shirt-bras',
+        dbNames: ['T-Shirt Bras', 'T-SHIRT BRAS', 't-shirt-bras', 'T Shirt Bras', 'PADDED T-SHIRT BRAS'],
+      },
+      {
+        name: 'Full Coverage Bras', slug: 'full-coverage-bras',
         dbNames: ['Full Coverage', 'FULL COVERAGE BRAS', 'full-coverage-bras', 'Full Coverage Bras'],
       },
       {
-        name: 'Feeding & Maternity', slug: 'feeding-maternity-bras',
-        dbNames: ['Feeding & Maternity', 'FEEDING / MATERNITY BRAS', 'feeding-maternity-bras', 'Maternity Bras', 'Nursing Bras'],
+        name: 'Everyday Essentials', slug: 'everyday-essentials',
+        dbNames: ['EVERYDAY ESSENTIALS', 'Everyday Essentials', 'EVERYDAY COMFORT BRAS', 'everyday-essentials'],
       },
       {
         name: 'Minimizer Bras', slug: 'minimizer-bra',
         dbNames: ['Minimizer Bras', 'MINIMIZER BRA', 'minimizer-bra', 'Minimizer Bra'],
+      },
+      {
+        name: 'Teenager Bra', slug: 'teenager-bra',
+        dbNames: ['TEENAGER BRA', 'Teenager Bra', 'teenager-bra'],
       }
     ],
   },
@@ -42,29 +51,43 @@ const categoryMap: { [key: string]: CategoryEntry } = {
     dbName: 'Panties',
     subs: [
       {
-        name: 'Seamless Panties', slug: 'seamless',
-        dbNames: ['Seamless', 'Seamless Panties', 'Seamless Invisibles', 'seamless'],
+        name: 'Cotton Lycra Panties', slug: 'cotton-lycra',
+        dbNames: ['COTTON LYCRA PANTIES', 'COTTON LYCRA', 'cotton-lycra', 'Cotton Lycra Panties', 'Cotton Lycra'],
       },
       {
-        name: 'High-Waist Panties', slug: 'high-waisted',
-        dbNames: ['High-Waisted', 'High-Waist Panties', 'High-Waist Luxe', 'high-waisted', 'High Waist', 'Hipsters'],
+        name: 'Modal Panties', slug: 'modal-panties',
+        dbNames: ['MODAL PANTIES', 'modal-panties', 'Modal Panties', 'Modal'],
       },
       {
-        name: 'Bikini Panties', slug: 'bikini-panties',
-        dbNames: ['Bikini Panties', 'Bikini Bliss', 'bikini-panties', 'Bikini'],
-      },
-      {
-        name: 'Thongs', slug: 'thongs',
-        dbNames: ['Thongs', 'Thongs & V-Strings', 'thongs', 'Thong'],
-      },
-      {
-        name: 'Period Panties', slug: 'period-panties',
-        dbNames: ['Period Panties', 'Period Care', 'period-panties'],
+        name: 'Everyday Essentials', slug: 'everyday-essentials',
+        dbNames: ['EVERYDAY ESSENTIALS', 'Everyday Essentials', 'everyday-essentials'],
       }
     ],
   },
   'sale': {
-    label: 'Sale%',
+    label: 'Offers%',
+    dbName: 'Sale%',
+    subs: [
+      {
+        name: 'Bras on Sale', slug: 'bras',
+        dbNames: ['Bras on Sale', 'Sale Bras', 'bras-on-sale'],
+      },
+      {
+        name: 'Panties on Sale', slug: 'panties',
+        dbNames: ['Panties on Sale', 'Sale Panties', 'panties-on-sale'],
+      },
+      {
+        name: 'Combo Pack Offers', slug: 'combos',
+        dbNames: ['Combo Pack Offers', 'Combo Packs on Sale', 'combos-on-sale'],
+      },
+      {
+        name: 'Clearance', slug: 'clearance',
+        dbNames: ['Clearance', 'Clearance Sale', 'clearance-sale'],
+      },
+    ],
+  },
+  'offers': {
+    label: 'Offers%',
     dbName: 'Sale%',
     subs: [
       {
@@ -118,8 +141,19 @@ const categoryMap: { [key: string]: CategoryEntry } = {
     ],
   },
   'bestsellers': { label: 'Bestsellers', dbName: 'Bestsellers' },
+  'new-arrivals':{ label: 'New Arrivals', dbName: 'New Arrivals' },
+  'signature':   { label: 'Signature Collection', dbName: 'Signature Collection' },
+  'buy-1-get-1': { label: 'Buy 1 Get 1', dbName: 'BOGO' },
+  'bogo':        { label: 'Buy 1 Get 1', dbName: 'BOGO' },
   'combos':      { label: 'Combo Packs', dbName: 'Combo Packs' },
-  'signature':   { label: 'Signature Collection', dbName: 'Signature' },
+  'all': {
+    label: 'All Products',
+    dbName: 'All',
+    subs: [
+      { name: 'Bras', slug: 'bras', dbNames: ['Bras', 'BRAS', 'bras'] },
+      { name: 'Panties', slug: 'panties', dbNames: ['Panties', 'PANTIES', 'panties'] },
+    ],
+  },
 };
 
 const CategoryPage = () => {
@@ -128,23 +162,62 @@ const CategoryPage = () => {
   const slugArray = params.slug as string[];
   const mainSlug = slugArray?.[0] || '';
   const subSlug  = slugArray?.[1] || '';
-  const searchQuery = searchParams ? (searchParams.get('q') || '') : '';
+  const searchQuery = searchParams ? (searchParams.get('q') || searchParams.get('search') || '') : '';
 
   const [products, setProducts] = useState<any[]>([]);
+  const [reviewStats, setReviewStats] = useState<Record<string, { rating: number; count: number }>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState('newest');
 
-  const isSearchPage = mainSlug.toLowerCase() === 'search';
+  const isSearchPage = mainSlug.toLowerCase() === 'search' || !!searchQuery;
   const currentCategory = isSearchPage
-    ? { label: 'Search Results', dbName: 'Search' }
+    ? { label: searchQuery ? `Search: "${searchQuery}"` : 'Search Results', dbName: 'Search' }
     : categoryMap[mainSlug] || { label: mainSlug?.toUpperCase(), dbName: mainSlug };
   const currentSub = !isSearchPage && (currentCategory.subs as SubCategory[] | undefined)?.find(s => s.slug === subSlug);
 
   useEffect(() => {
+    let isCancelled = false;
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
-        // 1. Resolve names from database or hardcoded categoryMap
+        // Fetch products and approved reviews in parallel
+        const [productsRes, reviewsRes] = await Promise.all([
+          supabase
+            .from('products')
+            .select('*')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('reviews')
+            .select('product_id, rating')
+            .eq('status', 'approved')
+        ]);
+
+        if (isCancelled) return;
+        if (productsRes.error) {
+          console.error('Products fetch error:', productsRes.error);
+          throw productsRes.error;
+        }
+
+        const data = productsRes.data;
+
+        // Aggregate genuine review stats per product
+        const stats: Record<string, { rating: number; count: number }> = {};
+        if (Array.isArray(reviewsRes.data)) {
+          reviewsRes.data.forEach((r: any) => {
+            if (!r.product_id) return;
+            const pid = String(r.product_id);
+            if (!stats[pid]) stats[pid] = { rating: 0, count: 0 };
+            stats[pid].rating += Number(r.rating) || 0;
+            stats[pid].count += 1;
+          });
+
+          Object.keys(stats).forEach(pid => {
+            stats[pid].rating = stats[pid].count > 0 ? Number((stats[pid].rating / stats[pid].count).toFixed(1)) : 0;
+          });
+        }
+        setReviewStats(stats);
+
+        // 2. Resolve names from categoryMap or categories table if needed
         let dbCategoryName = '';
         let dbSubCategoryName = '';
         let dbParentCategoryName = '';
@@ -158,68 +231,47 @@ const CategoryPage = () => {
               dbSubCategoryName = sub.name;
             }
           }
-        }
+        } else if (!isSearchPage && mainSlug) {
+          try {
+            const { data: directCat } = await supabase
+              .from('categories')
+              .select('*')
+              .eq('slug', mainSlug.toLowerCase())
+              .maybeSingle();
 
-        // Fetch category by mainSlug from DB if not resolved
-        if (!dbCategoryName) {
-          const { data: catData } = await supabase
-            .from('categories')
-            .select('*')
-            .eq('slug', mainSlug.toLowerCase())
-            .maybeSingle();
-
-          if (catData) {
-            if (catData.parent_id) {
-              // It's a direct subcategory URL (e.g. /category/feeding-maternity-bras)
-              dbSubCategoryName = catData.name;
-              // Fetch parent category name
-              const { data: parentData } = await supabase
-                .from('categories')
-                .select('name')
-                .eq('id', catData.parent_id)
-                .maybeSingle();
-              if (parentData) {
-                dbCategoryName = parentData.name;
-                dbParentCategoryName = parentData.name;
+            if (directCat) {
+              if (directCat.parent_id) {
+                dbSubCategoryName = directCat.name;
+                const { data: parentData } = await supabase
+                  .from('categories')
+                  .select('name')
+                  .eq('id', directCat.parent_id)
+                  .maybeSingle();
+                if (parentData) {
+                  dbCategoryName = parentData.name;
+                  dbParentCategoryName = parentData.name;
+                } else {
+                  dbCategoryName = directCat.name;
+                }
               } else {
-                dbCategoryName = catData.name;
+                dbCategoryName = directCat.name;
               }
-            } else {
-              // It's a main category URL (e.g. /category/bras)
-              dbCategoryName = catData.name;
             }
-          } else {
-            // Fallback
-            dbCategoryName = mainSlug;
+          } catch (e) {
+            console.warn('Category lookup notice:', e);
           }
         }
 
-        // If there is a subSlug in URL, try to resolve it from the DB
-        if (subSlug && !dbSubCategoryName) {
-          const { data: subData } = await supabase
-            .from('categories')
-            .select('name')
-            .eq('slug', subSlug.toLowerCase())
-            .maybeSingle();
-          if (subData) {
-            dbSubCategoryName = subData.name;
-          }
+        if (!dbCategoryName) {
+          dbCategoryName = mainSlug;
         }
-
-        // 2. Fetch all products
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
 
         if (data) {
           const filtered = data.filter((p: any) => {
             if (p.status && p.status !== 'Active') return false;
 
-            if (isSearchPage) {
-              if (!searchQuery) return true;
+            // Search filter: if on search page OR search query parameter is present
+            if (searchQuery) {
               const q = searchQuery.toLowerCase().trim();
               const nameMatch = (p.name || '').toLowerCase().includes(q);
               const descMatch = (p.description || '').toLowerCase().includes(q);
@@ -227,7 +279,10 @@ const CategoryPage = () => {
                 ? p.categories
                 : p.category ? [p.category] : [];
               const catMatch = productCats.some(c => typeof c === 'string' && c.trim().toLowerCase().includes(q));
-              return nameMatch || descMatch || catMatch;
+              if (!nameMatch && !descMatch && !catMatch) return false;
+              if (mainSlug.toLowerCase() === 'search') return true;
+            } else if (mainSlug.toLowerCase() === 'search') {
+              return true;
             }
 
             const productCats: string[] = Array.isArray(p.categories)
@@ -235,19 +290,31 @@ const CategoryPage = () => {
               : p.category ? [p.category] : [];
 
             // ── Main category match ──
-            const isSaleSection = mainSlug.toLowerCase() === 'sale' || dbCategoryName.toLowerCase() === 'sale%';
-            const matchesMain = isSaleSection 
-              ? (p.is_sale === true || productCats.some(c => typeof c === 'string' && c.trim().toLowerCase() === 'sale%'))
-              : productCats.some(c => {
-                  if (typeof c !== 'string') return false;
-                  const low = c.trim().toLowerCase();
-                  return (
-                    low === dbCategoryName.toLowerCase() ||
-                    low === mainSlug.toLowerCase() ||
-                    (dbParentCategoryName && low === dbParentCategoryName.toLowerCase()) ||
-                    (mainSlug.toLowerCase() === 'signature' && low === 'signature collection')
-                  );
-                });
+            const isAllSection = mainSlug.toLowerCase() === 'all';
+            const isSaleSection = mainSlug.toLowerCase() === 'sale' || mainSlug.toLowerCase() === 'offers' || dbCategoryName.toLowerCase() === 'sale%';
+            const isBogoSection = mainSlug.toLowerCase() === 'bogo' || mainSlug.toLowerCase() === 'buy-1-get-1' || mainSlug.toLowerCase() === 'buy-one-get-one';
+            const isBogoProduct = Boolean(
+              p.is_bogo === true ||
+              (Array.isArray(p.specifications) && p.specifications.some((s: any) => s.name === 'is_bogo' && s.value === 'true')) ||
+              productCats.some(c => typeof c === 'string' && /^(bogo|buy 1 get 1|buy 1 get 1 free|buy-1-get-1)$/i.test(c.trim()))
+            );
+
+            const matchesMain = isAllSection
+              ? true
+              : isSaleSection 
+                ? (hasDiscount || productCats.some(c => typeof c === 'string' && (c.trim().toLowerCase() === 'sale%' || c.trim().toLowerCase().includes('offer'))))
+                : isBogoSection
+                  ? isBogoProduct
+                  : productCats.some(c => {
+                      if (typeof c !== 'string') return false;
+                      const low = c.trim().toLowerCase();
+                      return (
+                        low === dbCategoryName.toLowerCase() ||
+                        low === mainSlug.toLowerCase() ||
+                        (dbParentCategoryName && low === dbParentCategoryName.toLowerCase()) ||
+                        (mainSlug.toLowerCase() === 'signature' && low === 'signature collection')
+                      );
+                    });
 
             if (!matchesMain) return false;
 
@@ -279,15 +346,31 @@ const CategoryPage = () => {
               }
 
               // ── Sub-category match using all known DB aliases or direct matching ──
-              const aliases = currentSub?.dbNames || [targetSubName];
-              const aliasesLow = aliases.map(n => n.toLowerCase());
+              // Look up aliases from categoryMap if not already set by currentSub
+              let aliases = currentSub?.dbNames;
+              if (!aliases) {
+                for (const catKey of Object.keys(categoryMap)) {
+                  const foundSub = categoryMap[catKey].subs?.find(
+                    s => s.slug.toLowerCase() === mainSlug.toLowerCase() ||
+                         s.slug.toLowerCase() === subSlug.toLowerCase() ||
+                         s.name.toLowerCase() === targetSubName.trim().toLowerCase()
+                  );
+                  if (foundSub) {
+                    aliases = foundSub.dbNames;
+                    break;
+                  }
+                }
+              }
+              const finalAliases = aliases || [targetSubName];
+              const aliasesLow = finalAliases.map(n => n.toLowerCase().trim());
               return productCats.some(c => {
                 if (typeof c !== 'string') return false;
                 const low = c.trim().toLowerCase();
                 return (
                   aliasesLow.includes(low) ||
-                  low === targetSubName.toLowerCase() ||
-                  (subSlug && low === subSlug.toLowerCase())
+                  low === targetSubName.toLowerCase().trim() ||
+                  (mainSlug && low === mainSlug.toLowerCase().trim()) ||
+                  (subSlug && low === subSlug.toLowerCase().trim())
                 );
               });
             }
@@ -300,11 +383,14 @@ const CategoryPage = () => {
       } catch (err) {
         console.error('Fetch error:', err);
       } finally {
-        setIsLoading(false);
+        if (!isCancelled) setIsLoading(false);
       }
     };
 
     if (mainSlug) fetchProducts();
+    return () => {
+      isCancelled = true;
+    };
   }, [mainSlug, subSlug, searchQuery]);
 
   const sortedProducts = [...products].sort((a, b) => {
@@ -319,14 +405,83 @@ const CategoryPage = () => {
 
 
 
+        {/* ── Category Header & Breadcrumb ── */}
+        <div className="max-w-screen-xl mx-auto px-6 mb-8">
+          <nav className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-surface-on/40 mb-4" aria-label="Breadcrumb">
+            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+            <span className="text-stone-300">/</span>
+            <Link href="/all-categories" className="hover:text-primary transition-colors">All Categories</Link>
+            <span className="text-stone-300">/</span>
+            <Link href="/category/all" className="hover:text-primary transition-colors">All Products</Link>
+            {mainSlug && mainSlug.toLowerCase() !== 'all' && (
+              <>
+                <span className="text-stone-300">/</span>
+                {subSlug ? (
+                  <Link href={`/category/${mainSlug}`} className="hover:text-primary transition-colors text-primary font-bold">
+                    {currentCategory.label}
+                  </Link>
+                ) : (
+                  <span className="text-primary font-bold">{currentCategory.label}</span>
+                )}
+              </>
+            )}
+            {subSlug && (
+              <>
+                <span className="text-stone-300">/</span>
+                <span className="text-primary font-bold">{currentSub?.name || subSlug}</span>
+              </>
+            )}
+          </nav>
+
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-2">Bloomina Collection</p>
+              <h1 className="text-4xl md:text-5xl font-display font-light text-surface-on tracking-tight capitalize">
+                {subSlug ? (currentSub?.name || subSlug) : currentCategory.label}
+              </h1>
+            </div>
+            <div className="flex items-center gap-4">
+              {subSlug && (
+                <Link 
+                  href={`/category/${mainSlug}`}
+                  className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary hover:underline group"
+                >
+                  <span>View Full {currentCategory.label} Collection</span>
+                  <span className="material-symbols-outlined text-sm transition-transform group-hover:translate-x-1">arrow_forward</span>
+                </Link>
+              )}
+              <Link
+                href="/all-categories"
+                className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-stone-200 text-[10px] font-bold uppercase tracking-wider text-stone-700 hover:text-primary hover:border-primary transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm text-primary">grid_view</span>
+                <span>All Categories</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* ── Toolbar ── */}
         <div className="sticky top-20 z-30 bg-white/80 backdrop-blur-xl border-y border-stone-50 mb-12">
           <div className="max-w-screen-xl mx-auto px-6 h-20 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/products" className="text-[10px] font-bold uppercase tracking-widest text-surface-on/40 hover:text-primary transition-colors flex items-center gap-2">
-                <span className="material-symbols-outlined text-sm">arrow_back</span>
-                All Products
-              </Link>
+            <div className="flex items-center gap-3">
+              {subSlug ? (
+                <Link 
+                  href={`/category/${mainSlug}`} 
+                  className="text-[10px] font-bold uppercase tracking-widest text-surface-on/60 hover:text-primary transition-colors flex items-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-sm">arrow_back</span>
+                  <span>{currentCategory.label}</span>
+                </Link>
+              ) : (
+                <Link 
+                  href="/all-categories" 
+                  className="text-[10px] font-bold uppercase tracking-widest text-surface-on/60 hover:text-primary transition-colors flex items-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-sm">arrow_back</span>
+                  <span>All Categories</span>
+                </Link>
+              )}
               <div className="h-4 w-[1px] bg-stone-100" />
               <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
                 {products.length} {products.length === 1 ? 'Item' : 'Items'} Found
@@ -361,46 +516,25 @@ const CategoryPage = () => {
               ))}
             </div>
           ) : sortedProducts.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-16">
-              {sortedProducts.map(product => (
-                <Link
-                  key={product.id}
-                  href={`/product/${product.slug || product.id}`}
-                  className="group block"
-                >
-                  <div className="relative aspect-[3/4] overflow-hidden rounded-[2.5rem] bg-stone-50 mb-6 petal-shadow transition-all duration-700 group-hover:shadow-[0_40px_80px_-20px_rgba(241,145,161,0.25)]">
-                    <img
-                      src={(Array.isArray(product.images) ? product.images[0] : product.images?.[0]?.url) || 'https://via.placeholder.com/600x800'}
-                      alt={product.name}
-                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="absolute bottom-6 left-6 right-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                      <div className="w-full py-4 bg-white/90 backdrop-blur-md rounded-2xl text-[10px] font-bold uppercase tracking-widest text-primary shadow-xl hover:bg-primary hover:text-white transition-colors text-center">
-                        View Product
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1 px-2">
-                    <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-primary/40">
-                      {Array.isArray(product.categories) ? product.categories[0] : (product.category || currentCategory.label)}
-                    </p>
-                    <h3 className="text-base md:text-lg font-sans font-medium text-surface-on group-hover:text-primary transition-colors tracking-tight capitalize">{product.name}</h3>
-                    <div className="flex items-baseline gap-2">
-                      <p className="text-sm font-price font-bold text-surface-on-variant">
-                        ₹{product.price ? parseFloat(product.price).toLocaleString() : '0'}
-                      </p>
-                      {(product.comparePrice || product.original_price || product.mrp) &&
-                        parseFloat(product.comparePrice || product.original_price || product.mrp) > parseFloat(product.price) && (
-                        <span className="text-xs font-price text-stone-400 line-through">
-                          ₹{parseFloat(product.comparePrice || product.original_price || product.mrp).toLocaleString()}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              ))}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 md:gap-x-8 gap-y-10 md:gap-y-16">
+              {sortedProducts.map(product => {
+                const genuine = reviewStats[String(product.id)];
+                return (
+                  <ProductCard
+                    key={product.id}
+                    id={product.id}
+                    title={product.name}
+                    price={parseFloat(product.price) || 0}
+                    comparePrice={product.comparePrice || product.original_price || product.mrp}
+                    image={(Array.isArray(product.images) ? product.images[0] : product.images?.[0]?.url) || 'https://placehold.co/600x800?text=No+Image'}
+                    category={Array.isArray(product.categories) ? product.categories[0] : (product.category || currentCategory.label)}
+                    colorConfigs={product.colorConfigs || []}
+                    variants={product.variants || []}
+                    rating={genuine?.rating}
+                    reviewCount={genuine?.count || 0}
+                  />
+                );
+              })}
             </div>
           ) : (
             <div className="py-24 text-center">

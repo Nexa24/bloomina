@@ -35,11 +35,10 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Only redirect to login if the user is unauthenticated AND trying to access checkout or account pages
+  // Only redirect to login if the user is unauthenticated AND trying to access account pages
   if (
     !user &&
-    (request.nextUrl.pathname.startsWith('/checkout') || 
-     request.nextUrl.pathname.startsWith('/account'))
+    request.nextUrl.pathname.startsWith('/account')
   ) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/login';

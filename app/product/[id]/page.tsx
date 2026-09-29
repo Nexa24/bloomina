@@ -8,6 +8,7 @@ import { useCart } from '@/hooks/use-cart';
 import { useWishlist } from '@/hooks/use-wishlist';
 import { supabase } from '@/lib/supabase';
 import ProductReviews from '@/components/ProductReviews';
+import TrustBanner from '@/components/TrustBanner';
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = React.use(params);
@@ -31,16 +32,36 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [selectedBraSize, setSelectedBraSize] = useState('');
   const [selectedPantySize, setSelectedPantySize] = useState('');
 
+  const [productReviewStats, setProductReviewStats] = useState<{ rating: number; count: number } | null>(null);
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const { data: productData, error: productError } = await supabase
-          .from('products')
-          .select('*')
-          .eq('id', id)
-          .single();
+        const [productRes, reviewsRes] = await Promise.all([
+          supabase
+            .from('products')
+            .select('*')
+            .eq('id', id)
+            .single(),
+          supabase
+            .from('reviews')
+            .select('rating')
+            .eq('product_id', id)
+            .eq('status', 'approved')
+        ]);
 
-        if (productError) throw productError;
+        if (productRes.error) throw productRes.error;
+        const productData = productRes.data;
+
+        if (Array.isArray(reviewsRes.data) && reviewsRes.data.length > 0) {
+          const totalRating = reviewsRes.data.reduce((sum: number, r: any) => sum + (Number(r.rating) || 0), 0);
+          setProductReviewStats({
+            rating: Number((totalRating / reviewsRes.data.length).toFixed(1)),
+            count: reviewsRes.data.length
+          });
+        } else {
+          setProductReviewStats({ rating: 0, count: 0 });
+        }
         
         // Separately fetch material if it exists
         if (productData.material_id) {
@@ -433,6 +454,35 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   </span>
                 )}
               </div>
+
+              {/* Genuine Review Display or No reviews */}
+              {productReviewStats && productReviewStats.count > 0 ? (
+                <div className="flex items-center gap-2 pt-1">
+                  <div className="flex items-center text-amber-500">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span 
+                        key={star} 
+                        className="material-symbols-outlined text-base"
+                        style={{ fontVariationSettings: star <= Math.round(productReviewStats.rating) ? "'FILL' 1" : "'FILL' 0" }}
+                      >
+                        star
+                      </span>
+                    ))}
+                  </div>
+                  <span className="text-xs font-bold text-stone-800">
+                    {productReviewStats.rating.toFixed(1)}
+                  </span>
+                  <span className="text-xs text-stone-400 font-normal">
+                    ({productReviewStats.count} {productReviewStats.count === 1 ? 'review' : 'reviews'})
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 pt-0.5">
+                  <span className="text-xs text-stone-400 italic">
+                    No reviews yet
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Color Selector moved to top */}
@@ -691,6 +741,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   <span className="material-symbols-outlined text-base font-light">bolt</span>
                   Buy Now
                 </button>
+
+                {/* Trust & Guarantee Box */}
+                <TrustBanner variant="compact" className="mt-3" />
               </div>
             </div>
           </div>

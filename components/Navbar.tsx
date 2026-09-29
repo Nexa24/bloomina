@@ -8,28 +8,70 @@ import { useAuth } from '@/hooks/use-auth';
 import { useCart } from '@/hooks/use-cart';
 import { useWishlist } from '@/hooks/use-wishlist';
 
-const navLinks = [
+interface SubSectionItem {
+  name: string;
+  href: string;
+}
+
+interface CategoryGroup {
+  groupName: string;
+  groupHref: string;
+  items: SubSectionItem[];
+}
+
+interface NavLinkItem {
+  name: string;
+  href: string;
+  badge?: string;
+  groups?: CategoryGroup[];
+  subsections?: SubSectionItem[];
+  featured?: {
+    title: string;
+    image: string;
+  };
+}
+
+const navLinks: NavLinkItem[] = [
   { 
-    name: 'Bras', 
-    href: '/category/bras',
-    subsections: [
-      { name: 'Padded Bras', href: '/category/bras/padded-bras' },
-      { name: 'Non-Padded', href: '/category/bras/non-padded' },
-      { name: 'Full Coverage', href: '/category/bras/full-coverage-bras' },
-      { name: 'Feeding & Maternity', href: '/category/bras/feeding-maternity-bras' },
-      { name: 'Minimizer Bras', href: '/category/bras/minimizer-bra' },
+    name: 'All Products', 
+    href: '/category/all',
+    groups: [
+      {
+        groupName: 'Bras',
+        groupHref: '/category/bras',
+        items: [
+          { name: 'All Bras', href: '/category/bras' },
+          { name: 'Padded Bras', href: '/category/bras/padded-bras' },
+          { name: 'Non-Padded Bras', href: '/category/bras/non-padded' },
+          { name: 'T-Shirt Bras', href: '/category/bras/t-shirt-bras' },
+          { name: 'Full Coverage Bras', href: '/category/bras/full-coverage-bras' },
+          { name: 'Everyday Essentials', href: '/category/bras/everyday-essentials' },
+          { name: 'Minimizer Bras', href: '/category/bras/minimizer-bra' },
+          { name: 'Teenager Bra', href: '/category/bras/teenager-bra' },
+        ]
+      },
+      {
+        groupName: 'Panties',
+        groupHref: '/category/panties',
+        items: [
+          { name: 'All Panties', href: '/category/panties' },
+          { name: 'Cotton Lycra Panties', href: '/category/panties/cotton-lycra' },
+          { name: 'Modal Panties', href: '/category/panties/modal-panties' },
+          { name: 'Everyday Essentials', href: '/category/panties/everyday-essentials' },
+        ]
+      }
     ],
     featured: {
-      title: 'The Petal Bra',
+      title: 'Everyday Luxury',
       image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBTbghw_WZVzhd9DKApPxJcoUK9cwJkf44QoDbHoRjTRnubMMge4zVDFV4aKhYlPUZNpOupfdzT_0TFOc5M6oK763b3jWnP3FX8u0mOjZs3PFlSuFUrwyW4_flxdqhvotNurlXfZlqgu9fsu5PAuM8dAy-TskCzImUd_-ghDraPg07vOihUfj8zdinMGOjJgvlkxSv-3v0qUaYWyUveFWSIXwp6uyeh7Wq5XildCnMHdWUN0Mar7Gjox8ZGa_kkMAJD0mIuDs0er5Y'
     }
   },
-  { 
-    name: 'Panties', 
-    href: '/category/panties'
-  },
   { name: 'Bestsellers', href: '/category/bestsellers' },
-  { name: 'Signature', href: '/category/signature' }
+  { 
+    name: 'Offers%', 
+    href: '/category/sale',
+    badge: 'Hot'
+  }
 ];
 
 const Navbar = () => {
@@ -90,9 +132,7 @@ const Navbar = () => {
             className="brightness-0 invert opacity-80"
           />
           <p className="text-[10px] md:text-xs font-display font-medium text-white tracking-[0.2em] uppercase flex items-center gap-2">
-            <span>Free Shipping All Over Kerala</span>
-            <span>•</span>
-            <span className="font-black bg-white/20 px-2.5 py-0.5 rounded-full text-amber-200 animate-pulse border border-white/30">🎁 BUY 1 GET 1 FREE (CODE: BOGO)</span>
+            <span>Free Shipping On Orders Above ₹499</span>
           </p>
         </div>
 
@@ -167,28 +207,14 @@ const Navbar = () => {
 
           {/* RIGHT SIDE: Icons (Universal) */}
           <div className="flex items-center justify-end gap-3 md:gap-8 z-10 flex-1">
-            {/* Inline search bar in navbar (Desktop) */}
-            <div className="hidden lg:flex items-center gap-2 bg-stone-50 hover:bg-stone-100 border border-stone-300 rounded-full px-3 py-1.5 transition-all duration-300 group">
-              <span className="material-symbols-outlined text-lg text-surface-on-variant/60 font-light group-hover:text-primary transition-colors" aria-hidden="true">search</span>
-              <label htmlFor="navbar-desktop-search" className="sr-only">Search products</label>
-              <input
-                type="text"
-                id="navbar-desktop-search"
-                aria-label="Search products"
-                placeholder="Search..."
-                value={searchVal}
-                onChange={(e) => setSearchVal(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && searchVal.trim()) {
-                    router.push(`/category/search?q=${encodeURIComponent(searchVal.trim())}`);
-                  }
-                }}
-                className="bg-transparent border-none p-0 focus:ring-0 text-[10px] font-semibold uppercase tracking-wider text-surface-on placeholder:text-stone-300 w-28 focus:w-56 transition-all duration-300 outline-none"
-              />
-            </div>
-            <Link href="/contact" className="hidden lg:flex text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0" title="Contact Us" aria-label="Contact Us">
-              <span className="material-symbols-outlined text-[20px] md:text-2xl font-light" aria-hidden="true">info</span>
-            </Link>
+            {/* Search Icon Button (Desktop) */}
+            <button 
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              aria-label="Open search"
+              className={`hidden lg:flex text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0 ${isSearchOpen ? 'text-primary' : ''}`}
+            >
+              <span className="material-symbols-outlined text-[20px] md:text-2xl font-light" aria-hidden="true">search</span>
+            </button>
             <Link href="/account" className="text-surface-on-variant hover:text-primary transition-colors duration-300 flex-shrink-0" aria-label="My Account">
               <span className="material-symbols-outlined text-[20px] md:text-2xl font-light" aria-hidden="true">person</span>
             </Link>
@@ -213,40 +239,98 @@ const Navbar = () => {
 
           {/* Mega-Menu Dropdown */}
           <div 
-            className={`absolute top-full left-0 w-full bg-white/95 backdrop-blur-2xl border-t border-stone-50 overflow-hidden transition-all duration-500 ease-out shadow-2xl ${hoveredLink && navLinks.find(l => l.name === hoveredLink)?.subsections ? 'max-h-[500px] opacity-100 py-12' : 'max-h-0 opacity-0 py-0 pointer-events-none'}`}
+            className={`absolute top-full left-0 w-full bg-white/95 backdrop-blur-2xl border-t border-stone-50 overflow-hidden transition-all duration-500 ease-out shadow-2xl ${hoveredLink && (navLinks.find(l => l.name === hoveredLink)?.groups || navLinks.find(l => l.name === hoveredLink)?.subsections) ? 'max-h-[550px] opacity-100 py-12' : 'max-h-0 opacity-0 py-0 pointer-events-none'}`}
           >
             <div className="max-w-screen-xl mx-auto px-12 grid grid-cols-12 gap-12">
-              {/* Sub-sections */}
-              <div className="col-span-8 grid grid-cols-2 gap-x-12 gap-y-8">
-                {navLinks.find(l => l.name === hoveredLink)?.subsections?.map((sub) => (
-                  <Link 
-                    key={sub.name} 
-                    href={sub.href}
-                    className="group flex items-center gap-4 text-surface-on-variant hover:text-primary transition-all"
-                    onClick={() => setHoveredLink(null)}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary/20 group-hover:bg-primary transition-colors" />
-                    <div>
-                      <p className="text-sm font-semibold tracking-tight">{sub.name}</p>
-                      <p className="text-[10px] font-bold uppercase tracking-widest opacity-30 mt-1">Shop Collection</p>
-                    </div>
-                  </Link>
-                ))}
+              {/* Grouped Sub-sections (e.g. Bras & Panties divisions) */}
+              <div className="col-span-8">
+                {(() => {
+                  const activeItem = navLinks.find(l => l.name === hoveredLink);
+                  if (activeItem?.groups) {
+                    return (
+                      <div className="grid grid-cols-2 gap-10">
+                        {activeItem.groups.map((group) => (
+                          <div key={group.groupName} className="space-y-4">
+                            <div className="flex items-center justify-between pb-2 border-b border-stone-100">
+                              <Link 
+                                href={group.groupHref}
+                                onClick={() => setHoveredLink(null)}
+                                className="font-display text-lg font-medium text-surface-on hover:text-primary transition-colors flex items-center gap-2 group/g"
+                              >
+                                <span>{group.groupName}</span>
+                                <span className="material-symbols-outlined text-sm text-stone-300 group-hover/g:text-primary group-hover/g:translate-x-0.5 transition-all">arrow_forward</span>
+                              </Link>
+                              <span className="text-[9px] font-bold uppercase tracking-widest text-primary/60">Collection</span>
+                            </div>
+                            <div className="grid grid-cols-1 gap-2.5">
+                              {group.items.map((sub) => (
+                                <Link 
+                                  key={sub.name} 
+                                  href={sub.href}
+                                  className="group flex items-center gap-3 text-surface-on-variant hover:text-primary transition-all py-1"
+                                  onClick={() => setHoveredLink(null)}
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full bg-primary/20 group-hover:bg-primary transition-colors" />
+                                  <span className="text-sm font-light text-stone-700 group-hover:text-primary group-hover:translate-x-1 transition-all">{sub.name}</span>
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }
+                  if (activeItem?.subsections) {
+                    return (
+                      <div className="grid grid-cols-2 gap-x-12 gap-y-8">
+                        {activeItem.subsections.map((sub) => (
+                          <Link 
+                            key={sub.name} 
+                            href={sub.href}
+                            className="group flex items-center gap-4 text-surface-on-variant hover:text-primary transition-all"
+                            onClick={() => setHoveredLink(null)}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary/20 group-hover:bg-primary transition-colors" />
+                            <div>
+                              <p className="text-sm font-semibold tracking-tight">{sub.name}</p>
+                              <p className="text-[10px] font-bold uppercase tracking-widest opacity-30 mt-1">Shop Collection</p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
 
-              {/* Featured Card */}
-              <div className="col-span-4 border-l border-stone-100 pl-12 flex flex-col justify-center">
+              {/* Featured Card & All Categories Link */}
+              <div className="col-span-4 border-l border-stone-100 pl-12 flex flex-col justify-between">
                 {hoveredLink && navLinks.find(l => l.name === hoveredLink)?.featured ? (
-                  <div className="relative group cursor-pointer overflow-hidden rounded-2xl aspect-[4/3] petal-shadow">
-                    <img 
-                      src={navLinks.find(l => l.name === hoveredLink)?.featured?.image} 
-                      alt="Featured" 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent flex flex-col justify-end p-6">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/80">New Arrival</p>
-                      <h4 className="text-white font-display text-xl">{navLinks.find(l => l.name === hoveredLink)?.featured?.title}</h4>
+                  <div className="space-y-4">
+                    <div className="relative group cursor-pointer overflow-hidden rounded-2xl aspect-[4/3] petal-shadow">
+                      <img 
+                        src={navLinks.find(l => l.name === hoveredLink)?.featured?.image} 
+                        alt="Featured" 
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent flex flex-col justify-end p-6">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/80">New Arrival</p>
+                        <h4 className="text-white font-display text-xl">{navLinks.find(l => l.name === hoveredLink)?.featured?.title}</h4>
+                      </div>
                     </div>
+
+                    <Link 
+                      href="/all-categories" 
+                      onClick={() => setHoveredLink(null)}
+                      className="flex items-center justify-between p-3.5 bg-stone-50 hover:bg-primary/5 rounded-xl border border-stone-200/60 group/btn transition-all"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="material-symbols-outlined text-primary text-lg">grid_view</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-surface-on group-hover/btn:text-primary transition-colors">Browse All Categories</span>
+                      </div>
+                      <span className="material-symbols-outlined text-sm text-stone-300 group-hover/btn:text-primary group-hover/btn:translate-x-1 transition-all">arrow_forward</span>
+                    </Link>
                   </div>
                 ) : (
                   <div className="space-y-6">
@@ -254,7 +338,17 @@ const Navbar = () => {
                     <p className="text-sm font-light leading-relaxed text-surface-on-variant">
                       Crafted for the feminine silhouette, our collections embrace the philosophy of ethereal comfort and timeless elegance.
                     </p>
-                    <Link href="/about" className="inline-block text-[10px] font-bold uppercase tracking-widest text-primary underline underline-offset-8">Our Philosophy</Link>
+                    <div className="flex flex-col gap-2 pt-2">
+                      <Link 
+                        href="/all-categories" 
+                        onClick={() => setHoveredLink(null)}
+                        className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary hover:underline"
+                      >
+                        <span>Browse All Categories</span>
+                        <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                      </Link>
+                      <Link href="/about" className="text-[10px] font-bold uppercase tracking-widest text-surface-on-variant/70 hover:text-primary transition-colors">Our Philosophy</Link>
+                    </div>
                   </div>
                 )}
               </div>
@@ -312,7 +406,17 @@ const Navbar = () => {
                   <h3 className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">Trending Now</h3>
                   <div className="flex flex-wrap gap-4">
                     {['Lace Bralettes', 'Silk Robes', 'Bridal Set', 'Wireless Comfort', 'Midnight Black'].map((term) => (
-                      <button key={term} aria-label={`Search ${term}`} className="px-8 py-3 rounded-full border border-stone-300 text-xs font-semibold text-surface-on/60 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all duration-300">
+                      <button 
+                        key={term} 
+                        type="button"
+                        onClick={() => {
+                          setSearchVal(term);
+                          setIsSearchOpen(false);
+                          router.push(`/category/search?q=${encodeURIComponent(term)}`);
+                        }}
+                        aria-label={`Search ${term}`} 
+                        className="px-8 py-3 rounded-full border border-stone-300 text-xs font-semibold text-surface-on/60 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all duration-300"
+                      >
                         {term}
                       </button>
                     ))}
@@ -322,9 +426,19 @@ const Navbar = () => {
                 <div className="space-y-8">
                   <h3 className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">Suggested Collections</h3>
                   <div className="grid grid-cols-2 gap-4">
-                    {['Innerwear Essentials', 'Lounge Sanctuary', 'Silk Rituals', 'New Arrivals'].map((col) => (
-                      <Link key={col} href="/products" className="text-xl font-display font-light text-surface-on/60 hover:text-primary transition-colors">
-                        {col}
+                    {[
+                      { name: 'Bras Collection', href: '/category/bras' },
+                      { name: 'Panties Collection', href: '/category/panties' },
+                      { name: 'Bestsellers', href: '/category/bestsellers' },
+                      { name: 'Special Offers', href: '/category/sale' },
+                    ].map((col) => (
+                      <Link 
+                        key={col.name} 
+                        href={col.href} 
+                        onClick={() => setIsSearchOpen(false)}
+                        className="text-xl font-display font-light text-surface-on/60 hover:text-primary transition-colors"
+                      >
+                        {col.name}
                       </Link>
                     ))}
                   </div>
@@ -395,36 +509,90 @@ const Navbar = () => {
               {navLinks.map((link) => (
                 <div key={link.name} className="space-y-4">
                   <div className="flex items-center justify-between group">
-                    <Link 
-                      href={link.href} 
-                      className={`text-3xl font-display font-light transition-colors tracking-tight ${pathname === link.href ? 'text-primary' : 'text-surface-on'}`}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {link.name}
-                    </Link>
-                    {link.subsections && (
+                    {link.groups || link.subsections ? (
                       <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        type="button"
+                        onClick={() => {
                           setMobileExpanded(mobileExpanded === link.name ? null : link.name);
                         }}
-                        className="p-2 text-primary/40"
+                        className={`text-3xl font-display font-light transition-colors tracking-tight text-left flex-1 flex items-center justify-between ${pathname === link.href || mobileExpanded === link.name ? 'text-primary' : 'text-surface-on'}`}
                       >
-                        <span className={`material-symbols-outlined transition-transform duration-500 ${mobileExpanded === link.name ? 'rotate-180' : ''}`}>
+                        <span>{link.name}</span>
+                        <span className={`material-symbols-outlined transition-transform duration-500 text-primary/60 text-2xl pr-1 ${mobileExpanded === link.name ? 'rotate-180' : ''}`}>
                           expand_more
                         </span>
                       </button>
+                    ) : (
+                      <Link 
+                        href={link.href} 
+                        className={`text-3xl font-display font-light transition-colors tracking-tight ${pathname === link.href ? 'text-primary' : 'text-surface-on'}`}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {link.name}
+                      </Link>
                     )}
                   </div>
                   
-                  {/* Mobile Sub-sections Accordion */}
-                  {link.subsections && (
-                    <div className={`overflow-hidden transition-all duration-500 flex flex-col gap-4 pl-4 border-l border-primary/10 ${mobileExpanded === link.name ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
-                      {link.subsections.map((sub) => (
+                  {/* Mobile Sub-sections & Grouped Divisions Accordion */}
+                  {(link.groups || link.subsections) && (
+                    <div className={`overflow-hidden transition-all duration-500 flex flex-col gap-4 pl-4 border-l border-primary/20 ${mobileExpanded === link.name ? 'max-h-[480px] opacity-100 overflow-y-auto' : 'max-h-0 opacity-0'}`}>
+                      <div className="flex flex-col gap-1 pb-1">
+                        <Link 
+                          href={link.href}
+                          className="text-xs font-bold uppercase tracking-wider text-primary py-1 hover:underline flex items-center justify-between"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <span>Explore All Products</span>
+                          <span>&rarr;</span>
+                        </Link>
+                        <Link 
+                          href="/all-categories"
+                          className="text-xs font-bold uppercase tracking-wider text-stone-700 hover:text-primary py-1 flex items-center justify-between"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <span className="flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-sm text-primary">grid_view</span>
+                            <span>All Categories Page</span>
+                          </span>
+                          <span>&rarr;</span>
+                        </Link>
+                      </div>
+
+                      {/* If categorized into groups like Bras & Panties */}
+                      {link.groups && link.groups.map((group) => (
+                        <div key={group.groupName} className="space-y-2 pt-2 border-t border-stone-100/80 first:border-t-0 first:pt-0">
+                          <div className="flex items-center justify-between pr-2">
+                            <Link 
+                              href={group.groupHref}
+                              onClick={() => setIsMenuOpen(false)}
+                              className="text-xs font-black uppercase tracking-wider text-stone-900 hover:text-primary flex items-center gap-1.5"
+                            >
+                              <span>{group.groupName}</span>
+                              <span className="material-symbols-outlined text-xs text-primary">arrow_forward</span>
+                            </Link>
+                            <span className="text-[8px] font-bold uppercase tracking-widest text-primary/60">Division</span>
+                          </div>
+                          <div className="flex flex-col gap-1.5 pl-2">
+                            {group.items.map((sub) => (
+                              <Link 
+                                key={sub.name} 
+                                href={sub.href}
+                                className="text-xs font-light text-stone-600 hover:text-primary transition-colors py-0.5"
+                                onClick={() => setIsMenuOpen(false)}
+                              >
+                                {sub.name}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Fallback for regular subsections */}
+                      {!link.groups && link.subsections && link.subsections.map((sub) => (
                         <Link 
                           key={sub.name} 
                           href={sub.href}
-                          className="text-sm font-semibold text-surface-on/60 hover:text-primary transition-colors"
+                          className="text-sm font-semibold text-surface-on/70 hover:text-primary transition-colors py-0.5"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           {sub.name}
@@ -439,12 +607,8 @@ const Navbar = () => {
 
           <div className="mt-auto space-y-8 pt-12 border-t border-primary/5">
             <div className="flex flex-col gap-4">
-              <Link href="/" className="text-xs font-bold uppercase tracking-widest text-surface-on/60 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Home</Link>
-              <Link href="/about" className="text-xs font-bold uppercase tracking-widest text-surface-on/60 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>About Us</Link>
-              <Link href="/account" className="text-xs font-bold uppercase tracking-widest text-surface-on/60 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>My Account</Link>
               <Link href="/size-guide" className="text-xs font-bold uppercase tracking-widest text-surface-on/60 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Size Guide</Link>
               <Link href="/contact" className="text-xs font-bold uppercase tracking-widest text-surface-on/60 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Contact Us</Link>
-              <Link href="/feedback" className="text-xs font-bold uppercase tracking-widest text-surface-on/60 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Feedback</Link>
             </div>
             <p className="text-[10px] text-surface-on-variant font-light">
               Crafting elegance since 2026. <br />

@@ -107,7 +107,7 @@ const SuccessContent = () => {
 
             <p className="text-lg text-[#534345] font-light leading-relaxed mb-12 max-w-lg">
               {isCOD 
-                ? "Your order has been logged into our system. We will contact you shortly to verify your delivery details before dispatching your lovely selection."
+                ? "Your COD order has been confirmed with your ₹50 advance payment! Our team is preparing your package. The remaining balance will be collected in cash upon delivery."
                 : "Your selection has been curated. Our artisans are now preparing your pieces with the meticulous attention to detail that defines the Bloomina standard."
               }
             </p>
@@ -128,7 +128,7 @@ const SuccessContent = () => {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-6 w-full max-w-md animate-slide-up [animation-delay:400ms]">
           <Link 
-            href="/account"
+            href={orderId ? `/track?id=${orderId}` : '/track'}
             className="group relative flex-1 bg-[#1A1C1C] text-white py-7 rounded-full text-center overflow-hidden transition-all duration-500 hover:scale-[1.02] active:scale-95 shadow-xl shadow-black/10"
           >
             <span className="relative z-10 text-[10px] font-bold uppercase tracking-[0.3em]">Track Selection</span>

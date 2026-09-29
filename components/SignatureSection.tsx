@@ -4,24 +4,48 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../lib/supabase';
 import ScrollReveal from './ScrollReveal';
+import ProductCard from './ProductCard';
 
 const SignatureSection = () => {
   const [products, setProducts] = useState<any[]>([]);
+  const [reviewStats, setReviewStats] = useState<Record<string, { rating: number; count: number }>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchSignatureProducts = async () => {
       try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .order('created_at', { ascending: false });
+        const [productsRes, reviewsRes] = await Promise.all([
+          supabase
+            .from('products')
+            .select('*')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('reviews')
+            .select('product_id, rating')
+            .eq('status', 'approved')
+        ]);
 
-        if (error) throw error;
+        if (productsRes.error) throw productsRes.error;
 
-        if (data) {
+        const stats: Record<string, { rating: number; count: number }> = {};
+        if (Array.isArray(reviewsRes.data)) {
+          reviewsRes.data.forEach((r: any) => {
+            if (!r.product_id) return;
+            const pid = String(r.product_id);
+            if (!stats[pid]) stats[pid] = { rating: 0, count: 0 };
+            stats[pid].rating += Number(r.rating) || 0;
+            stats[pid].count += 1;
+          });
+
+          Object.keys(stats).forEach(pid => {
+            stats[pid].rating = stats[pid].count > 0 ? Number((stats[pid].rating / stats[pid].count).toFixed(1)) : 0;
+          });
+        }
+        setReviewStats(stats);
+
+        if (productsRes.data) {
           // Filter products tagged with "signature"
-          const signature = data.filter((p: any) => {
+          const signature = productsRes.data.filter((p: any) => {
             if (p.status && p.status !== 'Active') return false;
             
             const productCats: string[] = Array.isArray(p.categories)
@@ -75,14 +99,9 @@ const SignatureSection = () => {
   return (
     <section className="max-w-screen-xl mx-auto px-6 py-4 md:py-6 border-t border-stone-100">
       <div className="text-center mb-4 md:mb-6 space-y-2">
-        <ScrollReveal variant="fade" duration={600}>
-          <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">
-            Customer Favorites
-          </span>
-        </ScrollReveal>
         <ScrollReveal variant="slide-up" delay={150} duration={800}>
           <h2 className="text-3xl md:text-5xl font-display font-light text-surface-on tracking-tight leading-tight">
-            Our <span className="italic text-primary">Bestsellers</span>
+            Customer <span className="italic text-primary">Favorites</span>
           </h2>
         </ScrollReveal>
         <ScrollReveal variant="slide-up" delay={250} duration={800}>
@@ -92,52 +111,31 @@ const SignatureSection = () => {
         </ScrollReveal>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6 md:gap-x-6 md:gap-y-8">
-        {products.map((product, idx) => (
-          <ScrollReveal 
-            key={product.id} 
-            delay={idx * 100} 
-            variant="slide-up"
-            duration={800}
-          >
-            <Link
-              href={`/product/${product.slug || product.id}`}
-              className="group block"
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-x-8 md:gap-y-12">
+        {products.map((product, idx) => {
+          const genuine = reviewStats[String(product.id)];
+          return (
+            <ScrollReveal 
+              key={product.id} 
+              delay={idx * 100} 
+              variant="slide-up"
+              duration={800}
             >
-              <div className="relative aspect-[3/4] overflow-hidden rounded-[2rem] md:rounded-[2.5rem] bg-stone-50 mb-3 md:mb-4 petal-shadow transition-all duration-700 group-hover:shadow-[0_40px_80px_-20px_rgba(241,145,161,0.22)]">
-                <img
-                  src={(Array.isArray(product.images) ? product.images[0] : product.images?.[0]?.url) || 'https://via.placeholder.com/600x800'}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <div className="absolute bottom-6 left-6 right-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                  <div className="w-full py-4 bg-white/90 backdrop-blur-md rounded-2xl text-[9px] font-bold uppercase tracking-widest text-primary shadow-xl hover:bg-primary hover:text-white transition-colors text-center">
-                    Quick View
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-1 px-2">
-                <p className="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.25em] text-primary/50">
-                  Signature
-                </p>
-                <h3 className="text-sm md:text-base font-sans font-medium text-surface-on group-hover:text-primary transition-colors tracking-tight line-clamp-1 capitalize">{product.name}</h3>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-xs md:text-sm font-price font-bold text-surface-on-variant">
-                    ₹{product.price ? parseFloat(product.price).toLocaleString('en-IN') : '0'}
-                  </p>
-                  {(product.comparePrice || product.original_price || product.mrp) &&
-                    parseFloat(product.comparePrice || product.original_price || product.mrp) > parseFloat(product.price) && (
-                    <span className="text-[10px] md:text-xs font-price text-stone-400 line-through">
-                      ₹{parseFloat(product.comparePrice || product.original_price || product.mrp).toLocaleString('en-IN')}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </Link>
-          </ScrollReveal>
-        ))}
+              <ProductCard
+                id={product.id}
+                title={product.name}
+                price={parseFloat(product.price) || 0}
+                comparePrice={product.comparePrice || product.original_price || product.mrp}
+                image={(Array.isArray(product.images) ? product.images[0] : product.images?.[0]?.url) || 'https://placehold.co/600x800?text=No+Image'}
+                category="Signature"
+                colorConfigs={product.colorConfigs || []}
+                variants={product.variants || []}
+                rating={genuine?.rating}
+                reviewCount={genuine?.count || 0}
+              />
+            </ScrollReveal>
+          );
+        })}
       </div>
 
       <div className="text-center mt-6 md:mt-8">

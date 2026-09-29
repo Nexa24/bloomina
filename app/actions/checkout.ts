@@ -16,6 +16,16 @@ function cleanText(value: unknown, name: string, maxLength: number) {
   return cleaned;
 }
 
+async function getOptionalUser() {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    return user || null;
+  } catch {
+    return null;
+  }
+}
+
 async function requireUser() {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
@@ -86,22 +96,52 @@ export async function validateCoupon(code: string, cartTotal: number, items?: an
     if (error || !rawCoupon) {
       // Check hardcoded promo code aliases if not found in database
       if (normalizedCode === 'BOGO' || normalizedCode === 'BUY1GET1') {
-        const expandedCart: number[] = [];
+        // Collect product IDs from items to check db eligibility if needed
+        const itemIds = Array.isArray(items) ? items.map(i => i.productId || i.id).filter(Boolean) : [];
+        let bogoEligibleProductIds = new Set<string>();
+
+        if (itemIds.length > 0) {
+          const { data: dbProducts } = await supabase
+            .from('products')
+            .select('id, categories, specifications, is_bogo')
+            .in('id', itemIds);
+
+          if (dbProducts) {
+            dbProducts.forEach((p: any) => {
+              const pCats: string[] = Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : []);
+              const isEligible = Boolean(
+                p.is_bogo === true ||
+                (Array.isArray(p.specifications) && p.specifications.some((s: any) => s.name === 'is_bogo' && s.value === 'true')) ||
+                pCats.some(c => typeof c === 'string' && /^(bogo|buy 1 get 1|buy 1 get 1 free|buy-1-get-1)$/i.test(c.trim()))
+              );
+              if (isEligible) bogoEligibleProductIds.add(p.id);
+            });
+          }
+        }
+
+        const expandedBogoItems: number[] = [];
         if (Array.isArray(items)) {
           items.forEach(item => {
-            const qty = Number(item.quantity) || 1;
-            const price = Number(item.price) || 0;
-            for (let i = 0; i < qty; i++) expandedCart.push(price);
+            const prodId = item.productId || item.id;
+            const isEligible = item.is_bogo === true || bogoEligibleProductIds.has(prodId);
+            if (isEligible) {
+              const qty = Number(item.quantity) || 1;
+              const price = Number(item.price) || 0;
+              for (let i = 0; i < qty; i++) expandedBogoItems.push(price);
+            }
           });
         }
-        if (expandedCart.length < 2) {
-          return { error: 'BOGO offer requires at least 2 items in your cart.' };
+
+        if (expandedBogoItems.length < 2) {
+          return { error: 'BOGO code requires at least 2 selected BOGO-eligible items in your cart.' };
         }
-        expandedCart.sort((a, b) => b - a);
+
+        expandedBogoItems.sort((a, b) => b - a);
         let bogoDiscount = 0;
-        for (let i = 1; i < expandedCart.length; i += 2) {
-          bogoDiscount += expandedCart[i];
+        for (let i = 1; i < expandedBogoItems.length; i += 2) {
+          bogoDiscount += expandedBogoItems[i];
         }
+
         return {
           success: true,
           coupon: {
@@ -172,20 +212,53 @@ export async function validateCoupon(code: string, cartTotal: number, items?: an
         discountAmount = Math.min(discountAmount, Number(coupon.max_discount));
       }
     } else if (coupon.discount_type === 'bogo' || coupon.code === 'BOGO' || coupon.code === 'BUY1GET1') {
-      const expandedCart: number[] = [];
+      const selectedIds = Array.isArray(rawCoupon.selected_product_ids) ? rawCoupon.selected_product_ids : [];
+      const itemIds = Array.isArray(items) ? items.map(i => i.productId || i.id).filter(Boolean) : [];
+      let bogoEligibleProductIds = new Set<string>();
+
+      if (itemIds.length > 0) {
+        const { data: dbProducts } = await supabase
+          .from('products')
+          .select('id, categories, specifications, is_bogo')
+          .in('id', itemIds);
+
+        if (dbProducts) {
+          dbProducts.forEach((p: any) => {
+            const pCats: string[] = Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : []);
+            const isEligible = Boolean(
+              p.is_bogo === true ||
+              (selectedIds.length > 0 && selectedIds.includes(p.id)) ||
+              (Array.isArray(p.specifications) && p.specifications.some((s: any) => s.name === 'is_bogo' && s.value === 'true')) ||
+              pCats.some(c => typeof c === 'string' && /^(bogo|buy 1 get 1|buy 1 get 1 free|buy-1-get-1)$/i.test(c.trim()))
+            );
+            if (isEligible) bogoEligibleProductIds.add(p.id);
+          });
+        }
+      }
+
+      const expandedBogoItems: number[] = [];
       if (Array.isArray(items)) {
         items.forEach(item => {
-          const qty = Number(item.quantity) || 1;
-          const price = Number(item.price) || 0;
-          for (let i = 0; i < qty; i++) expandedCart.push(price);
+          const prodId = item.productId || item.id;
+          const isEligible = 
+            item.is_bogo === true || 
+            bogoEligibleProductIds.has(prodId) || 
+            (selectedIds.length > 0 && selectedIds.includes(prodId));
+          if (isEligible) {
+            const qty = Number(item.quantity) || 1;
+            const price = Number(item.price) || 0;
+            for (let i = 0; i < qty; i++) expandedBogoItems.push(price);
+          }
         });
       }
-      if (expandedCart.length < 2) {
-        return { error: 'BOGO offer requires at least 2 items in your cart.' };
+
+      if (expandedBogoItems.length < 2) {
+        return { error: 'BOGO code requires at least 2 selected BOGO-eligible items in your cart.' };
       }
-      expandedCart.sort((a, b) => b - a);
-      for (let i = 1; i < expandedCart.length; i += 2) {
-        discountAmount += expandedCart[i];
+
+      expandedBogoItems.sort((a, b) => b - a);
+      for (let i = 1; i < expandedBogoItems.length; i += 2) {
+        discountAmount += expandedBogoItems[i];
       }
     } else if (coupon.discount_type === 'buy2get1' || coupon.code === 'BUY2GET1') {
       const expandedCart: number[] = [];
@@ -258,7 +331,7 @@ export async function createOrder(data: {
   couponCode?: string;
 }) {
   try {
-    const user = await requireUser();
+    const user = await getOptionalUser();
     const supabase = createAdminClient();
     const config = await getPaymentConfig();
 
@@ -279,12 +352,26 @@ export async function createOrder(data: {
       state: cleanText(data.shippingAddress?.state, 'State', 100),
       postalCode: cleanText(data.shippingAddress?.postalCode, 'Postal code', 20),
     };
-    if (shippingAddress.email !== user.email?.toLowerCase()) {
+    if (user && user.email && shippingAddress.email !== user.email.toLowerCase()) {
       throw new Error('Checkout email must match your signed-in account.');
     }
 
     let subtotal = 0;
+    let saleFee = 0;
     const validatedItems: any[] = [];
+
+    // Optimize execution: Fetch all products in a single database round-trip
+    const productIds = Array.from(new Set(data.items.map(item => cleanText(item.productId || item.id, 'Product ID', 100))));
+    const { data: dbProducts, error: productsError } = await supabase
+      .from('products')
+      .select('id, name, price, categories, is_sale, comparePrice')
+      .in('id', productIds);
+
+    if (productsError) {
+      throw new Error(`Failed to verify products: ${productsError.message}`);
+    }
+
+    const productMap = new Map((dbProducts || []).map((p: any) => [p.id, p]));
 
     for (const item of data.items) {
       const quantity = Number(item.quantity);
@@ -292,19 +379,35 @@ export async function createOrder(data: {
         throw new Error('Invalid item quantity.');
       }
       const productId = cleanText(item.productId || item.id, 'Product ID', 100);
-      const { data: product, error: productError } = await supabase
-        .from('products')
-        .select('id, name, price')
-        .eq('id', productId)
-        .single();
+      const product = productMap.get(productId);
 
-      if (productError || !product) {
+      if (!product) {
         throw new Error(`Product "${item.name || item.title}" not found.`);
       }
 
       const price = Number(product.price);
       if (!Number.isFinite(price) || price < 0) throw new Error('Product price is invalid.');
       subtotal += price * quantity;
+
+      // Check if product is in Sale% category or marked on sale (+50 Rs per item)
+      const pCats: string[] = Array.isArray(product.categories)
+        ? product.categories
+        : (product.categories ? [product.categories] : []);
+      const isSaleProduct = 
+        product.is_sale === true ||
+        (product.comparePrice && Number(product.comparePrice) > Number(product.price)) ||
+        pCats.some(c => typeof c === 'string' && /sale/i.test(c.trim()));
+
+      if (isSaleProduct) {
+        saleFee += 50 * quantity;
+      }
+
+      // Check if product is marked as BOGO (Buy 1 Get 1)
+      const isBogoProduct = Boolean(
+        product.is_bogo === true ||
+        (Array.isArray(product.specifications) && product.specifications.some((s: any) => s.name === 'is_bogo' && s.value === 'true')) ||
+        pCats.some(c => typeof c === 'string' && /^(bogo|buy 1 get 1|buy 1 get 1 free|buy-1-get-1)$/i.test(c.trim()))
+      );
 
       const itemSize = typeof item.size === 'string' && item.size.trim() ? item.size.trim() : (typeof item.selectedSize === 'string' ? item.selectedSize.trim() : '');
       const itemColor = typeof item.color === 'string' && item.color.trim() ? item.color.trim() : (typeof item.selectedColor === 'string' ? item.selectedColor.trim() : '');
@@ -316,6 +419,8 @@ export async function createOrder(data: {
         name: product.name,
         price,
         quantity,
+        is_sale: isSaleProduct,
+        is_bogo: isBogoProduct,
         image: typeof item.image === 'string' ? item.image.slice(0, 500) : '',
         size: itemSize,
         color: itemColor,
@@ -325,61 +430,69 @@ export async function createOrder(data: {
     }
 
     // 2. Validate Coupon if provided
-    let total = subtotal;
     let discountAmount = 0;
     let appliedCouponId = null;
 
     if (data.couponCode) {
-      const couponResult = await validateCoupon(data.couponCode, subtotal);
+      const couponResult = await validateCoupon(data.couponCode, subtotal, validatedItems);
       if (couponResult.success && couponResult.coupon) {
         discountAmount = couponResult.coupon.discountAmount;
-        total = subtotal - discountAmount;
         appliedCouponId = couponResult.coupon.id;
       }
     }
+
+    // 3. Shipping and Extra Charges
+    const isKerala = shippingAddress.state?.trim().toLowerCase() === 'kerala';
+    const shippingCost = isKerala ? 0 : 80;
+    const codFee = data.paymentMethod === 'COD' ? 50 : 0;
+    const total = Math.max(0, subtotal - discountAmount + shippingCost + saleFee + codFee);
 
     // 3. Handle Payment Method Specifics
     let razorpayOrderId = null;
     let orderStatus = 'Payment Pending';
     let rzpKey = null;
 
-    if (data.paymentMethod === 'Razorpay') {
-      let keySource = 'Unknown';
-      let partialKey = 'None';
-      try {
-        const { instance, keyId, source } = await getRazorpayInstance();
-        rzpKey = keyId;
-        keySource = source;
-        partialKey = keyId ? keyId.substring(0, 6) + '...' : 'None';
-        
-        const headersList = await (await import('next/headers')).headers();
-        const host = headersList.get('host');
-        console.log(`[Checkout] Creating Razorpay order on domain: ${host}`);
+    // Both Razorpay full payment and COD compulsory Rs 50 payment use Razorpay gateway
+    // COD orders require paying the Rs 50 advance/confirmation fee via Razorpay to confirm!
+    const payableOnlineAmount = data.paymentMethod === 'COD' ? 50 : total;
 
-        const rzpOrder = await instance.orders.create({
-          amount: Math.round(total * 100),
-          currency: 'INR',
-          receipt: `receipt_${Date.now()}`,
-        });
-        razorpayOrderId = rzpOrder.id;
-      } catch (rzpErr: any) {
-        console.error('Razorpay Order Error:', rzpErr);
-        throw new Error(`Payment Gateway Error: ${rzpErr.error?.description || rzpErr.message || 'Authentication failed'} (Source: ${keySource}, Key: ${partialKey})`);
-      }
-    } else if (data.paymentMethod === 'COD') {
+    let keySource = 'Unknown';
+    let partialKey = 'None';
+    try {
+      const { instance, keyId, source } = await getRazorpayInstance();
+      rzpKey = keyId;
+      keySource = source;
+      partialKey = keyId ? keyId.substring(0, 6) + '...' : 'None';
+      
+      const headersList = await (await import('next/headers')).headers();
+      const host = headersList.get('host');
+      console.log(`[Checkout] Creating Razorpay order (${data.paymentMethod}) for ₹${payableOnlineAmount} on domain: ${host}`);
+
+      const rzpOrder = await instance.orders.create({
+        amount: Math.round(payableOnlineAmount * 100),
+        currency: 'INR',
+        receipt: `receipt_${Date.now()}`,
+      });
+      razorpayOrderId = rzpOrder.id;
+    } catch (rzpErr: any) {
+      console.error('Razorpay Order Error:', rzpErr);
+      throw new Error(`Payment Gateway Error: ${rzpErr.error?.description || rzpErr.message || 'Authentication failed'} (Source: ${keySource}, Key: ${partialKey})`);
+    }
+
+    if (data.paymentMethod === 'COD') {
       if (!config.cod_enabled || total < (config.cod_min_order || 0)) {
         throw new Error('Cash on Delivery is not available for this order.');
       }
-      orderStatus = 'Processing';
     }
 
     // 4. Insert order
     const orderRow = {
-      status: orderStatus,
+      status: 'Payment Pending',
       customer_name: shippingAddress.fullName,
       email: shippingAddress.email,
       phone: shippingAddress.phone,
       subtotal,
+      shipping_cost: shippingCost,
       discount_amount: discountAmount,
       total,
       applied_coupon_id: appliedCouponId,
@@ -393,7 +506,7 @@ export async function createOrder(data: {
       },
       payment_method: data.paymentMethod,
       razorpay_order_id: razorpayOrderId,
-      user_id: user.id,
+      user_id: user ? user.id : null,
     };
 
     const { data: order, error: orderError } = await supabase
@@ -413,21 +526,16 @@ export async function createOrder(data: {
       if (rpcError) console.error('Coupon Usage Update Error:', rpcError);
     }
 
-    // Push COD orders to Shiprocket automatically
-    if (data.paymentMethod === 'COD') {
-      createShiprocketOrder(order.id).catch(err => {
-        console.error('Async Shiprocket Creation Error:', err);
-      });
-    }
-
     return {
       success: true,
       orderId: order.id,
       razorpayOrderId,
-      amount: Math.round(total * 100),
+      amount: Math.round(payableOnlineAmount * 100),
       currency: 'INR',
       key: rzpKey,
-      isCOD: data.paymentMethod === 'COD'
+      isCOD: data.paymentMethod === 'COD',
+      totalOrderAmount: total,
+      payableAmount: payableOnlineAmount
     };
   } catch (error: any) {
     console.error('Checkout error:', error);
@@ -442,7 +550,7 @@ export async function verifyPayment(data: {
   orderId: string;
 }) {
   try {
-    const user = await requireUser();
+    const user = await getOptionalUser();
     const supabase = createAdminClient();
     const secret = process.env.RAZORPAY_KEY_SECRET;
 
@@ -468,11 +576,15 @@ export async function verifyPayment(data: {
       .from('orders')
       .select('razorpay_order_id, status, user_id')
       .eq('id', data.orderId)
-      .eq('user_id', user.id)
       .single();
 
     if (fetchError || !order) {
       return { error: 'Order not found for payment verification' };
+    }
+
+    // If order was placed by an authenticated user, verify it belongs to them
+    if (order.user_id && (!user || order.user_id !== user.id)) {
+      return { error: 'Order authentication mismatch' };
     }
 
     if (order.razorpay_order_id !== data.razorpay_order_id) {
@@ -487,7 +599,6 @@ export async function verifyPayment(data: {
         razorpay_signature: data.razorpay_signature,
       })
       .eq('id', data.orderId)
-      .eq('user_id', user.id)
       .eq('razorpay_order_id', data.razorpay_order_id)
       .eq('status', 'Payment Pending');
 
@@ -507,15 +618,28 @@ export async function verifyPayment(data: {
 
 export async function deleteOrder(orderId: string) {
   try {
-    const user = await requireUser();
+    const user = await getOptionalUser();
     const supabase = createAdminClient();
-    
+    const cleanId = cleanText(orderId, 'Order ID', 100);
+
+    // Verify order exists and matches user if user_id is set
+    const { data: existingOrder } = await supabase
+      .from('orders')
+      .select('id, user_id, status')
+      .eq('id', cleanId)
+      .single();
+
+    if (!existingOrder) return { success: true };
+    if (existingOrder.status !== 'Payment Pending') return { success: true };
+    if (existingOrder.user_id && (!user || existingOrder.user_id !== user.id)) {
+      return { error: 'Unauthorized to delete this order' };
+    }
+
     // Only delete if it's still in 'Payment Pending' status to be safe
     const { error } = await supabase
       .from('orders')
       .delete()
-      .eq('id', orderId)
-      .eq('user_id', user.id)
+      .eq('id', cleanId)
       .eq('status', 'Payment Pending');
 
     if (error) throw error;
@@ -528,13 +652,25 @@ export async function deleteOrder(orderId: string) {
 
 export async function cancelOrder(orderId: string) {
   try {
-    const user = await requireUser();
+    const user = await getOptionalUser();
     const supabase = createAdminClient();
+    const cleanId = cleanText(orderId, 'Order ID', 100);
+
+    const { data: existingOrder } = await supabase
+      .from('orders')
+      .select('id, user_id, status')
+      .eq('id', cleanId)
+      .single();
+
+    if (!existingOrder) throw new Error('Order not found');
+    if (existingOrder.user_id && (!user || existingOrder.user_id !== user.id)) {
+      throw new Error('Unauthorized to cancel this order');
+    }
+
     const { error } = await supabase
       .from('orders')
       .update({ status: 'Cancelled' })
-      .eq('id', cleanText(orderId, 'Order ID', 100))
-      .eq('user_id', user.id)
+      .eq('id', cleanId)
       .in('status', ['Payment Pending', 'Processing']);
 
     if (error) throw error;
@@ -546,17 +682,31 @@ export async function cancelOrder(orderId: string) {
 
 export async function getOrderConfirmation(orderId: string) {
   try {
-    const user = await requireUser();
+    const user = await getOptionalUser();
     const supabase = createAdminClient();
+    const cleanId = cleanText(orderId, 'Order ID', 100);
+
     const { data, error } = await supabase
       .from('orders')
-      .select('payment_method, email, status')
-      .eq('id', cleanText(orderId, 'Order ID', 100))
-      .eq('user_id', user.id)
+      .select('payment_method, email, status, user_id')
+      .eq('id', cleanId)
       .single();
 
     if (error || !data) return { error: 'Order not found.' };
-    return { success: true, data };
+
+    // If order has an assigned user_id and current viewer is logged in as someone else, protect it
+    if (data.user_id && user && data.user_id !== user.id) {
+      return { error: 'Order not found.' };
+    }
+
+    return { 
+      success: true, 
+      data: {
+        payment_method: data.payment_method,
+        email: data.email,
+        status: data.status,
+      } 
+    };
   } catch {
     return { error: 'Unable to load order confirmation.' };
   }

@@ -69,3 +69,39 @@ export async function getApprovedReviews(productId?: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function getAllProductsReviewStats() {
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('product_id, rating')
+      .eq('status', 'approved');
+
+    if (error) throw error;
+
+    const statsMap: Record<string, { rating: number; count: number }> = {};
+
+    if (Array.isArray(data)) {
+      data.forEach((r: any) => {
+        if (!r.product_id) return;
+        const pid = String(r.product_id);
+        if (!statsMap[pid]) {
+          statsMap[pid] = { rating: 0, count: 0 };
+        }
+        statsMap[pid].rating += Number(r.rating) || 0;
+        statsMap[pid].count += 1;
+      });
+
+      Object.keys(statsMap).forEach(pid => {
+        const item = statsMap[pid];
+        item.rating = item.count > 0 ? Number((item.rating / item.count).toFixed(1)) : 0;
+      });
+    }
+
+    return { success: true, stats: statsMap };
+  } catch (error: any) {
+    console.error('Fetch review stats error:', error);
+    return { success: false, stats: {} };
+  }
+}

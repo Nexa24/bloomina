@@ -45,7 +45,6 @@ const getCategoryHref = (cat: any, parent: any) => {
     // Map database slugs to storefront categoryMap slugs for backward-compatibility
     if (subSlug === 'seamless-panties') subSlug = 'seamless';
     if (subSlug === 'lace-bras') subSlug = 'lace-intimates';
-    if (subSlug === 'padded-bras') subSlug = 'full-coverage';
     
     return `/category/${parentSlug}/${subSlug}`;
   }

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/hooks/use-cart';
 import CouponSection from '@/components/CouponSection';
+import TrustBanner from '@/components/TrustBanner';
 
 const CartPage = () => {
   const { items, updateQuantity, removeItem, getTotalPrice, clearCart } = useCart();
@@ -27,7 +28,18 @@ const CartPage = () => {
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shipping = 0;
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
-  const total = Math.max(0, subtotal - discount + shipping);
+
+  // Sale% fee: ₹50 per product in sale% category or marked on sale
+  const saleFee = items.reduce((sum, item: any) => {
+    const isSale = 
+      item.is_sale === true ||
+      (item.comparePrice && Number(item.comparePrice) > Number(item.price)) ||
+      (item.categories && Array.isArray(item.categories) && item.categories.some((c: string) => /sale/i.test(c))) ||
+      (typeof item.category === 'string' && /sale/i.test(item.category));
+    return isSale ? sum + 50 * (Number(item.quantity) || 1) : sum;
+  }, 0);
+
+  const total = Math.max(0, subtotal - discount + shipping + saleFee);
 
   if (items.length === 0) {
     return (
@@ -60,6 +72,71 @@ const CartPage = () => {
             Clear Selection
           </button>
         </div>
+
+        {/* BOGO Interactive Guidance Banner */}
+        {(() => {
+          const totalQty = items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+          if (totalQty === 1) {
+            return (
+              <div className="mb-10 p-5 rounded-2xl bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 border border-rose-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+                    <span className="material-symbols-outlined text-xl">redeem</span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-rose-700 bg-rose-100/80 px-2 py-0.5 rounded-full">
+                        Offer Alert
+                      </span>
+                      <p className="text-xs font-bold text-stone-900">
+                        Add 1 more item to unlock <span className="text-rose-600 font-black">BUY 1 GET 1 FREE (BOGO)</span>
+                      </p>
+                    </div>
+                    <p className="text-[11px] text-stone-600 mt-0.5 font-light">
+                      The lower-priced item will be completely <strong className="text-rose-600">FREE</strong> at checkout!
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/category/buy-1-get-1"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-full text-[11px] font-bold uppercase tracking-wider transition-all shadow-md shadow-rose-200 shrink-0"
+                >
+                  <span>Select BOGO Item</span>
+                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                </Link>
+              </div>
+            );
+          }
+          if (totalQty >= 2) {
+            return (
+              <div className="mb-10 p-4 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-between gap-3 animate-fade-in text-emerald-900">
+                <div className="flex items-center gap-3">
+                  <span className="material-symbols-outlined text-emerald-600 text-xl">task_alt</span>
+                  <div>
+                    <p className="text-xs font-bold">
+                      🎉 BOGO Unlocked! You have {totalQty} eligible items in your cart.
+                    </p>
+                    <p className="text-[10px] text-emerald-700 font-light">
+                      Apply code <strong className="font-bold">BOGO</strong> in the order summary to get your 2nd item 100% free.
+                    </p>
+                  </div>
+                </div>
+                {!appliedCoupon && (
+                  <button
+                    onClick={() => {
+                      const couponEl = document.querySelector('input[placeholder*="COUPON"]') as HTMLInputElement;
+                      if (couponEl) couponEl.focus();
+                    }}
+                    className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 underline underline-offset-4 hover:text-emerald-950 shrink-0"
+                  >
+                    Apply Below &darr;
+                  </button>
+                )}
+              </div>
+            );
+          }
+          return null;
+        })()}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
           {/* Cart Items List */}
@@ -141,6 +218,7 @@ const CartPage = () => {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-3 ml-1">Have a coupon?</p>
                 <CouponSection 
                   cartTotal={subtotal}
+                  items={items}
                   appliedCoupon={appliedCoupon}
                   onApply={(coupon) => setAppliedCoupon(coupon)}
                   onRemove={() => setAppliedCoupon(null)}
@@ -164,6 +242,15 @@ const CartPage = () => {
                     {shipping === 0 ? 'Free' : `₹${shipping}`}
                   </span>
                 </div>
+                {saleFee > 0 && (
+                  <div className="flex justify-between text-sm items-center animate-fade-in">
+                    <div>
+                      <span className="text-surface-on-variant">Sale% Category Fee</span>
+                      <p className="text-[9px] text-stone-400 font-light">₹50 per sale product</p>
+                    </div>
+                    <span className="text-surface-on font-medium">₹{saleFee.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="h-px bg-stone-100 my-4" />
                 <div className="flex justify-between items-baseline">
                   <span className="text-lg font-display text-surface-on">Total</span>
@@ -181,15 +268,9 @@ const CartPage = () => {
                 Proceed to Checkout
               </Link>
 
-              <div className="mt-8 space-y-4">
-                <div className="flex items-center gap-3 text-stone-400">
-                  <span className="material-symbols-outlined text-lg font-light">verified_user</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest">SSL Secure Payment</span>
-                </div>
-                <div className="flex items-center gap-3 text-stone-400">
-                  <span className="material-symbols-outlined text-lg font-light">package_2</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest">Discreet Packaging</span>
-                </div>
+              {/* Trust & Guarantee Banner */}
+              <div className="mt-8 pt-6 border-t border-stone-100">
+                <TrustBanner variant="compact" />
               </div>
             </div>
 
