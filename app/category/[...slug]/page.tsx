@@ -299,6 +299,10 @@ const CategoryPage = () => {
               productCats.some(c => typeof c === 'string' && /^(bogo|buy 1 get 1|buy 1 get 1 free|buy-1-get-1)$/i.test(c.trim()))
             );
 
+            const prodPrice = parseFloat(p.price) || 0;
+            const prodComparePrice = parseFloat(p.comparePrice || p.original_price || p.mrp) || 0;
+            const hasDiscount = prodComparePrice > prodPrice;
+
             const matchesMain = isAllSection
               ? true
               : isSaleSection 
