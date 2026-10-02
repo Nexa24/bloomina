@@ -6,15 +6,59 @@ import { validateCoupon } from '@/app/actions/checkout';
 interface CouponSectionProps {
   cartTotal: number;
   items?: any[];
+  hasBogoItems?: boolean;
   onApply: (coupon: { code: string; discountAmount: number }) => void;
   onRemove: () => void;
   appliedCoupon: { code: string; discountAmount: number } | null;
 }
 
-const CouponSection: React.FC<CouponSectionProps> = ({ cartTotal, items = [], onApply, onRemove, appliedCoupon }) => {
+const CouponSection: React.FC<CouponSectionProps> = ({ 
+  cartTotal, 
+  items = [], 
+  hasBogoItems: propHasBogoItems, 
+  onApply, 
+  onRemove, 
+  appliedCoupon 
+}) => {
   const [couponCode, setCouponCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verifiedHasBogo, setVerifiedHasBogo] = useState<boolean | null>(null);
+
+  // Check if cart has BOGO items if not explicitly provided as prop
+  React.useEffect(() => {
+    if (typeof propHasBogoItems === 'boolean') {
+      setVerifiedHasBogo(propHasBogoItems);
+      return;
+    }
+
+    let isMounted = true;
+    const checkBogo = async () => {
+      try {
+        const { checkBogoEligibility } = await import('@/app/actions/checkout');
+        const res = await checkBogoEligibility(items);
+        if (isMounted) {
+          setVerifiedHasBogo(res.hasBogoItems);
+        }
+      } catch (e) {
+        if (isMounted) setVerifiedHasBogo(false);
+      }
+    };
+
+    if (items.length > 0) {
+      checkBogo();
+    } else {
+      setVerifiedHasBogo(false);
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [items, propHasBogoItems]);
+
+  const showBogoBanner = typeof propHasBogoItems === 'boolean' 
+    ? propHasBogoItems 
+    : (verifiedHasBogo === true);
 
   // Total quantity of items in cart
   const totalItemCount = Array.isArray(items) 
@@ -74,46 +118,48 @@ const CouponSection: React.FC<CouponSectionProps> = ({ cartTotal, items = [], on
 
   return (
     <div className="space-y-4">
-      {/* Active Offer Banner */}
-      <div className="bg-gradient-to-r from-amber-50 to-rose-50/50 dark:from-amber-950/30 dark:to-rose-950/20 border border-amber-200/80 dark:border-amber-800/40 p-4 rounded-2xl space-y-3 shadow-sm">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <span className="text-xl">🎁</span>
-            <div>
-              <p className="text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-tight">
-                BUY 1 GET 1 FREE (BOGO)
-              </p>
-              <p className="text-[10px] font-semibold text-amber-700/90 dark:text-amber-400/90">
-                Add 2 or more items &middot; Lower priced item is 100% FREE!
-              </p>
+      {/* Active Offer Banner - Only shown if cart has BOGO eligible items */}
+      {showBogoBanner && (
+        <div className="bg-gradient-to-r from-amber-50 to-rose-50/50 dark:from-amber-950/30 dark:to-rose-950/20 border border-amber-200/80 dark:border-amber-800/40 p-4 rounded-2xl space-y-3 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl">🎁</span>
+              <div>
+                <p className="text-xs font-black text-amber-900 dark:text-amber-200 uppercase tracking-tight">
+                  BUY 1 GET 1 FREE (BOGO)
+                </p>
+                <p className="text-[10px] font-semibold text-amber-700/90 dark:text-amber-400/90">
+                  Add 2 or more items &middot; Lower priced item is 100% FREE!
+                </p>
+              </div>
             </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => handleApply('BOGO')}
-            disabled={isLoading}
-            className="bg-[#944555] hover:bg-[#7d3a47] text-white px-3.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm shrink-0 disabled:opacity-50"
-          >
-            {isLoading ? '...' : 'Apply Code'}
-          </button>
-        </div>
-
-        {/* Dynamic customer guidance based on items in cart */}
-        {!isBogoEligible && (
-          <div className="pt-2 border-t border-amber-200/60 dark:border-amber-800/40 flex items-center justify-between text-[10px]">
-            <span className="text-amber-800 dark:text-amber-300 font-medium flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-xs">info</span>
-              You have {totalItemCount} of 2 items in cart for BOGO
-            </span>
-            <a 
-              href="/products" 
-              className="text-[#944555] font-bold hover:underline underline-offset-2 flex items-center gap-1"
+            <button
+              type="button"
+              onClick={() => handleApply('BOGO')}
+              disabled={isLoading}
+              className="bg-[#944555] hover:bg-[#7d3a47] text-white px-3.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-sm shrink-0 disabled:opacity-50"
             >
-              + Add 1 more item &rarr;
-            </a>
+              {isLoading ? '...' : 'Apply Code'}
+            </button>
           </div>
-        )}
-      </div>
+
+          {/* Dynamic customer guidance based on items in cart */}
+          {!isBogoEligible && (
+            <div className="pt-2 border-t border-amber-200/60 dark:border-amber-800/40 flex items-center justify-between text-[10px]">
+              <span className="text-amber-800 dark:text-amber-300 font-medium flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-xs">info</span>
+                You have {totalItemCount} of 2 items in cart for BOGO
+              </span>
+              <a 
+                href="/products" 
+                className="text-[#944555] font-bold hover:underline underline-offset-2 flex items-center gap-1"
+              >
+                + Add 1 more item &rarr;
+              </a>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="relative">
         <input 

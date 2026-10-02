@@ -1,10 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 const WhatsAppButton = () => {
+  const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+
+  const isProductPage = pathname?.startsWith('/product/');
 
   useEffect(() => {
     // Show button after 1.5 seconds delay
@@ -32,7 +36,7 @@ const WhatsAppButton = () => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 font-sans pointer-events-none">
+    <div className={`fixed ${isProductPage ? 'bottom-24 md:bottom-6' : 'bottom-20 md:bottom-6'} right-4 md:right-6 z-40 flex items-center gap-3 font-sans pointer-events-none transition-all duration-300`}>
       {/* Tooltip */}
       <div 
         className={`bg-white text-stone-800 text-xs px-4 py-2.5 rounded-2xl shadow-xl border border-stone-100/80 transition-all duration-500 ease-out transform origin-right ${

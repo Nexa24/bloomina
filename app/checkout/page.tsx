@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useCart } from '@/hooks/use-cart';
 import { useRouter } from 'next/navigation';
-import { createOrder, verifyPayment, validateCoupon, deleteOrder, getCheckoutConfig } from '@/app/actions/checkout';
+import { createOrder, verifyPayment, validateCoupon, deleteOrder, getCheckoutConfig, checkBogoEligibility } from '@/app/actions/checkout';
 import Link from 'next/link';
 import Script from 'next/script';
 import { useAuth } from '@/hooks/use-auth';
@@ -68,6 +68,7 @@ const CheckoutPage = () => {
   const [paymentMethod, setPaymentMethod] = useState<'Razorpay' | 'COD'>('Razorpay');
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
   const [buyNowItem, setBuyNowItem] = useState<any>(null);
+  const [hasBogoItems, setHasBogoItems] = useState(false);
 
   // The items used for this checkout session
   const items = isBuyNow && buyNowItem ? [buyNowItem] : cartItems;
@@ -123,6 +124,28 @@ const CheckoutPage = () => {
   }, [initialCouponCode, items]);
 
   useEffect(() => {
+    let isSubscribed = true;
+    const checkBogo = async () => {
+      if (items.length > 0) {
+        try {
+          const res = await checkBogoEligibility(items);
+          if (isSubscribed) {
+            setHasBogoItems(res.hasBogoItems);
+          }
+        } catch (err) {
+          if (isSubscribed) setHasBogoItems(false);
+        }
+      } else {
+        if (isSubscribed) setHasBogoItems(false);
+      }
+    };
+    checkBogo();
+    return () => {
+      isSubscribed = false;
+    };
+  }, [items]);
+
+  useEffect(() => {
     const fetchConfig = async () => {
       try {
         const config = await getCheckoutConfig();
@@ -171,24 +194,28 @@ const CheckoutPage = () => {
   }
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const isKerala = formData.state?.trim().toLowerCase() === 'kerala';
-  const shipping = isKerala ? 0 : 80;
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
 
-  // Sale% fee: ₹50 per product in sale% category or marked on sale
-  const saleFee = items.reduce((sum, item) => {
-    const isSale = 
+  // Check if checkout items contain any Offer% / Sale products
+  const hasOfferProduct = items.some((item: any) => {
+    return (
       item.is_sale === true ||
       (item.comparePrice && Number(item.comparePrice) > Number(item.price)) ||
-      (item.categories && Array.isArray(item.categories) && item.categories.some((c: string) => /sale/i.test(c))) ||
-      (typeof item.category === 'string' && /sale/i.test(item.category));
-    return isSale ? sum + 50 * (Number(item.quantity) || 1) : sum;
-  }, 0);
+      (item.categories && Array.isArray(item.categories) && item.categories.some((c: string) => /sale|offer/i.test(c))) ||
+      (typeof item.category === 'string' && /sale|offer/i.test(item.category))
+    );
+  });
+
+  // Shipping rules:
+  // - Offer% item present: ₹50 shipping charge
+  // - Cart subtotal under ₹499: ₹50 shipping charge
+  // - Orders >= ₹499 with regular items: Free shipping
+  const shipping = hasOfferProduct ? 50 : (subtotal < 499 && subtotal > 0 ? 50 : 0);
 
   // COD fee: ₹50 compulsory fee when paymentMethod is COD
   const codFee = paymentMethod === 'COD' ? 50 : 0;
 
-  const total = Math.max(0, subtotal - discount + shipping + saleFee + codFee);
+  const total = Math.max(0, subtotal - discount + shipping + codFee);
   const payableOnline = paymentMethod === 'COD' ? 50 : total;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -548,6 +575,7 @@ const CheckoutPage = () => {
                 <CouponSection 
                   cartTotal={subtotal}
                   items={items}
+                  hasBogoItems={hasBogoItems}
                   appliedCoupon={appliedCoupon}
                   onApply={(coupon) => setAppliedCoupon(coupon)}
                   onRemove={() => setAppliedCoupon(null)}
@@ -569,23 +597,17 @@ const CheckoutPage = () => {
                    <div>
                      <span className="text-surface-on-variant">Shipping</span>
                      <p className="text-[9px] text-stone-400 font-light">
-                       {isKerala ? 'Free shipping across Kerala' : `Standard shipping for ${formData.state || 'other states'}`}
+                       {hasOfferProduct 
+                         ? 'Flat ₹50 shipping for Offer% items' 
+                         : subtotal < 499 
+                           ? 'Standard ₹50 shipping for orders under ₹499' 
+                           : 'Free shipping on orders above ₹499'}
                      </p>
                    </div>
-                   <span className={`${shipping === 0 ? 'text-primary font-bold' : 'text-surface-on font-medium'} uppercase text-[10px] tracking-widest`}>
+                   <span className={`${shipping === 0 ? 'text-green-600 font-bold' : 'text-surface-on font-medium'} uppercase text-[10px] tracking-widest`}>
                      {shipping === 0 ? 'Free' : `₹${shipping}.00`}
                    </span>
                  </div>
-
-                {saleFee > 0 && (
-                  <div className="flex justify-between text-sm items-center animate-fade-in">
-                    <div>
-                      <span className="text-surface-on-variant">Sale% Category Fee</span>
-                      <p className="text-[9px] text-stone-400 font-light">₹50 per sale product</p>
-                    </div>
-                    <span className="text-surface-on font-medium">₹{saleFee.toLocaleString()}.00</span>
-                  </div>
-                )}
 
                 {paymentMethod === 'COD' && (
                   <div className="flex justify-between text-sm items-center animate-fade-in">

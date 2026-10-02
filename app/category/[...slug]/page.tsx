@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useParams, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -159,9 +159,10 @@ const categoryMap: { [key: string]: CategoryEntry } = {
 const CategoryPage = () => {
   const params = useParams();
   const searchParams = useSearchParams();
-  const slugArray = params.slug as string[];
-  const mainSlug = slugArray?.[0] || '';
-  const subSlug  = slugArray?.[1] || '';
+  const rawSlug = params?.slug;
+  const slugArray = Array.isArray(rawSlug) ? rawSlug : typeof rawSlug === 'string' ? [rawSlug] : [];
+  const mainSlug = slugArray[0] || '';
+  const subSlug  = slugArray[1] || '';
   const searchQuery = searchParams ? (searchParams.get('q') || searchParams.get('search') || '') : '';
 
   const [products, setProducts] = useState<any[]>([]);
@@ -169,11 +170,11 @@ const CategoryPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [sortBy, setSortBy] = useState('newest');
 
-  const isSearchPage = mainSlug.toLowerCase() === 'search' || !!searchQuery;
+  const isSearchPage = (mainSlug || '').toLowerCase() === 'search' || !!searchQuery;
   const currentCategory = isSearchPage
     ? { label: searchQuery ? `Search: "${searchQuery}"` : 'Search Results', dbName: 'Search' }
-    : categoryMap[mainSlug] || { label: mainSlug?.toUpperCase(), dbName: mainSlug };
-  const currentSub = !isSearchPage && (currentCategory.subs as SubCategory[] | undefined)?.find(s => s.slug === subSlug);
+    : (mainSlug ? categoryMap[mainSlug.toLowerCase()] : null) || { label: (mainSlug || 'All').toUpperCase(), dbName: mainSlug || 'All' };
+  const currentSub = !isSearchPage && (currentCategory.subs as SubCategory[] | undefined)?.find(s => s.slug === (subSlug || '').toLowerCase());
 
   useEffect(() => {
     let isCancelled = false;
@@ -559,4 +560,16 @@ const CategoryPage = () => {
   );
 };
 
-export default CategoryPage;
+export default function CategoryPageWrapper() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <CategoryPage />
+    </Suspense>
+  );
+}

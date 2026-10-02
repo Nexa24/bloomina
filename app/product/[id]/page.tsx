@@ -856,25 +856,25 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         <ProductReviews productId={product.id} title={`${product.name} Feedback`} />
 
         {/* Floating Mobile Action Bar */}
-        <div className="fixed bottom-0 left-0 right-0 z-45 bg-white/90 backdrop-blur-md border-t border-stone-100 p-4 md:hidden flex gap-3 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] animate-fade-in-up">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-stone-200/80 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:hidden flex items-center gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.08)]">
           <button 
             onClick={handleAddToCart}
-            className={`flex-1 py-4 rounded-full font-bold uppercase tracking-[0.2em] text-[10px] border transition-all duration-300 relative overflow-hidden ${isAdded ? 'bg-green-500 border-green-500 text-white' : 'border-primary text-primary active:bg-primary/5'}`}
+            className={`flex-1 py-3.5 rounded-full font-bold uppercase tracking-[0.2em] text-[10px] border transition-all duration-300 relative overflow-hidden active:scale-98 ${isAdded ? 'bg-green-600 border-green-600 text-white' : 'border-primary text-primary hover:bg-primary/5 active:bg-primary/10'}`}
           >
             <span className={`flex items-center justify-center gap-1.5 transition-transform duration-500 ${isAdded ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'}`}>
-              <span className="material-symbols-outlined text-sm font-light">shopping_bag</span>
+              <span className="material-symbols-outlined text-base font-light">shopping_bag</span>
               Add to Cart
             </span>
             <span className={`absolute inset-0 flex items-center justify-center gap-1.5 transition-transform duration-500 ${isAdded ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
-              <span className="material-symbols-outlined text-sm">check</span>
+              <span className="material-symbols-outlined text-base">check</span>
               Added!
             </span>
           </button>
           <button
             onClick={handleBuyNow}
-            className="flex-1 py-4 rounded-full bg-primary text-white font-bold uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-primary/20 active:scale-95 transition-all duration-300 flex items-center justify-center gap-1.5"
+            className="flex-1 py-3.5 rounded-full bg-primary hover:bg-primary/95 text-white font-bold uppercase tracking-[0.2em] text-[10px] shadow-lg shadow-primary/25 active:scale-98 transition-all duration-300 flex items-center justify-center gap-1.5"
           >
-            <span className="material-symbols-outlined text-sm font-light">bolt</span>
+            <span className="material-symbols-outlined text-base font-light">bolt</span>
             Buy Now
           </button>
         </div>

@@ -455,175 +455,181 @@ const Navbar = () => {
           className={`absolute inset-0 bg-surface-on/20 backdrop-blur-md transition-opacity duration-700 ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`}
           onClick={() => setIsMenuOpen(false)}
         />
-        <div className={`absolute top-0 left-0 w-[80%] max-w-[320px] h-full bg-white transition-transform duration-700 ease-out p-12 flex flex-col rounded-r-[3rem] shadow-2xl ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <button 
-            onClick={() => setIsMenuOpen(false)}
-            aria-label="Close menu drawer"
-            className="self-end text-surface-on-variant hover:text-primary transition-colors"
-          >
-            <span className="material-symbols-outlined text-3xl font-light" aria-hidden="true">close</span>
-          </button>
+        <div className={`absolute top-0 left-0 w-[82%] max-w-[320px] h-full bg-white transition-transform duration-500 ease-out px-6 py-5 flex flex-col justify-between rounded-r-[2.5rem] shadow-2xl overflow-y-auto ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          {/* Top Header & Quick Buttons */}
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Menu</span>
+              <button 
+                onClick={() => setIsMenuOpen(false)}
+                aria-label="Close menu drawer"
+                className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-surface-on hover:text-primary transition-colors"
+              >
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">close</span>
+              </button>
+            </div>
 
-          {/* Quick Icons Row (Wishlist and Info/Support) */}
-          <div className="flex items-center gap-4 mt-8 py-4 border-b border-stone-100">
-            <Link 
-              href="/wishlist" 
-              className="flex-1 flex items-center justify-center gap-2 py-3 bg-stone-50 rounded-2xl text-surface-on-variant hover:text-primary transition-colors duration-300"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <span className="material-symbols-outlined font-light text-[20px]">favorite</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider">Wishlist</span>
-              {isMounted && wishlistItems.length > 0 && (
-                <span className="w-4 h-4 bg-primary text-white text-[8px] font-bold rounded-full flex items-center justify-center">
-                  {wishlistItems.length}
-                </span>
-              )}
-            </Link>
-            
-            <Link 
-              href="/contact" 
-              className="flex-1 flex items-center justify-center gap-2 py-3 bg-stone-50 rounded-2xl text-surface-on-variant hover:text-primary transition-colors duration-300"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <span className="material-symbols-outlined font-light text-[20px]">info</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider">Support</span>
-            </Link>
-          </div>
+            {/* Quick Icons Row (Wishlist and Support) */}
+            <div className="grid grid-cols-2 gap-2.5 my-3.5">
+              <Link 
+                href="/wishlist" 
+                className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-stone-50 rounded-xl text-surface-on-variant hover:text-primary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <span className="material-symbols-outlined text-base">favorite</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider">Wishlist</span>
+                {isMounted && wishlistItems.length > 0 && (
+                  <span className="w-4 h-4 bg-primary text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+                    {wishlistItems.length}
+                  </span>
+                )}
+              </Link>
+              
+              <Link 
+                href="/contact" 
+                className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-stone-50 rounded-xl text-surface-on-variant hover:text-primary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <span className="material-symbols-outlined text-base">support_agent</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider">Support</span>
+              </Link>
+            </div>
 
-          <div className="mt-8 space-y-12 overflow-y-auto">
-            <h2 className="text-[10px] font-bold uppercase tracking-[0.4em] text-surface-on/30">Explore</h2>
-            <nav className="flex flex-col gap-6">
-              {/* Home Link */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between group">
+            {/* Main Nav Items */}
+            <div className="pt-2">
+              <p className="text-[9px] font-bold uppercase tracking-[0.3em] text-surface-on/35 mb-2.5">Explore</p>
+              <nav className="flex flex-col gap-2.5">
+                {/* Home Link */}
+                <div>
                   <Link 
                     href="/" 
-                    className={`text-3xl font-display font-light transition-colors tracking-tight ${pathname === '/' ? 'text-primary' : 'text-surface-on'}`}
+                    className={`text-xl font-display font-light transition-colors tracking-tight block ${pathname === '/' ? 'text-primary font-normal' : 'text-surface-on'}`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Home
                   </Link>
                 </div>
-              </div>
 
-              {navLinks.map((link) => (
-                <div key={link.name} className="space-y-4">
-                  <div className="flex items-center justify-between group">
-                    {link.groups || link.subsections ? (
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          setMobileExpanded(mobileExpanded === link.name ? null : link.name);
-                        }}
-                        className={`text-3xl font-display font-light transition-colors tracking-tight text-left flex-1 flex items-center justify-between ${pathname === link.href || mobileExpanded === link.name ? 'text-primary' : 'text-surface-on'}`}
-                      >
-                        <span>{link.name}</span>
-                        <span className={`material-symbols-outlined transition-transform duration-500 text-primary/60 text-2xl pr-1 ${mobileExpanded === link.name ? 'rotate-180' : ''}`}>
-                          expand_more
-                        </span>
-                      </button>
-                    ) : (
-                      <Link 
-                        href={link.href} 
-                        className={`text-3xl font-display font-light transition-colors tracking-tight ${pathname === link.href ? 'text-primary' : 'text-surface-on'}`}
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {link.name}
-                      </Link>
+                {navLinks.map((link) => (
+                  <div key={link.name} className="space-y-2">
+                    <div className="flex items-center justify-between group">
+                      {link.groups || link.subsections ? (
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            setMobileExpanded(mobileExpanded === link.name ? null : link.name);
+                          }}
+                          className={`text-xl font-display font-light transition-colors tracking-tight text-left flex-1 flex items-center justify-between py-0.5 ${pathname === link.href || mobileExpanded === link.name ? 'text-primary font-normal' : 'text-surface-on'}`}
+                        >
+                          <span>{link.name}</span>
+                          <span className={`material-symbols-outlined transition-transform duration-300 text-primary/70 text-lg ${mobileExpanded === link.name ? 'rotate-180' : ''}`}>
+                            expand_more
+                          </span>
+                        </button>
+                      ) : (
+                        <Link 
+                          href={link.href} 
+                          className={`text-xl font-display font-light transition-colors tracking-tight block py-0.5 ${pathname === link.href ? 'text-primary font-normal' : 'text-surface-on'}`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          {link.name}
+                        </Link>
+                      )}
+                    </div>
+                    
+                    {/* Mobile Sub-sections & Grouped Divisions Accordion */}
+                    {(link.groups || link.subsections) && (
+                      <div className={`overflow-hidden transition-all duration-300 flex flex-col gap-2.5 pl-3 border-l-2 border-primary/20 ${mobileExpanded === link.name ? 'max-h-[300px] opacity-100 overflow-y-auto pt-1 pb-1' : 'max-h-0 opacity-0'}`}>
+                        <div className="flex flex-col gap-1">
+                          <Link 
+                            href={link.href}
+                            className="text-[11px] font-bold uppercase tracking-wider text-primary hover:underline flex items-center justify-between"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <span>Explore All Products</span>
+                            <span>&rarr;</span>
+                          </Link>
+                          <Link 
+                            href="/all-categories"
+                            className="text-[11px] font-bold uppercase tracking-wider text-stone-600 hover:text-primary flex items-center justify-between"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <span className="flex items-center gap-1.5">
+                              <span className="material-symbols-outlined text-xs text-primary">grid_view</span>
+                              <span>All Categories</span>
+                            </span>
+                            <span>&rarr;</span>
+                          </Link>
+                        </div>
+
+                        {/* If categorized into groups like Bras & Panties */}
+                        {link.groups && link.groups.map((group) => (
+                          <div key={group.groupName} className="space-y-1.5 pt-1.5 border-t border-stone-100 first:border-t-0 first:pt-0">
+                            <div className="flex items-center justify-between">
+                              <Link 
+                                href={group.groupHref}
+                                onClick={() => setIsMenuOpen(false)}
+                                className="text-[11px] font-black uppercase tracking-wider text-stone-900 hover:text-primary flex items-center gap-1"
+                              >
+                                <span>{group.groupName}</span>
+                                <span className="material-symbols-outlined text-[10px] text-primary">arrow_forward</span>
+                              </Link>
+                            </div>
+                            <div className="flex flex-col gap-1 pl-1">
+                              {group.items.map((sub) => (
+                                <Link 
+                                  key={sub.name} 
+                                  href={sub.href}
+                                  className="text-[11px] font-light text-stone-600 hover:text-primary transition-colors py-0.5"
+                                  onClick={() => setIsMenuOpen(false)}
+                                >
+                                  {sub.name}
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+
+                        {/* Fallback for regular subsections */}
+                        {!link.groups && link.subsections && link.subsections.map((sub) => (
+                          <Link 
+                            key={sub.name} 
+                            href={sub.href}
+                            className="text-xs font-semibold text-surface-on/70 hover:text-primary transition-colors py-0.5"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            {sub.name}
+                          </Link>
+                        ))}
+                      </div>
                     )}
                   </div>
-                  
-                  {/* Mobile Sub-sections & Grouped Divisions Accordion */}
-                  {(link.groups || link.subsections) && (
-                    <div className={`overflow-hidden transition-all duration-500 flex flex-col gap-4 pl-4 border-l border-primary/20 ${mobileExpanded === link.name ? 'max-h-[480px] opacity-100 overflow-y-auto' : 'max-h-0 opacity-0'}`}>
-                      <div className="flex flex-col gap-1 pb-1">
-                        <Link 
-                          href={link.href}
-                          className="text-xs font-bold uppercase tracking-wider text-primary py-1 hover:underline flex items-center justify-between"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <span>Explore All Products</span>
-                          <span>&rarr;</span>
-                        </Link>
-                        <Link 
-                          href="/all-categories"
-                          className="text-xs font-bold uppercase tracking-wider text-stone-700 hover:text-primary py-1 flex items-center justify-between"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <span className="flex items-center gap-1.5">
-                            <span className="material-symbols-outlined text-sm text-primary">grid_view</span>
-                            <span>All Categories Page</span>
-                          </span>
-                          <span>&rarr;</span>
-                        </Link>
-                      </div>
-
-                      {/* If categorized into groups like Bras & Panties */}
-                      {link.groups && link.groups.map((group) => (
-                        <div key={group.groupName} className="space-y-2 pt-2 border-t border-stone-100/80 first:border-t-0 first:pt-0">
-                          <div className="flex items-center justify-between pr-2">
-                            <Link 
-                              href={group.groupHref}
-                              onClick={() => setIsMenuOpen(false)}
-                              className="text-xs font-black uppercase tracking-wider text-stone-900 hover:text-primary flex items-center gap-1.5"
-                            >
-                              <span>{group.groupName}</span>
-                              <span className="material-symbols-outlined text-xs text-primary">arrow_forward</span>
-                            </Link>
-                            <span className="text-[8px] font-bold uppercase tracking-widest text-primary/60">Division</span>
-                          </div>
-                          <div className="flex flex-col gap-1.5 pl-2">
-                            {group.items.map((sub) => (
-                              <Link 
-                                key={sub.name} 
-                                href={sub.href}
-                                className="text-xs font-light text-stone-600 hover:text-primary transition-colors py-0.5"
-                                onClick={() => setIsMenuOpen(false)}
-                              >
-                                {sub.name}
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-
-                      {/* Fallback for regular subsections */}
-                      {!link.groups && link.subsections && link.subsections.map((sub) => (
-                        <Link 
-                          key={sub.name} 
-                          href={sub.href}
-                          className="text-sm font-semibold text-surface-on/70 hover:text-primary transition-colors py-0.5"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          {sub.name}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </nav>
+                ))}
+              </nav>
+            </div>
           </div>
 
-          <div className="mt-auto space-y-8 pt-12 border-t border-primary/5">
-            <div className="flex flex-col gap-4">
-              <Link href="/size-guide" className="text-xs font-bold uppercase tracking-widest text-surface-on/60 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Size Guide</Link>
-              <Link href="/contact" className="text-xs font-bold uppercase tracking-widest text-surface-on/60 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Contact Us</Link>
+          {/* Footer Utility Links */}
+          <div className="pt-4 border-t border-stone-100 mt-4">
+            <div className="flex items-center gap-4 mb-2">
+              <Link href="/size-guide" className="text-[10px] font-bold uppercase tracking-wider text-surface-on/70 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Size Guide</Link>
+              <span className="text-stone-300">•</span>
+              <Link href="/contact" className="text-[10px] font-bold uppercase tracking-wider text-surface-on/70 hover:text-primary transition-colors" onClick={() => setIsMenuOpen(false)}>Contact Us</Link>
             </div>
-            <p className="text-[10px] text-surface-on-variant font-light">
-              Crafting elegance since 2026. <br />
-              Bloomina Collective.
+            <p className="text-[9px] text-surface-on-variant/60 font-light">
+              Bloomina Collective &copy; 2026
             </p>
           </div>
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-stone-200/80 px-4 py-2 flex items-center justify-around shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
-        <Link href="/" className={`flex flex-col items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider ${pathname === '/' ? 'text-primary' : 'text-stone-500'}`}>
-          <span className="material-symbols-outlined text-xl" aria-hidden="true">home</span>
-          <span>Home</span>
-        </Link>
+      {/* Mobile Bottom Navigation Bar - hidden on product detail pages to avoid collision with action bar */}
+      {!pathname?.startsWith('/product/') && (
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-stone-200/80 px-4 py-2 flex items-center justify-around shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+          <Link href="/" className={`flex flex-col items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider ${pathname === '/' ? 'text-primary' : 'text-stone-500'}`}>
+            <span className="material-symbols-outlined text-xl" aria-hidden="true">home</span>
+            <span>Home</span>
+          </Link>
         <Link href="/products" className={`flex flex-col items-center gap-0.5 text-[9px] font-bold uppercase tracking-wider ${pathname?.startsWith('/category') || pathname === '/products' ? 'text-primary' : 'text-stone-500'}`}>
           <span className="material-symbols-outlined text-xl" aria-hidden="true">grid_view</span>
           <span>Shop</span>
@@ -651,6 +657,7 @@ const Navbar = () => {
           )}
         </Link>
       </div>
+      )}
     </>
   );
 };

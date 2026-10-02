@@ -5,17 +5,72 @@ import Link from 'next/link';
 import { useCart } from '@/hooks/use-cart';
 import CouponSection from '@/components/CouponSection';
 import TrustBanner from '@/components/TrustBanner';
+import { supabase } from '@/lib/supabase';
+
+const UUID_REGEX = /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i;
 
 const CartPage = () => {
   const { items, updateQuantity, removeItem, getTotalPrice, clearCart } = useCart();
   const [isMounted, setIsMounted] = useState(false);
+  const [bogoEligibleIds, setBogoEligibleIds] = useState<Set<string>>(new Set());
 
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountAmount: number } | null>(null);
 
-  // Avoid hydration mismatch
+  // Avoid hydration mismatch and fetch accurate BOGO product statuses from database
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    const checkBogoEligibility = async () => {
+      const itemIds = Array.from(new Set(
+        items.map(i => {
+          const raw = String(i.productId || i.id || '');
+          const match = raw.match(UUID_REGEX);
+          return match ? match[0] : (raw.includes('-') && raw.length > 36 ? raw.split('-')[0] : raw);
+        }).filter(Boolean)
+      ));
+
+      if (itemIds.length === 0) {
+        setBogoEligibleIds(new Set());
+        return;
+      }
+
+      try {
+        const { data: dbProducts } = await supabase
+          .from('products')
+          .select('id, name, categories, specifications')
+          .in('id', itemIds);
+
+        const eligible = new Set<string>();
+        if (dbProducts) {
+          dbProducts.forEach((p: any) => {
+            const pCats: string[] = Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : []);
+            const pSpecs: any[] = Array.isArray(p.specifications) ? p.specifications : [];
+            const isBogo = Boolean(
+              p.is_bogo === true ||
+              String(p.is_bogo) === 'true' ||
+              pSpecs.some((s: any) => {
+                const sName = String(s.name || s.key || '').trim().toLowerCase();
+                const sVal = String(s.value || '').trim().toLowerCase();
+                return (sName === 'is_bogo' || sName === 'bogo') && (sVal === 'true' || sVal === 'yes' || sVal === '1');
+              }) ||
+              pCats.some(c => typeof c === 'string' && /bogo|buy\s*1\s*get\s*1|buy\s*one\s*get\s*one/i.test(c.trim()))
+            );
+            if (isBogo) {
+              eligible.add(String(p.id).toLowerCase());
+              if (p.name) eligible.add(String(p.name).toLowerCase().trim());
+            }
+          });
+        }
+        setBogoEligibleIds(eligible);
+      } catch (err) {
+        console.error('BOGO check error:', err);
+      }
+    };
+
+    checkBogoEligibility();
+  }, [items]);
 
   if (!isMounted) {
     return (
@@ -26,20 +81,25 @@ const CartPage = () => {
   }
 
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const shipping = 0;
   const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
 
-  // Sale% fee: ₹50 per product in sale% category or marked on sale
-  const saleFee = items.reduce((sum, item: any) => {
-    const isSale = 
+  // Check if cart contains any Offer% / Sale products
+  const hasOfferProduct = items.some((item: any) => {
+    return (
       item.is_sale === true ||
       (item.comparePrice && Number(item.comparePrice) > Number(item.price)) ||
-      (item.categories && Array.isArray(item.categories) && item.categories.some((c: string) => /sale/i.test(c))) ||
-      (typeof item.category === 'string' && /sale/i.test(item.category));
-    return isSale ? sum + 50 * (Number(item.quantity) || 1) : sum;
-  }, 0);
+      (item.categories && Array.isArray(item.categories) && item.categories.some((c: string) => /sale|offer/i.test(c))) ||
+      (typeof item.category === 'string' && /sale|offer/i.test(item.category))
+    );
+  });
 
-  const total = Math.max(0, subtotal - discount + shipping + saleFee);
+  // Shipping rules:
+  // - If cart has any Offer% product: ₹50 shipping
+  // - Otherwise, if subtotal < 499: ₹50 shipping
+  // - Otherwise: Free shipping (orders >= 499 with regular items)
+  const shipping = hasOfferProduct ? 50 : (subtotal < 499 && subtotal > 0 ? 50 : 0);
+
+  const total = Math.max(0, subtotal - discount + shipping);
 
   if (items.length === 0) {
     return (
@@ -73,10 +133,19 @@ const CartPage = () => {
           </button>
         </div>
 
-        {/* BOGO Interactive Guidance Banner */}
+        {/* BOGO Interactive Guidance Banner (Strictly for Eligible Items) */}
         {(() => {
-          const totalQty = items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
-          if (totalQty === 1) {
+          const eligibleItemsInCart = items.filter(item => {
+            const rawId = String(item.productId || item.id || '').trim();
+            const match = rawId.match(UUID_REGEX);
+            const uuid = match ? match[0].toLowerCase() : '';
+            const cleanId = rawId.includes('-') && rawId.length > 36 ? rawId.split('-')[0].toLowerCase() : rawId.toLowerCase();
+            const name = String(item.name || '').toLowerCase().trim();
+            return (uuid && bogoEligibleIds.has(uuid)) || bogoEligibleIds.has(cleanId) || bogoEligibleIds.has(rawId.toLowerCase()) || (name && bogoEligibleIds.has(name));
+          });
+          const eligibleQty = eligibleItemsInCart.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+
+          if (eligibleQty === 1) {
             return (
               <div className="mb-10 p-5 rounded-2xl bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 border border-rose-200/80 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in">
                 <div className="flex items-center gap-3.5">
@@ -89,11 +158,11 @@ const CartPage = () => {
                         Offer Alert
                       </span>
                       <p className="text-xs font-bold text-stone-900">
-                        Add 1 more item to unlock <span className="text-rose-600 font-black">BUY 1 GET 1 FREE (BOGO)</span>
+                        Add 1 more BOGO-eligible item to unlock <span className="text-rose-600 font-black">BUY 1 GET 1 FREE</span>
                       </p>
                     </div>
                     <p className="text-[11px] text-stone-600 mt-0.5 font-light">
-                      The lower-priced item will be completely <strong className="text-rose-600">FREE</strong> at checkout!
+                      The lower-priced eligible item will be completely <strong className="text-rose-600">FREE</strong> at checkout!
                     </p>
                   </div>
                 </div>
@@ -107,17 +176,17 @@ const CartPage = () => {
               </div>
             );
           }
-          if (totalQty >= 2) {
+          if (eligibleQty >= 2) {
             return (
               <div className="mb-10 p-4 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-center justify-between gap-3 animate-fade-in text-emerald-900">
                 <div className="flex items-center gap-3">
                   <span className="material-symbols-outlined text-emerald-600 text-xl">task_alt</span>
                   <div>
                     <p className="text-xs font-bold">
-                      🎉 BOGO Unlocked! You have {totalQty} eligible items in your cart.
+                      🎉 BOGO Unlocked! You have {eligibleQty} eligible BOGO items in your cart.
                     </p>
                     <p className="text-[10px] text-emerald-700 font-light">
-                      Apply code <strong className="font-bold">BOGO</strong> in the order summary to get your 2nd item 100% free.
+                      Apply code <strong className="font-bold">BOGO</strong> in the order summary to get your 2nd eligible item 100% free.
                     </p>
                   </div>
                 </div>
@@ -148,31 +217,51 @@ const CartPage = () => {
               <div className="col-span-2 text-right">Total</div>
             </div>
 
-            {items.map((item) => (
-              <div key={item.id} className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center pb-10 border-b border-stone-50 group">
-                {/* Product Info */}
-                <div className="col-span-1 md:col-span-6 flex gap-6">
-                  <Link href={`/product/${item.productId}`} className="w-24 h-32 md:w-32 md:h-40 bg-stone-50 rounded-2xl overflow-hidden flex-shrink-0 petal-shadow relative group/img block">
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors duration-300 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-white opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 text-lg drop-shadow">open_in_new</span>
-                    </div>
-                  </Link>
-                  <div className="flex flex-col justify-center gap-1">
-                    <Link href={`/product/${item.productId}`} className="group/name">
-                      <h3 className="text-lg md:text-xl font-display font-light text-surface-on group-hover/name:text-primary transition-colors duration-200 underline-offset-4 group-hover/name:underline decoration-primary/30">{item.name}</h3>
+            {items.map((item) => {
+              const rawId = String(item.productId || item.id || '').trim();
+              const match = rawId.match(UUID_REGEX);
+              const uuid = match ? match[0].toLowerCase() : '';
+              const cleanId = rawId.includes('-') && rawId.length > 36 ? rawId.split('-')[0].toLowerCase() : rawId.toLowerCase();
+              const name = String(item.name || '').toLowerCase().trim();
+              const isItemBogo = (uuid && bogoEligibleIds.has(uuid)) || bogoEligibleIds.has(cleanId) || bogoEligibleIds.has(rawId.toLowerCase()) || (name && bogoEligibleIds.has(name));
+
+              return (
+                <div key={item.id} className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center pb-10 border-b border-stone-50 group">
+                  {/* Product Info */}
+                  <div className="col-span-1 md:col-span-6 flex gap-6">
+                    <Link href={`/product/${item.productId}`} className="w-24 h-32 md:w-32 md:h-40 bg-stone-50 rounded-2xl overflow-hidden flex-shrink-0 petal-shadow relative group/img block">
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors duration-300 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-white opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 text-lg drop-shadow">open_in_new</span>
+                      </div>
+                      {isItemBogo && (
+                        <div className="absolute top-2 left-2 bg-[#944555] text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow">
+                          BOGO
+                        </div>
+                      )}
                     </Link>
-                    <p className="text-sm text-surface-on-variant/60">
-                      {item.size && `Size: ${item.size}`} {item.color && `| Color: ${item.color}`}
-                    </p>
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="text-[10px] font-bold uppercase tracking-widest text-primary mt-4 hover:underline underline-offset-4 decoration-1 text-left"
-                    >
-                      Remove
-                    </button>
+                    <div className="flex flex-col justify-center gap-1">
+                      <div className="flex items-center gap-2">
+                        <Link href={`/product/${item.productId}`} className="group/name">
+                          <h3 className="text-lg md:text-xl font-display font-light text-surface-on group-hover/name:text-primary transition-colors duration-200 underline-offset-4 group-hover/name:underline decoration-primary/30">{item.name}</h3>
+                        </Link>
+                        {isItemBogo && (
+                          <span className="text-[9px] font-black uppercase tracking-wider text-[#944555] bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md">
+                            BOGO Eligible
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-surface-on-variant/60">
+                        {item.size && `Size: ${item.size}`} {item.color && `| Color: ${item.color}`}
+                      </p>
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        className="text-[10px] font-bold uppercase tracking-widest text-primary mt-4 hover:underline underline-offset-4 decoration-1 text-left"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
-                </div>
 
                 {/* Price */}
                 <div className="hidden md:block col-span-2 text-center font-display text-lg text-surface-on/80">
@@ -206,7 +295,8 @@ const CartPage = () => {
                   </span>
                 </div>
               </div>
-            ))}
+            );
+          })}
           </div>
 
           {/* Order Summary Sidebox */}
@@ -219,6 +309,7 @@ const CartPage = () => {
                 <CouponSection 
                   cartTotal={subtotal}
                   items={items}
+                  hasBogoItems={bogoEligibleIds.size > 0}
                   appliedCoupon={appliedCoupon}
                   onApply={(coupon) => setAppliedCoupon(coupon)}
                   onRemove={() => setAppliedCoupon(null)}
@@ -236,21 +327,21 @@ const CartPage = () => {
                     <span className="font-medium text-primary">-₹{appliedCoupon.discountAmount.toLocaleString()}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-sm">
-                  <span className="text-surface-on-variant">Shipping</span>
-                  <span className={`${shipping === 0 ? 'text-green-600' : 'text-surface-on'} font-medium uppercase text-[10px] tracking-widest`}>
-                    {shipping === 0 ? 'Free' : `₹${shipping}`}
+                <div className="flex justify-between text-sm items-center">
+                  <div>
+                    <span className="text-surface-on-variant">Shipping</span>
+                    <p className="text-[9px] text-stone-400 font-light">
+                      {hasOfferProduct 
+                        ? 'Flat ₹50 shipping for Offer% items' 
+                        : subtotal < 499 
+                          ? 'Standard ₹50 shipping for orders under ₹499' 
+                          : 'Free shipping on orders above ₹499'}
+                    </p>
+                  </div>
+                  <span className={`${shipping === 0 ? 'text-green-600 font-bold' : 'text-surface-on font-medium'} uppercase text-[10px] tracking-widest`}>
+                    {shipping === 0 ? 'Free' : `₹${shipping}.00`}
                   </span>
                 </div>
-                {saleFee > 0 && (
-                  <div className="flex justify-between text-sm items-center animate-fade-in">
-                    <div>
-                      <span className="text-surface-on-variant">Sale% Category Fee</span>
-                      <p className="text-[9px] text-stone-400 font-light">₹50 per sale product</p>
-                    </div>
-                    <span className="text-surface-on font-medium">₹{saleFee.toLocaleString()}</span>
-                  </div>
-                )}
                 <div className="h-px bg-stone-100 my-4" />
                 <div className="flex justify-between items-baseline">
                   <span className="text-lg font-display text-surface-on">Total</span>

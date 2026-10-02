@@ -81,6 +81,93 @@ export async function getCheckoutConfig() {
   };
 }
 
+export async function checkBogoEligibility(items: any[]): Promise<{ hasBogoItems: boolean; eligibleProductIds: string[] }> {
+  try {
+    if (!Array.isArray(items) || items.length === 0) {
+      return { hasBogoItems: false, eligibleProductIds: [] };
+    }
+
+    const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i;
+    const itemIds: string[] = [];
+    const itemNames: string[] = [];
+
+    items.forEach(i => {
+      const rawId = String(i.productId || i.id || '').trim();
+      const match = rawId.match(uuidRegex);
+      if (match) {
+        itemIds.push(match[0]);
+      } else if (rawId) {
+        itemIds.push(rawId);
+      }
+      const name = i.name || i.title;
+      if (name) itemNames.push(String(name).trim());
+    });
+
+    if (itemIds.length === 0 && itemNames.length === 0) {
+      return { hasBogoItems: false, eligibleProductIds: [] };
+    }
+
+    const supabase = createAdminClient();
+    let query = supabase
+      .from('products')
+      .select('id, name, categories, specifications');
+
+    if (itemIds.length > 0) {
+      query = query.in('id', itemIds);
+    }
+
+    const { data: dbProducts } = await query;
+    const eligibleSet = new Set<string>();
+
+    if (dbProducts && dbProducts.length > 0) {
+      dbProducts.forEach((p: any) => {
+        const pCats: string[] = Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : []);
+        const pSpecs: any[] = Array.isArray(p.specifications) ? p.specifications : [];
+
+        const isEligible = Boolean(
+          p.is_bogo === true ||
+          String(p.is_bogo) === 'true' ||
+          pSpecs.some((s: any) => {
+            const sName = String(s.name || s.key || '').trim().toLowerCase();
+            const sVal = String(s.value || '').trim().toLowerCase();
+            return (sName === 'is_bogo' || sName === 'bogo') && (sVal === 'true' || sVal === 'yes' || sVal === '1');
+          }) ||
+          pCats.some(c => typeof c === 'string' && /bogo|buy\s*1\s*get\s*1|buy\s*one\s*get\s*one/i.test(c.trim()))
+        );
+
+        if (isEligible) {
+          eligibleSet.add(String(p.id).toLowerCase());
+          if (p.name) eligibleSet.add(String(p.name).toLowerCase().trim());
+        }
+      });
+    }
+
+    // Check if any cart item matches an eligible product
+    const hasBogoItems = items.some(item => {
+      const rawId = String(item.productId || item.id || '').trim();
+      const uuidMatch = rawId.match(uuidRegex);
+      const uuid = uuidMatch ? uuidMatch[0].toLowerCase() : '';
+      const cleanId = rawId.includes('-') && rawId.length > 36 ? rawId.split('-')[0].toLowerCase() : rawId.toLowerCase();
+      const itemName = String(item.name || item.title || '').toLowerCase().trim();
+
+      return (
+        (uuid && eligibleSet.has(uuid)) ||
+        eligibleSet.has(cleanId) ||
+        eligibleSet.has(rawId.toLowerCase()) ||
+        (itemName && eligibleSet.has(itemName))
+      );
+    });
+
+    return {
+      hasBogoItems,
+      eligibleProductIds: Array.from(eligibleSet)
+    };
+  } catch (err) {
+    console.error('checkBogoEligibility error:', err);
+    return { hasBogoItems: false, eligibleProductIds: [] };
+  }
+}
+
 export async function validateCoupon(code: string, cartTotal: number, items?: any[]) {
   try {
     const supabase = createAdminClient();
@@ -96,25 +183,55 @@ export async function validateCoupon(code: string, cartTotal: number, items?: an
     if (error || !rawCoupon) {
       // Check hardcoded promo code aliases if not found in database
       if (normalizedCode === 'BOGO' || normalizedCode === 'BUY1GET1') {
-        // Collect product IDs from items to check db eligibility if needed
-        const itemIds = Array.isArray(items) ? items.map(i => i.productId || i.id).filter(Boolean) : [];
+        const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i;
+        const itemIds: string[] = [];
+        const itemNames: string[] = [];
+
+        if (Array.isArray(items)) {
+          items.forEach(i => {
+            const rawId = String(i.productId || i.id || '');
+            const match = rawId.match(uuidRegex);
+            if (match) {
+              itemIds.push(match[0]);
+            } else if (rawId) {
+              itemIds.push(rawId);
+            }
+            const name = i.name || i.title;
+            if (name) itemNames.push(String(name).trim());
+          });
+        }
+
         let bogoEligibleProductIds = new Set<string>();
 
-        if (itemIds.length > 0) {
-          const { data: dbProducts } = await supabase
+        if (itemIds.length > 0 || itemNames.length > 0) {
+          let query = supabase
             .from('products')
-            .select('id, categories, specifications, is_bogo')
-            .in('id', itemIds);
+            .select('id, name, categories, specifications');
 
-          if (dbProducts) {
+          if (itemIds.length > 0) {
+            query = query.in('id', itemIds);
+          }
+
+          const { data: dbProducts } = await query;
+
+          if (dbProducts && dbProducts.length > 0) {
             dbProducts.forEach((p: any) => {
               const pCats: string[] = Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : []);
+              const pSpecs: any[] = Array.isArray(p.specifications) ? p.specifications : [];
+              
               const isEligible = Boolean(
-                p.is_bogo === true ||
-                (Array.isArray(p.specifications) && p.specifications.some((s: any) => s.name === 'is_bogo' && s.value === 'true')) ||
-                pCats.some(c => typeof c === 'string' && /^(bogo|buy 1 get 1|buy 1 get 1 free|buy-1-get-1)$/i.test(c.trim()))
+                pSpecs.some((s: any) => {
+                  const sName = String(s.name || s.key || '').trim().toLowerCase();
+                  const sVal = String(s.value || '').trim().toLowerCase();
+                  return (sName === 'is_bogo' || sName === 'bogo') && (sVal === 'true' || sVal === 'yes' || sVal === '1');
+                }) ||
+                pCats.some(c => typeof c === 'string' && /bogo|buy\s*1\s*get\s*1|buy\s*one\s*get\s*one/i.test(c.trim()))
               );
-              if (isEligible) bogoEligibleProductIds.add(p.id);
+
+              if (isEligible) {
+                bogoEligibleProductIds.add(String(p.id).toLowerCase());
+                if (p.name) bogoEligibleProductIds.add(String(p.name).toLowerCase().trim());
+              }
             });
           }
         }
@@ -122,8 +239,19 @@ export async function validateCoupon(code: string, cartTotal: number, items?: an
         const expandedBogoItems: number[] = [];
         if (Array.isArray(items)) {
           items.forEach(item => {
-            const prodId = item.productId || item.id;
-            const isEligible = item.is_bogo === true || bogoEligibleProductIds.has(prodId);
+            const rawId = String(item.productId || item.id || '').trim();
+            const uuidMatch = rawId.match(uuidRegex);
+            const uuid = uuidMatch ? uuidMatch[0].toLowerCase() : '';
+            const cleanId = rawId.includes('-') && rawId.length > 36 ? rawId.split('-')[0].toLowerCase() : rawId.toLowerCase();
+            const itemName = String(item.name || item.title || '').toLowerCase().trim();
+            
+            // Verified against DB eligible product registry
+            const isEligible = 
+              (uuid && bogoEligibleProductIds.has(uuid)) ||
+              bogoEligibleProductIds.has(cleanId) ||
+              bogoEligibleProductIds.has(rawId.toLowerCase()) ||
+              (itemName && bogoEligibleProductIds.has(itemName));
+
             if (isEligible) {
               const qty = Number(item.quantity) || 1;
               const price = Number(item.price) || 0;
@@ -133,7 +261,7 @@ export async function validateCoupon(code: string, cartTotal: number, items?: an
         }
 
         if (expandedBogoItems.length < 2) {
-          return { error: 'BOGO code requires at least 2 selected BOGO-eligible items in your cart.' };
+          return { error: 'BOGO offer requires at least 2 eligible BOGO products in your cart.' };
         }
 
         expandedBogoItems.sort((a, b) => b - a);
@@ -212,26 +340,59 @@ export async function validateCoupon(code: string, cartTotal: number, items?: an
         discountAmount = Math.min(discountAmount, Number(coupon.max_discount));
       }
     } else if (coupon.discount_type === 'bogo' || coupon.code === 'BOGO' || coupon.code === 'BUY1GET1') {
-      const selectedIds = Array.isArray(rawCoupon.selected_product_ids) ? rawCoupon.selected_product_ids : [];
-      const itemIds = Array.isArray(items) ? items.map(i => i.productId || i.id).filter(Boolean) : [];
+      const selectedIds = Array.isArray(rawCoupon.selected_product_ids) ? rawCoupon.selected_product_ids.map((id: any) => String(id)) : [];
+      const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i;
+      const itemIds: string[] = [];
+      const itemNames: string[] = [];
+
+      if (Array.isArray(items)) {
+        items.forEach(i => {
+          const rawId = String(i.productId || i.id || '');
+          const match = rawId.match(uuidRegex);
+          if (match) {
+            itemIds.push(match[0]);
+          } else if (rawId) {
+            itemIds.push(rawId);
+          }
+          const name = i.name || i.title;
+          if (name) itemNames.push(String(name).trim());
+        });
+      }
+
       let bogoEligibleProductIds = new Set<string>();
 
-      if (itemIds.length > 0) {
-        const { data: dbProducts } = await supabase
+      if (itemIds.length > 0 || itemNames.length > 0) {
+        let query = supabase
           .from('products')
-          .select('id, categories, specifications, is_bogo')
-          .in('id', itemIds);
+          .select('id, name, categories, specifications');
 
-        if (dbProducts) {
+        if (itemIds.length > 0) {
+          query = query.in('id', itemIds);
+        }
+
+        const { data: dbProducts } = await query;
+
+        if (dbProducts && dbProducts.length > 0) {
           dbProducts.forEach((p: any) => {
             const pCats: string[] = Array.isArray(p.categories) ? p.categories : (p.categories ? [p.categories] : []);
+            const pSpecs: any[] = Array.isArray(p.specifications) ? p.specifications : [];
+
             const isEligible = Boolean(
               p.is_bogo === true ||
-              (selectedIds.length > 0 && selectedIds.includes(p.id)) ||
-              (Array.isArray(p.specifications) && p.specifications.some((s: any) => s.name === 'is_bogo' && s.value === 'true')) ||
-              pCats.some(c => typeof c === 'string' && /^(bogo|buy 1 get 1|buy 1 get 1 free|buy-1-get-1)$/i.test(c.trim()))
+              String(p.is_bogo) === 'true' ||
+              (selectedIds.length > 0 && selectedIds.includes(String(p.id))) ||
+              pSpecs.some((s: any) => {
+                const sName = String(s.name || s.key || '').trim().toLowerCase();
+                const sVal = String(s.value || '').trim().toLowerCase();
+                return (sName === 'is_bogo' || sName === 'bogo') && (sVal === 'true' || sVal === 'yes' || sVal === '1');
+              }) ||
+              pCats.some(c => typeof c === 'string' && /bogo|buy\s*1\s*get\s*1|buy\s*one\s*get\s*one/i.test(c.trim()))
             );
-            if (isEligible) bogoEligibleProductIds.add(p.id);
+
+            if (isEligible) {
+              bogoEligibleProductIds.add(String(p.id).toLowerCase());
+              if (p.name) bogoEligibleProductIds.add(String(p.name).toLowerCase().trim());
+            }
           });
         }
       }
@@ -239,11 +400,19 @@ export async function validateCoupon(code: string, cartTotal: number, items?: an
       const expandedBogoItems: number[] = [];
       if (Array.isArray(items)) {
         items.forEach(item => {
-          const prodId = item.productId || item.id;
+          const rawId = String(item.productId || item.id || '').trim();
+          const uuidMatch = rawId.match(uuidRegex);
+          const uuid = uuidMatch ? uuidMatch[0].toLowerCase() : '';
+          const cleanId = rawId.includes('-') && rawId.length > 36 ? rawId.split('-')[0].toLowerCase() : rawId.toLowerCase();
+          const itemName = String(item.name || item.title || '').toLowerCase().trim();
+
           const isEligible = 
-            item.is_bogo === true || 
-            bogoEligibleProductIds.has(prodId) || 
-            (selectedIds.length > 0 && selectedIds.includes(prodId));
+            (uuid && bogoEligibleProductIds.has(uuid)) ||
+            bogoEligibleProductIds.has(cleanId) || 
+            bogoEligibleProductIds.has(rawId.toLowerCase()) || 
+            (selectedIds.length > 0 && (selectedIds.includes(cleanId) || selectedIds.includes(rawId))) ||
+            (itemName && bogoEligibleProductIds.has(itemName));
+
           if (isEligible) {
             const qty = Number(item.quantity) || 1;
             const price = Number(item.price) || 0;
@@ -253,7 +422,7 @@ export async function validateCoupon(code: string, cartTotal: number, items?: an
       }
 
       if (expandedBogoItems.length < 2) {
-        return { error: 'BOGO code requires at least 2 selected BOGO-eligible items in your cart.' };
+        return { error: 'BOGO code requires at least 2 eligible BOGO products in your cart.' };
       }
 
       expandedBogoItems.sort((a, b) => b - a);
@@ -361,25 +530,29 @@ export async function createOrder(data: {
     const validatedItems: any[] = [];
 
     // Optimize execution: Fetch all products in a single database round-trip
-    const productIds = Array.from(new Set(data.items.map(item => cleanText(item.productId || item.id, 'Product ID', 100))));
+    const productIds = Array.from(new Set(data.items.map(item => {
+      const raw = cleanText(item.productId || item.id, 'Product ID', 100);
+      return raw.includes('-') && raw.length > 36 ? raw.split('-')[0] : raw;
+    })));
     const { data: dbProducts, error: productsError } = await supabase
       .from('products')
-      .select('id, name, price, categories, is_sale, comparePrice')
+      .select('id, name, price, categories, is_sale, comparePrice, specifications')
       .in('id', productIds);
 
     if (productsError) {
       throw new Error(`Failed to verify products: ${productsError.message}`);
     }
 
-    const productMap = new Map((dbProducts || []).map((p: any) => [p.id, p]));
+    const productMap = new Map((dbProducts || []).map((p: any) => [String(p.id), p]));
 
     for (const item of data.items) {
       const quantity = Number(item.quantity);
       if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY_PER_ITEM) {
         throw new Error('Invalid item quantity.');
       }
-      const productId = cleanText(item.productId || item.id, 'Product ID', 100);
-      const product = productMap.get(productId);
+      const rawId = cleanText(item.productId || item.id, 'Product ID', 100);
+      const cleanId = rawId.includes('-') && rawId.length > 36 ? rawId.split('-')[0] : rawId;
+      const product = productMap.get(cleanId) || productMap.get(rawId);
 
       if (!product) {
         throw new Error(`Product "${item.name || item.title}" not found.`);
@@ -389,14 +562,14 @@ export async function createOrder(data: {
       if (!Number.isFinite(price) || price < 0) throw new Error('Product price is invalid.');
       subtotal += price * quantity;
 
-      // Check if product is in Sale% category or marked on sale (+50 Rs per item)
+      // Check if product is in Sale% / Offer category or marked on sale
       const pCats: string[] = Array.isArray(product.categories)
         ? product.categories
         : (product.categories ? [product.categories] : []);
       const isSaleProduct = 
         product.is_sale === true ||
         (product.comparePrice && Number(product.comparePrice) > Number(product.price)) ||
-        pCats.some(c => typeof c === 'string' && /sale/i.test(c.trim()));
+        pCats.some(c => typeof c === 'string' && /sale|offer/i.test(c.trim()));
 
       if (isSaleProduct) {
         saleFee += 50 * quantity;
@@ -413,8 +586,8 @@ export async function createOrder(data: {
       const itemColor = typeof item.color === 'string' && item.color.trim() ? item.color.trim() : (typeof item.selectedColor === 'string' ? item.selectedColor.trim() : '');
 
       validatedItems.push({
-        id: productId,
-        productId: productId,
+        id: cleanId,
+        productId: cleanId,
         title: product.name,
         name: product.name,
         price,
@@ -442,10 +615,13 @@ export async function createOrder(data: {
     }
 
     // 3. Shipping and Extra Charges
-    const isKerala = shippingAddress.state?.trim().toLowerCase() === 'kerala';
-    const shippingCost = isKerala ? 0 : 80;
+    // - If any Offer% / Sale product in order: ₹50 shipping
+    // - Otherwise if subtotal < 499: ₹50 shipping
+    // - Otherwise: Free shipping (orders >= 499)
+    const hasOfferProduct = validatedItems.some(i => i.is_sale);
+    const shippingCost = hasOfferProduct ? 50 : (subtotal < 499 && subtotal > 0 ? 50 : 0);
     const codFee = data.paymentMethod === 'COD' ? 50 : 0;
-    const total = Math.max(0, subtotal - discountAmount + shippingCost + saleFee + codFee);
+    const total = Math.max(0, subtotal - discountAmount + shippingCost + codFee);
 
     // 3. Handle Payment Method Specifics
     let razorpayOrderId = null;
