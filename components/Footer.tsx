@@ -39,7 +39,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-surface-container-lowest border-t border-primary/5 pt-24 pb-12">
+    <footer className="bg-surface-container-lowest border-t border-primary/5 pt-8 md:pt-12 pb-12">
       <div className="max-w-screen-xl mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 lg:gap-24">
           {/* Brand Story & Address */}
@@ -57,14 +57,11 @@ const Footer = () => {
               Comfort • Elegant • Everyday
             </p>
             <div className="space-y-1 text-xs text-stone-600 font-medium">
-              <p className="font-bold text-stone-900">Bloomina Atelier</p>
+              <p className="font-bold text-stone-900">Bloomina</p>
               <p>150/8438, MOUNTPARK INDUSTRIAL ESTATES,</p>
-              <p>Pushpagiri, Calicut, India</p>
+              <p>Pushpagiri, Calicut, India - 673604</p>
             </div>
             <div className="flex items-center gap-4 pt-2">
-              <a href="https://facebook.com" aria-label="Bloomina Facebook" className="w-10 h-10 rounded-full border border-stone-300 flex items-center justify-center text-primary/80 hover:bg-primary hover:text-white transition-all">
-                <span className="material-symbols-outlined text-lg" aria-hidden="true">facebook</span>
-              </a>
               <a href="https://linktr.ee/livewearapparels" target="_blank" rel="noopener noreferrer" aria-label="Livewear Apparels Linktree" className="w-10 h-10 rounded-full border border-stone-300 flex items-center justify-center text-primary/80 hover:bg-primary hover:text-white transition-all">
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">public</span>
               </a>

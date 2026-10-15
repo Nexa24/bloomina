@@ -33,6 +33,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
   const [selectedPantySize, setSelectedPantySize] = useState('');
 
   const [productReviewStats, setProductReviewStats] = useState<{ rating: number; count: number } | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -343,6 +345,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
       color: colorName
     };
     sessionStorage.setItem('buyNowItem', JSON.stringify(buyNowItem));
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    }
     router.push('/checkout?buyNow=true');
   };
 
@@ -361,6 +366,35 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         category: product.categories?.[0] || 'Collection'
       });
     }
+  };
+
+  const handleShare = async () => {
+    if (typeof window === 'undefined') return;
+    const shareUrl = window.location.href;
+    const shareTitle = product?.name ? `${product.name} | Bloomina` : 'Bloomina';
+    const shareText = `Check out ${product?.name || 'this piece'} on Bloomina!`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      } catch (err: any) {
+        // User cancelled or share failed, fallback to modal if not AbortError
+        if (err.name === 'AbortError') return;
+      }
+    }
+    setShowShareModal(true);
+  };
+
+  const handleCopyLink = () => {
+    if (typeof window === 'undefined') return;
+    navigator.clipboard.writeText(window.location.href);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
   };
 
   if (isLoading) {
@@ -403,7 +437,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   return (
     <div className="bg-white min-h-screen antialiased overflow-x-hidden">
-      <main className="pb-32 w-full">
+      <main className="pb-6 md:pb-12 w-full">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-4 md:pt-6 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-20">
           
           {/* Left: Sticky Image Gallery */}
@@ -488,8 +522,8 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             {/* Color Selector moved to top */}
             <div className="space-y-4">
               <div className="flex justify-between items-end">
-                <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-surface-on/40">Select Color</h3>
-                <span className="text-xs font-medium text-surface-on-variant">
+                <h3 className="text-xs font-black uppercase tracking-[0.15em] text-stone-900">Select Color</h3>
+                <span className="text-xs font-bold text-stone-700">
                   {product.colorConfigs?.[selectedColorIndex]?.name}
                 </span>
               </div>
@@ -639,9 +673,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                 <div id="size-selector" className="space-y-4">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-surface-on/40">Select Size</h3>
+                      <h3 className="text-xs font-black uppercase tracking-[0.15em] text-stone-900">Select Size</h3>
                       {sizeError && (
-                        <span className="text-[10px] font-bold text-red-500 uppercase tracking-widest animate-pulse">
+                        <span className="text-[10px] font-black text-red-500 uppercase tracking-widest animate-pulse">
                           (Select size first)
                         </span>
                       )}
@@ -649,9 +683,9 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                     {(product.sizeGuide || sizes.length > 0) && (
                       <button 
                         onClick={() => setShowSizeGuide(true)}
-                        className="text-[10px] font-bold uppercase tracking-widest text-primary underline underline-offset-4 flex items-center gap-1 hover:text-primary/70 transition-colors"
+                        className="text-[10px] font-black uppercase tracking-widest text-primary underline underline-offset-4 flex items-center gap-1 hover:text-primary/70 transition-colors"
                       >
-                        <span className="material-symbols-outlined text-sm">straighten</span>
+                        <span className="material-symbols-outlined text-sm font-bold">straighten</span>
                         Size Guide
                       </button>
                     )}
@@ -690,7 +724,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
                 {/* Quantity Stepper */}
                 <div className="flex items-center justify-between">
-                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-surface-on/40">Quantity</h3>
+                  <h3 className="text-xs font-black uppercase tracking-[0.15em] text-stone-900">Quantity</h3>
                   <div className="flex items-center gap-0 bg-stone-50 rounded-2xl border border-stone-100 overflow-hidden">
                     <button
                       onClick={() => setQuantity(q => Math.max(1, q - 1))}
@@ -708,11 +742,11 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   </div>
                 </div>
 
-                {/* Row 1: Add to Cart + Wishlist */}
-                <div className="flex gap-4">
+                {/* Row 1: Add to Cart + Wishlist + Share */}
+                <div className="flex gap-3">
                   <button 
                     onClick={handleAddToCart}
-                    className={`flex-1 px-10 py-5 rounded-full font-bold uppercase tracking-[0.2em] text-[11px] transition-all duration-500 overflow-hidden relative border ${isAdded ? 'bg-green-500 border-green-500 text-white shadow-green-100' : 'border-primary text-primary hover:bg-primary/5 hover:scale-[1.02] active:scale-95'}`}
+                    className={`flex-1 px-8 py-5 rounded-full font-bold uppercase tracking-[0.2em] text-[11px] transition-all duration-500 overflow-hidden relative border ${isAdded ? 'bg-green-500 border-green-500 text-white shadow-green-100' : 'border-primary text-primary hover:bg-primary/5 hover:scale-[1.02] active:scale-95'}`}
                   >
                     <span className={`flex items-center justify-center gap-2 transition-transform duration-500 ${isAdded ? '-translate-y-full opacity-0' : 'translate-y-0 opacity-100'}`}>
                       <span className="material-symbols-outlined text-base font-light">shopping_bag</span>
@@ -725,10 +759,20 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
                   </button>
                   <button 
                     onClick={toggleWishlist}
+                    title={isFavorite ? "Remove from wishlist" : "Add to wishlist"}
                     className={`px-5 py-5 border rounded-full flex items-center justify-center transition-all ${isFavorite ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' : 'border-primary/20 text-primary hover:bg-primary/5'}`}
                   >
                     <span className="material-symbols-outlined" style={{ fontVariationSettings: isFavorite ? "'FILL' 1" : "'FILL' 0" }}>
                       favorite
+                    </span>
+                  </button>
+                  <button 
+                    onClick={handleShare}
+                    title="Share Product"
+                    className="px-5 py-5 border border-primary/20 text-primary hover:bg-primary/5 rounded-full flex items-center justify-center transition-all group"
+                  >
+                    <span className="material-symbols-outlined transition-transform group-hover:scale-110">
+                      share
                     </span>
                   </button>
                 </div>
@@ -749,23 +793,24 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
           </div>
         </div>
 
-        {/* Material Details Section */}
+        {/* Product Details Section */}
         {product.materials && (
-          <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-24 border-t border-stone-50 animate-fade-in">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-20">
-              <div className="lg:col-span-1 space-y-6">
-                <h2 className="text-sm font-bold uppercase tracking-[0.4em] text-primary/60 italic">Material Mastery</h2>
-                <h3 className="text-4xl font-display font-light text-surface-on leading-tight">{product.materials.name}</h3>
-                <p className="text-surface-on-variant font-light leading-relaxed">
-                  {product.materials.description}
-                </p>
+          <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-10 md:py-14 border-t border-stone-100 animate-fade-in">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+              <div className="lg:col-span-1 space-y-2">
+                <h2 className="text-2xl md:text-3xl font-display font-black text-surface-on tracking-tight">Product Details</h2>
+                {product.materials.description && (
+                  <p className="text-surface-on-variant font-light leading-relaxed text-sm pt-1">
+                    {product.materials.description}
+                  </p>
+                )}
               </div>
               
-              <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {product.materials.content?.map((item: any, idx: number) => (
-                  <div key={idx} className="p-8 rounded-3xl bg-stone-50/50 border border-stone-100 flex flex-col gap-2 transition-all hover:petal-shadow group">
-                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary group-hover:tracking-[0.3em] transition-all">{item.label}</span>
-                    <span className="text-lg font-display text-surface-on">{item.value}</span>
+                  <div key={idx} className="p-5 sm:p-6 rounded-2xl bg-stone-50/80 border border-stone-200/80 flex flex-col gap-1 transition-all hover:petal-shadow group">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-primary">{item.label}</span>
+                    <span className="text-base font-medium text-surface-on">{item.value}</span>
                   </div>
                 ))}
               </div>
@@ -853,10 +898,17 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
         )}
 
         {/* Feedback Section */}
-        <ProductReviews productId={product.id} title={`${product.name} Feedback`} />
+        <ProductReviews productId={product.id} title="Customer Feedback" />
 
         {/* Floating Mobile Action Bar */}
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-stone-200/80 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:hidden flex items-center gap-3 shadow-[0_-10px_30px_rgba(0,0,0,0.08)]">
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-stone-200/80 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] md:hidden flex items-center gap-2.5 shadow-[0_-10px_30px_rgba(0,0,0,0.08)]">
+          <button 
+            onClick={handleShare}
+            title="Share"
+            className="w-11 h-11 rounded-full border border-stone-200 flex items-center justify-center text-stone-600 hover:text-primary hover:border-primary shrink-0 transition-colors"
+          >
+            <span className="material-symbols-outlined text-lg">share</span>
+          </button>
           <button 
             onClick={handleAddToCart}
             className={`flex-1 py-3.5 rounded-full font-bold uppercase tracking-[0.2em] text-[10px] border transition-all duration-300 relative overflow-hidden active:scale-98 ${isAdded ? 'bg-green-600 border-green-600 text-white' : 'border-primary text-primary hover:bg-primary/5 active:bg-primary/10'}`}
@@ -878,6 +930,113 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             Buy Now
           </button>
         </div>
+
+        {/* Share Modal Dialog */}
+        {showShareModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl space-y-6 relative border border-stone-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-display font-semibold text-surface-on">Share this Piece</h3>
+                  <p className="text-xs text-stone-500 mt-0.5">Spread the elegance with friends</p>
+                </div>
+                <button
+                  onClick={() => setShowShareModal(false)}
+                  className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-500 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </button>
+              </div>
+
+              {/* Product mini preview */}
+              <div className="flex items-center gap-3 p-3 bg-stone-50 rounded-2xl border border-stone-100">
+                {currentImages[0] && (
+                  <img src={currentImages[0]} alt="" className="w-12 h-14 object-cover rounded-xl shrink-0" />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-stone-800 truncate">{product.name}</p>
+                  <p className="text-xs font-bold text-primary mt-0.5">₹{parseFloat(product.price).toLocaleString('en-IN')}</p>
+                </div>
+              </div>
+
+              {/* Share Channels */}
+              <div className="grid grid-cols-4 gap-3 text-center">
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Check out ${product.name} on Bloomina: ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center gap-1.5 p-2 rounded-2xl hover:bg-stone-50 transition-colors group"
+                >
+                  <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                      <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.275.072.376-.044c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.043.072.043.419-.101.824z"/>
+                    </svg>
+                  </div>
+                  <span className="text-[10px] font-semibold text-stone-600">WhatsApp</span>
+                </a>
+
+                <a
+                  href={`https://t.me/share/url?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&text=${encodeURIComponent(`Check out ${product.name} on Bloomina`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center gap-1.5 p-2 rounded-2xl hover:bg-stone-50 transition-colors group"
+                >
+                  <div className="w-12 h-12 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .36z"/>
+                    </svg>
+                  </div>
+                  <span className="text-[10px] font-semibold text-stone-600">Telegram</span>
+                </a>
+
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center gap-1.5 p-2 rounded-2xl hover:bg-stone-50 transition-colors group"
+                >
+                  <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                  </div>
+                  <span className="text-[10px] font-semibold text-stone-600">Facebook</span>
+                </a>
+
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Check out ${product.name} on Bloomina`)}&url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center gap-1.5 p-2 rounded-2xl hover:bg-stone-50 transition-colors group"
+                >
+                  <div className="w-12 h-12 rounded-full bg-stone-100 text-stone-800 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                  </div>
+                  <span className="text-[10px] font-semibold text-stone-600">X (Twitter)</span>
+                </a>
+              </div>
+
+              {/* Copy Link Row */}
+              <div className="flex items-center gap-2 p-1.5 pl-3.5 bg-stone-50 rounded-full border border-stone-200">
+                <span className="material-symbols-outlined text-stone-400 text-sm">link</span>
+                <input
+                  type="text"
+                  readOnly
+                  value={typeof window !== 'undefined' ? window.location.href : ''}
+                  className="bg-transparent text-xs text-stone-600 flex-1 truncate outline-none select-all"
+                />
+                <button
+                  onClick={handleCopyLink}
+                  className={`px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 ${copiedLink ? 'bg-green-600 text-white' : 'bg-primary text-white hover:bg-primary/90'}`}
+                >
+                  {copiedLink ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

@@ -104,11 +104,11 @@ const CartPage = () => {
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-background">
-        <main className="pt-40 pb-20 max-w-screen-xl mx-auto px-6 text-center">
-          <span className="material-symbols-outlined text-6xl text-primary/20 mb-6 font-light">shopping_basket</span>
-          <h1 className="text-4xl font-display font-light text-surface-on mb-4">Your sanctuary is empty</h1>
-          <p className="text-surface-on-variant mb-12 max-w-md mx-auto">Discover our collection of ethereal comfort and find your next favorite piece.</p>
-          <Link href="/products" className="inline-block bg-primary text-white px-12 py-4 rounded-full font-bold uppercase tracking-widest text-[11px] hover:scale-105 transition-transform shadow-lg shadow-primary/20">
+        <main className="pt-28 md:pt-36 pb-16 max-w-screen-xl mx-auto px-6 text-center">
+          <span className="material-symbols-outlined text-4xl text-primary/30 mb-4 font-light">shopping_basket</span>
+          <h1 className="text-2xl md:text-3xl font-display font-light text-surface-on mb-2">Your cart is empty</h1>
+          <p className="text-stone-400 text-xs mb-8 max-w-sm mx-auto">Discover our collection and find your favorite pieces.</p>
+          <Link href="/products" className="inline-block bg-primary text-white px-8 py-3.5 rounded-full font-bold uppercase tracking-widest text-[10px] hover:scale-105 transition-transform shadow-md shadow-primary/20">
             Explore Collection
           </Link>
         </main>
@@ -116,20 +116,23 @@ const CartPage = () => {
     );
   }
 
+  const totalItems = items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+
   return (
     <div className="min-h-screen bg-background antialiased">
-      <main className="pt-32 md:pt-40 pb-24 max-w-screen-xl mx-auto px-6">
-        <div className="mb-12 md:mb-16 flex justify-between items-end">
+      <main className="pt-28 md:pt-36 pb-20 max-w-screen-xl mx-auto px-6">
+        <div className="mb-6 md:mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-4xl md:text-6xl font-display font-light text-surface-on tracking-tight">Your Selection</h1>
-            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mt-4">Review your ethereal comfort pieces</p>
+            <h1 className="text-3xl md:text-5xl font-display font-light text-surface-on tracking-tight">
+              Your Cart <span className="text-primary font-normal text-2xl md:text-4xl">({totalItems})</span>
+            </h1>
           </div>
           <button
             onClick={clearCart}
-            className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60 hover:text-primary transition-all flex items-center gap-2 pb-1 border-b border-transparent hover:border-primary/20"
+            className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/60 hover:text-primary transition-all flex items-center gap-1.5 pb-1 border-b border-transparent hover:border-primary/20"
           >
             <span className="material-symbols-outlined text-sm font-light">delete_sweep</span>
-            Clear Selection
+            Clear All
           </button>
         </div>
 
@@ -207,10 +210,10 @@ const CartPage = () => {
           return null;
         })()}
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           {/* Cart Items List */}
-          <div className="lg:col-span-8 space-y-10">
-            <div className="hidden md:grid grid-cols-12 pb-6 border-b border-stone-100 text-[10px] font-bold uppercase tracking-widest text-stone-400">
+          <div className="lg:col-span-8 space-y-4">
+            <div className="hidden md:grid grid-cols-12 pb-3 border-b border-stone-100 text-[10px] font-bold uppercase tracking-widest text-stone-400">
               <div className="col-span-6">Product</div>
               <div className="col-span-2 text-center">Price</div>
               <div className="col-span-2 text-center">Quantity</div>
@@ -226,37 +229,37 @@ const CartPage = () => {
               const isItemBogo = (uuid && bogoEligibleIds.has(uuid)) || bogoEligibleIds.has(cleanId) || bogoEligibleIds.has(rawId.toLowerCase()) || (name && bogoEligibleIds.has(name));
 
               return (
-                <div key={item.id} className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center pb-10 border-b border-stone-50 group">
+                <div key={item.id} className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 items-center pb-4 border-b border-stone-100/70 group">
                   {/* Product Info */}
-                  <div className="col-span-1 md:col-span-6 flex gap-6">
-                    <Link href={`/product/${item.productId}`} className="w-24 h-32 md:w-32 md:h-40 bg-stone-50 rounded-2xl overflow-hidden flex-shrink-0 petal-shadow relative group/img block">
+                  <div className="col-span-1 md:col-span-6 flex items-center gap-3.5">
+                    <Link href={`/product/${item.productId}`} className="w-16 h-20 md:w-20 md:h-24 bg-stone-50 rounded-xl overflow-hidden flex-shrink-0 petal-shadow relative group/img block">
                       <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500" />
                       <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors duration-300 flex items-center justify-center">
-                        <span className="material-symbols-outlined text-white opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 text-lg drop-shadow">open_in_new</span>
+                        <span className="material-symbols-outlined text-white opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 text-sm drop-shadow">open_in_new</span>
                       </div>
                       {isItemBogo && (
-                        <div className="absolute top-2 left-2 bg-[#944555] text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow">
+                        <div className="absolute top-1 left-1 bg-[#944555] text-white text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full shadow">
                           BOGO
                         </div>
                       )}
                     </Link>
-                    <div className="flex flex-col justify-center gap-1">
+                    <div className="flex flex-col justify-center min-w-0">
                       <div className="flex items-center gap-2">
-                        <Link href={`/product/${item.productId}`} className="group/name">
-                          <h3 className="text-lg md:text-xl font-display font-light text-surface-on group-hover/name:text-primary transition-colors duration-200 underline-offset-4 group-hover/name:underline decoration-primary/30">{item.name}</h3>
+                        <Link href={`/product/${item.productId}`} className="group/name truncate">
+                          <h3 className="text-sm md:text-base font-display font-medium text-surface-on group-hover/name:text-primary transition-colors duration-200 truncate">{item.name}</h3>
                         </Link>
                         {isItemBogo && (
-                          <span className="text-[9px] font-black uppercase tracking-wider text-[#944555] bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md">
-                            BOGO Eligible
+                          <span className="text-[8px] font-black uppercase tracking-wider text-[#944555] bg-rose-50 border border-rose-200 px-1.5 py-0.2 rounded shrink-0">
+                            BOGO
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-surface-on-variant/60">
-                        {item.size && `Size: ${item.size}`} {item.color && `| Color: ${item.color}`}
+                      <p className="text-xs text-stone-500 mt-0.5">
+                        {item.size && `Size: ${item.size}`} {item.color && `· ${item.color}`}
                       </p>
                       <button
                         onClick={() => removeItem(item.id)}
-                        className="text-[10px] font-bold uppercase tracking-widest text-primary mt-4 hover:underline underline-offset-4 decoration-1 text-left"
+                        className="text-[10px] font-bold uppercase tracking-wider text-primary mt-1 hover:underline text-left"
                       >
                         Remove
                       </button>

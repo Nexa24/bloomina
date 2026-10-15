@@ -118,11 +118,8 @@ export default function Testimonials() {
         {/* Header & Controls */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">
-              Real Experiences
-            </span>
-            <h2 className="text-2xl md:text-4xl font-display font-light text-surface-on tracking-tight mt-1">
-              Voices of <span className="italic text-primary">Comfort</span>
+            <h2 className="text-2xl md:text-3xl font-display font-black text-surface-on tracking-tight">
+              Customer Feedback
             </h2>
           </div>
 

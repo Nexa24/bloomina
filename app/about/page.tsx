@@ -5,142 +5,216 @@ import Image from 'next/image';
 
 const AboutPage = () => {
   return (
-    <div className="min-h-screen bg-background antialiased">
+    <div className="min-h-screen bg-[#FFFBFB] antialiased text-stone-800">
       <Navbar />
-      
-      <main className="pt-32 pb-24">
-        {/* About Bloomina Hero Section */}
-        <section className="max-w-screen-xl mx-auto px-6 mb-24">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 items-center">
-            <div className="lg:col-span-7 space-y-8">
-              <div className="space-y-4">
-                <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary bg-primary/5 px-4 py-1.5 rounded-full inline-block">
-                  About Bloomina
+
+      <main className="pt-24 md:pt-32 pb-16">
+        <div className="max-w-md md:max-w-3xl lg:max-w-4xl mx-auto px-5 sm:px-6">
+
+          {/* SECTION 1: ABOUT BLOOMINA */}
+          <section className="pt-4 md:pt-8 pb-8">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+              {/* Text Left (or full on mobile) */}
+              <div className="md:col-span-7 space-y-3.5">
+                <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#A34355] block">
+                  ABOUT BLOOMINA
                 </span>
-                <h1 className="text-4xl md:text-6xl font-display font-light text-surface-on leading-[1.15] tracking-tight">
+                
+                <h1 className="text-3xl md:text-5xl font-display font-medium text-stone-900 leading-[1.15] tracking-tight">
                   More Than Innerwear. <br />
-                  <span className="italic text-primary">A Thoughtfully Crafted Everyday Essential.</span>
+                  <span className="italic text-[#A34355] font-normal">Thoughtfully Designed for Every Day.</span>
                 </h1>
-              </div>
-              
-              <div className="space-y-6 text-stone-600 font-light leading-relaxed text-base md:text-lg">
-                <p>
-                  At Bloomina, we believe that comfort is the foundation of confidence. Every woman deserves innerwear that feels effortless, supports her throughout the day, and complements her lifestyle without compromise.
-                </p>
-                <p>
-                  Bloomina was created with a simple vision—to redefine everyday innerwear by combining premium materials, thoughtful design, and exceptional comfort at an accessible price.
-                </p>
-                <p>
-                  Rather than following trends, we focus on creating timeless essentials that women can rely on every day. From selecting soft, high-quality fabrics to refining every detail of fit, support, and finish, every Bloomina product is carefully developed with comfort and functionality at its core.
-                </p>
-                <p>
-                  Our collections are designed by Bloomina and brought to life through experienced production unit which ensure commitment to quality and craftsmanship. Every material, trim, colour, and specification is carefully chosen by our team, ensuring that every product reflects the standards we stand for.
-                </p>
-                <p>
-                  Each piece undergoes careful quality evaluation before reaching our customers because we believe that true luxury lies in consistency, comfort, and attention to detail.
-                </p>
-                <p className="font-medium text-surface-on">
-                  Whether you’re heading to work, relaxing at home, travelling, or celebrating life’s special moments, Bloomina is designed to move with you by offering the confidence and comfort you deserve throughout the day.
-                </p>
-              </div>
-            </div>
 
-            <div className="lg:col-span-5 relative">
-              <div className="relative aspect-[4/5] rounded-[3.5rem] overflow-hidden petal-shadow group border border-stone-100">
-                <Image 
-                  src="/our_story.png" 
-                  alt="About Bloomina" 
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 45vw"
-                  className="object-cover transition-transform duration-1000 group-hover:scale-105"
-                />
+                <p className="text-[13px] md:text-sm text-stone-600 font-light leading-relaxed pt-1">
+                  At Bloomina, we create everyday innerwear that brings together comfort, thoughtful design, and practical details. We believe what you wear closest to your skin should help you feel comfortable, confident, and completely yourself — in every moment of your day.
+                </p>
               </div>
-              
-              <div className="mt-8 p-6 bg-stone-50 rounded-3xl border border-stone-100/80 space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-xl">favorite</span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-primary">The Bloomina Promise</span>
+
+              {/* Image Right: Model wearing bra */}
+              <div className="md:col-span-5">
+                <div className="relative w-full aspect-[4/5] rounded-3xl overflow-hidden shadow-sm border border-stone-100">
+                  <Image
+                    src="/aboutus_mn.png"
+                    alt="About Bloomina Model"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 40vw"
+                    className="object-cover object-top"
+                    priority
+                  />
                 </div>
-                <p className="text-xs font-display italic text-surface-on leading-relaxed">
-                  "Because we believe confidence begins with comfort."
-                </p>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* Our Philosophy Section */}
-        <section id="philosophy" className="bg-gradient-to-b from-stone-50/80 via-white to-stone-50/80 py-24 mb-24 border-y border-stone-100/80">
-          <div className="max-w-screen-xl mx-auto px-6">
-            <div className="max-w-3xl mx-auto text-center space-y-8">
-              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">
-                Our Philosophy
+          {/* SECTION 2: MATERIAL / FABRIC IMAGE BANNER */}
+          <section className="py-2">
+            <div className="relative w-full aspect-[16/9] sm:aspect-[2/1] rounded-2xl md:rounded-3xl overflow-hidden shadow-sm border border-stone-100">
+              <Image
+                src="/meterial.png"
+                alt="Finishing Materials and Trims"
+                fill
+                sizes="(max-width: 768px) 100vw, 800px"
+                className="object-cover"
+              />
+            </div>
+          </section>
+
+          {/* SECTION 3: OUR APPROACH */}
+          <section className="pt-8 pb-10 space-y-4">
+            <div className="space-y-2.5">
+              <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#A34355] block">
+                OUR APPROACH
               </span>
-              <h2 className="text-3xl md:text-5xl font-display font-light text-surface-on leading-snug">
-                "We believe innerwear should never be an afterthought."
+
+              <h2 className="text-2xl md:text-4xl font-display font-medium text-stone-900 leading-[1.15] tracking-tight">
+                Carefully Chosen, <br />
+                <span className="italic text-[#A34355] font-normal">Thoughtfully Made.</span>
               </h2>
-              <div className="space-y-6 text-stone-600 font-light text-base md:text-lg leading-relaxed">
-                <p>
-                  It is the first layer you wear and the one that stays with you throughout the day. That’s why every Bloomina product is developed with a balance of thoughtful design, premium materials, and reliable performance—creating pieces that feel as good as they look.
-                </p>
-                <p className="font-medium text-surface-on text-lg">
-                  We don’t believe that premium should mean complicated. We believe it should mean better fabrics, better fit, better craftsmanship, and a better everyday experience.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* Our Promise Section */}
-        <section className="max-w-screen-xl mx-auto px-6 mb-24">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">
-              Our Commitment
-            </span>
-            <h2 className="text-3xl md:text-4xl font-display font-light text-surface-on">
-              Our Promise
-            </h2>
-            <p className="text-sm text-stone-500 font-light">
-              Every Bloomina product is created with the same steadfast commitment:
-            </p>
-          </div>
+              <p className="text-[13px] md:text-sm text-stone-600 font-light leading-relaxed">
+                From fabrics and raw materials to the smallest finishing details, we carefully select every component that goes into our innerwear. Our experienced production team handles stitching and assembly with care and precision, while trained quality-control staff carefully inspect each piece for fit, construction, and finish.
+              </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-            {[
-              { icon: 'feather', title: 'Premium Fabrics', desc: 'Carefully selected premium fabrics for softness and breathability.' },
-              { icon: 'auto_awesome', title: 'Thoughtful Design', desc: 'Thoughtfully developed designs for optimal comfort and support.' },
-              { icon: 'handshake', title: 'Trusted Production', desc: 'Reliable quality through experienced production partners.' },
-              { icon: 'straighten', title: 'Fit to Finish', desc: 'Attention to every detail, from precision fit to finish.' },
-              { icon: 'verified', title: 'Timeless Style', desc: 'Timeless styles made for everyday confidence.' },
-            ].map((pillar) => (
-              <div key={pillar.title} className="bg-white p-8 rounded-3xl border border-stone-100 petal-shadow space-y-4 text-center hover:border-primary/20 transition-all duration-300">
-                <span className="material-symbols-outlined text-3xl text-primary font-light">{pillar.icon}</span>
-                <h3 className="text-sm font-bold uppercase tracking-wider text-surface-on">{pillar.title}</h3>
-                <p className="text-xs text-stone-400 font-light leading-relaxed">{pillar.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Designed for Modern Women Section */}
-        <section className="max-w-screen-xl mx-auto px-6">
-          <div className="bg-surface-on text-white rounded-[3.5rem] p-12 md:p-20 relative overflow-hidden text-center space-y-8 shadow-2xl">
-            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary">
-              Made for Your Routine
-            </span>
-            <h2 className="text-3xl md:text-5xl font-display font-light leading-tight max-w-3xl mx-auto">
-              Designed for Modern Women
-            </h2>
-            <p className="text-stone-300 font-light text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-              Today’s women need innerwear that adapts to every part of their day. Whether you’re working, studying, travelling, exercising, or simply enjoying time at home, Bloomina is designed to provide comfort, confidence, and effortless elegance from morning to night.
-            </p>
-            <div className="pt-4">
-              <p className="text-base md:text-lg font-display italic text-primary">
-                Because we believe confidence begins with comfort.
+              <p className="text-[13px] md:text-sm text-stone-600 font-light leading-relaxed">
+                Every detail is considered to bring you innerwear designed for everyday comfort and style.
               </p>
             </div>
-          </div>
-        </section>
+
+            {/* 5 Approach Feature List Items */}
+            <div className="space-y-4 pt-3">
+
+              {/* 1. Carefully Selected Fabrics */}
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-[#FFF0F2] border border-[#FAD8DC] flex items-center justify-center shrink-0 text-[#A34355] shadow-xs">
+                  {/* Layered fabrics icon */}
+                  <svg className="w-5 h-5 stroke-current fill-none stroke-[1.7]" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                    <polyline points="2 17 12 22 22 17" />
+                    <polyline points="2 12 12 17 22 12" />
+                  </svg>
+                </div>
+                <div className="pt-0.5">
+                  <h3 className="text-xs md:text-sm font-bold uppercase tracking-wider text-stone-900">
+                    Carefully Selected Fabrics
+                  </h3>
+                  <p className="text-[12px] md:text-[13px] text-stone-600 font-light leading-snug mt-0.5">
+                    Soft, breathable and durable fabrics chosen with attention to comfort and everyday use.
+                  </p>
+                </div>
+              </div>
+
+              {/* 2. Quality Raw Materials */}
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-[#FFF0F2] border border-[#FAD8DC] flex items-center justify-center shrink-0 text-[#A34355] shadow-xs">
+                  {/* Raw materials / components icon */}
+                  <svg className="w-5 h-5 stroke-current fill-none stroke-[1.7]" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                    <line x1="12" y1="22.08" x2="12" y2="12" />
+                  </svg>
+                </div>
+                <div className="pt-0.5">
+                  <h3 className="text-xs md:text-sm font-bold uppercase tracking-wider text-stone-900">
+                    Quality Raw Materials
+                  </h3>
+                  <p className="text-[12px] md:text-[13px] text-stone-600 font-light leading-snug mt-0.5">
+                    Elastics, straps, hooks, eyes, sliders and trims selected for their intended function and fit.
+                  </p>
+                </div>
+              </div>
+
+              {/* 3. Skilled Stitching */}
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-[#FFF0F2] border border-[#FAD8DC] flex items-center justify-center shrink-0 text-[#A34355] shadow-xs">
+                  {/* Scissors / Craft / Stitching icon */}
+                  <svg className="w-5 h-5 stroke-current fill-none stroke-[1.7]" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="6" cy="6" r="3" />
+                    <circle cx="6" cy="18" r="3" />
+                    <line x1="20" y1="4" x2="8.12" y2="15.88" />
+                    <line x1="14.47" y1="14.48" x2="20" y2="20" />
+                    <line x1="8.12" y1="8.12" x2="12" y2="12" />
+                  </svg>
+                </div>
+                <div className="pt-0.5">
+                  <h3 className="text-xs md:text-sm font-bold uppercase tracking-wider text-stone-900">
+                    Skilled Stitching
+                  </h3>
+                  <p className="text-[12px] md:text-[13px] text-stone-600 font-light leading-snug mt-0.5">
+                    Experienced staff handle stitching and assembly with care and attention to detail.
+                  </p>
+                </div>
+              </div>
+
+              {/* 4. Strict Quality Checks */}
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-[#FFF0F2] border border-[#FAD8DC] flex items-center justify-center shrink-0 text-[#A34355] shadow-xs">
+                  {/* Shield check icon */}
+                  <svg className="w-5 h-5 stroke-current fill-none stroke-[1.7]" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    <polyline points="9 12 11 14 15 10" />
+                  </svg>
+                </div>
+                <div className="pt-0.5">
+                  <h3 className="text-xs md:text-sm font-bold uppercase tracking-wider text-stone-900">
+                    Strict Quality Checks
+                  </h3>
+                  <p className="text-[12px] md:text-[13px] text-stone-600 font-light leading-snug mt-0.5">
+                    Each piece is inspected for construction, fit and finish before it reaches you.
+                  </p>
+                </div>
+              </div>
+
+              {/* 5. Designed for Everyday Wear */}
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-[#FFF0F2] border border-[#FAD8DC] flex items-center justify-center shrink-0 text-[#A34355] shadow-xs">
+                  {/* Heart icon */}
+                  <svg className="w-5 h-5 stroke-current fill-none stroke-[1.7]" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                  </svg>
+                </div>
+                <div className="pt-0.5">
+                  <h3 className="text-xs md:text-sm font-bold uppercase tracking-wider text-stone-900">
+                    Designed for Everyday Wear
+                  </h3>
+                  <p className="text-[12px] md:text-[13px] text-stone-600 font-light leading-snug mt-0.5">
+                    Practical styles that bring together thoughtful design and effortless style.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          {/* SECTION 4: CLOSING BRAND SIGNATURE CARD */}
+          <section className="pt-2 pb-6">
+            <div className="relative w-full rounded-2xl md:rounded-3xl overflow-hidden bg-gradient-to-r from-[#FFF5F6] via-[#FFF1F3] to-[#FCE7EB] border border-[#F8D2D8] p-6 sm:p-8 flex items-center justify-between">
+              <div className="space-y-1.5 z-10">
+                <Image
+                  src="/logo/BLO_TRNSP_PINK_LRG.png"
+                  alt="Bloomina"
+                  width={140}
+                  height={38}
+                  className="h-8 w-auto object-contain"
+                />
+                <div className="w-10 h-0.5 bg-[#A34355]/40 my-2" />
+                <p className="text-lg sm:text-xl font-display italic text-[#A34355] font-normal tracking-wide">
+                  Feel Every Moment.
+                </p>
+              </div>
+
+              {/* Decorative side bra image snippet matching reference */}
+              <div className="relative w-36 sm:w-52 h-24 sm:h-32 -mr-3 sm:-mr-4 -my-4 overflow-hidden rounded-l-2xl">
+                <Image
+                  src="/meterial.png"
+                  alt="Bloomina Intimates"
+                  fill
+                  className="object-cover object-right opacity-90"
+                />
+              </div>
+            </div>
+          </section>
+
+        </div>
       </main>
 
       <Footer />

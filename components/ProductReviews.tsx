@@ -130,27 +130,28 @@ export default function ProductReviews({ productId, title = "Customer Feedback" 
   const featuredReviews = reviews.slice(0, 4);
 
   return (
-    <section className="max-w-screen-xl mx-auto px-4 sm:px-6 py-24 border-t border-stone-50">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-20">
+    <section className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-8 md:pt-10 pb-4 md:pb-6 border-t border-stone-100">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-10">
         
         {/* Left: Summary & Stats */}
         <div className="lg:col-span-1 space-y-8">
-          <div className="space-y-4">
-            <h2 className="text-sm font-bold uppercase tracking-[0.4em] text-primary/60 italic">Real Voices</h2>
-            <h3 className="text-4xl font-display font-light text-surface-on leading-tight">{title}</h3>
+          <div className="space-y-2">
+            <h2 className="text-2xl md:text-3xl font-display font-black text-surface-on tracking-tight">
+              {title === 'Brand Testimonials' ? 'Customer Feedback' : (title || 'Customer Feedback')}
+            </h2>
           </div>
 
-          <div className="p-10 rounded-[40px] bg-stone-50/50 border border-stone-100 flex flex-col items-center justify-center text-center space-y-4 petal-shadow">
-            <div className="text-6xl font-display text-primary">{averageRating}</div>
+          <div className="p-6 sm:p-8 rounded-3xl bg-stone-50/50 border border-stone-100 flex flex-col items-center justify-center text-center space-y-3 petal-shadow">
+            <div className="text-5xl font-display text-primary">{averageRating}</div>
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star 
                   key={star} 
-                  className={`w-5 h-5 ${star <= Number(averageRating) ? 'fill-primary text-primary' : 'text-stone-200'}`} 
+                  className={`w-4 h-4 ${star <= Number(averageRating) ? 'fill-primary text-primary' : 'text-stone-200'}`} 
                 />
               ))}
             </div>
-            <p className="text-xs font-bold uppercase tracking-widest text-stone-400">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
               {reviews.length} approved {reviews.length === 1 ? 'review' : 'reviews'}
             </p>
 
@@ -327,9 +328,9 @@ export default function ProductReviews({ productId, title = "Customer Feedback" 
                   ))}
                 </div>
               ) : reviews.length === 0 ? (
-                <div className="p-16 rounded-[40px] bg-stone-50/30 border border-dashed border-stone-200 flex flex-col items-center justify-center text-center space-y-4">
-                  <MessageSquare className="w-12 h-12 text-stone-200" />
-                  <p className="text-stone-400 font-light italic">Be the first to share your experience with this piece.</p>
+                <div className="py-3 px-4 rounded-xl bg-stone-50/50 border border-dashed border-stone-200/80 flex items-center justify-center gap-2 text-center">
+                  <MessageSquare className="w-3.5 h-3.5 text-stone-300 shrink-0" />
+                  <p className="text-[11px] text-stone-400 font-normal">Be the first to share your experience with this piece.</p>
                 </div>
               ) : (
                 <div className="space-y-6">

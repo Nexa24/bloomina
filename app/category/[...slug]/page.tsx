@@ -230,6 +230,20 @@ const CategoryPage = () => {
             const sub = hardcoded.subs?.find(s => s.slug === subSlug.toLowerCase());
             if (sub) {
               dbSubCategoryName = sub.name;
+            } else {
+              // Try resolving subSlug from categories table
+              try {
+                const { data: subDbCat } = await supabase
+                  .from('categories')
+                  .select('*')
+                  .eq('slug', subSlug.toLowerCase())
+                  .maybeSingle();
+                if (subDbCat) {
+                  dbSubCategoryName = subDbCat.name;
+                }
+              } catch (e) {
+                console.warn('SubCategory lookup notice:', e);
+              }
             }
           }
         } else if (!isSearchPage && mainSlug) {
@@ -368,14 +382,18 @@ const CategoryPage = () => {
               }
               const finalAliases = aliases || [targetSubName];
               const aliasesLow = finalAliases.map(n => n.toLowerCase().trim());
+              const targetLow = targetSubName.toLowerCase().trim();
+              const subSlugClean = (subSlug || '').toLowerCase().replace(/[-\s]+/g, '');
+
               return productCats.some(c => {
                 if (typeof c !== 'string') return false;
                 const low = c.trim().toLowerCase();
+                const clean = low.replace(/[-\s]+/g, '');
                 return (
                   aliasesLow.includes(low) ||
-                  low === targetSubName.toLowerCase().trim() ||
-                  (mainSlug && low === mainSlug.toLowerCase().trim()) ||
-                  (subSlug && low === subSlug.toLowerCase().trim())
+                  low === targetLow ||
+                  (subSlug && low === subSlug.toLowerCase().trim()) ||
+                  (subSlugClean && clean === subSlugClean)
                 );
               });
             }

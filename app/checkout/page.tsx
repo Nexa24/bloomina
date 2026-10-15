@@ -91,6 +91,7 @@ const CheckoutPage = () => {
 
   useEffect(() => {
     setIsMounted(true);
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     // In buyNow mode, load the single item from sessionStorage
     if (isBuyNow) {
       const stored = sessionStorage.getItem('buyNowItem');

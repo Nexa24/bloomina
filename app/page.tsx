@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import CategorySection from "@/components/CategorySection";
 import SignatureSection from "@/components/SignatureSection";
-import OtherCategoriesSection from "@/components/OtherCategoriesSection";
 import HeroSlideshow from "@/components/HeroSlideshow";
 import CategoryCarousel from "@/components/CategoryCarousel";
 import Testimonials from "@/components/Testimonials";
@@ -54,9 +53,6 @@ export default function Home() {
 
       {/* Category Carousel - New */}
       <CategoryCarousel />
-
-      {/* Other Categories Section - New */}
-      <OtherCategoriesSection />
 
       {/* Testimonials Marquee - New */}
       <Testimonials />
